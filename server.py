@@ -9,7 +9,9 @@ from tornado import gen
 from os.path import abspath, dirname, join
 import cobra.test
 import json
+from theseus import models
 from jinja2 import Environment, FileSystemLoader
+
 
 
 define("port", default = 8888, help="run on the given port", type=int)
@@ -26,6 +28,9 @@ class Application(tornado.web.Application):
                     (r"/auth/login", AuthLoginHandler),
                     (r"/auth/logout", AuthLogoutHandler),
                     (r"/api/models/(.*)/reactions/(.*)", ReactionHandler),
+                    (r"/api/models/(.*)/reactions", ReactionListHandler),
+                    (r"/api/models/(.*)", ModelHandler),
+                    (r"/api/models",ModelListHandler),
                     (r"/assets/(.*)", StaticFileHandler,{'path':join(directory, 'assets')})
         ]
         
@@ -57,11 +62,49 @@ class MainHandler(BaseHandler):
 class ReactionHandler(BaseHandler):
     @authenticated
     def get(self, modelName, reactionName):
-        reaction = model.reactions.get_by_id(reactionName)
-        dictionary = {"name":reaction.name,"reaction": reaction.reaction}
-        data = json.dumps(dictionary)
+        if reactionName == "":
+            self.write("specify a reaction id")
+            self.finish()
+        else:
+            selectedModel = models.load_model(modelName)
+            reactionDict = selectedModel.reactions
+            #reaction = selectedModel.reactions.get_by_id(reactionName)
+            #dictionary = {"genes":,"reaction": reaction.reaction}
+            #data = json.dumps(reactionDict.list_attr)
+            self.write("reaction name that corresponds to the id: ")
+            self.write(reactionDict.get_by_id(reactionName).name)
+            self.finish()
+        
+class ReactionListHandler(BaseHandler):
+    @authenticated
+    def get(self, modelName):
+        selectedModel = models.load_model(modelName)
+        reactionDict = selectedModel.reactions
+        data = json.dumps(reactionDict._dict)
         self.write(data)
         self.finish()
+        
+class ModelListHandler(BaseHandler):
+    @authenticated
+    def get(self):
+        modellist = models.get_model_list()
+        #dictionary = {"name":reaction.name,"reaction": reaction.reaction}
+        data = json.dumps(modellist)
+        self.write(data)
+        self.finish()
+
+class ModelHandler(BaseHandler):
+    @authenticated
+    def get(self, modelName):
+        if modelName =="":
+            self.write("specify a model")
+            self.finish()
+        else:
+            modelobject = models.load_model(modelName)
+            #dictionary = {"name":modelName,"reaction": modelName}
+            #data = json.dumps(modelobject)
+            self.write(modelobject.description)
+            self.finish()
         
 class AuthLoginHandler(BaseHandler):
     def get(self):
