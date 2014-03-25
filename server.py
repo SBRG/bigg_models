@@ -14,7 +14,7 @@ from jinja2 import Environment, FileSystemLoader
 
 
 
-define("port", default = 8882, help="run on the given port", type=int)
+define("port", default = 8888, help="run on the given port", type=int)
 
 env = Environment(loader=FileSystemLoader('templates'))
 
@@ -28,6 +28,8 @@ class Application(tornado.web.Application):
                     (r"/auth/login", AuthLoginHandler),
                     (r"/auth/logout", AuthLogoutHandler),
                     (r"/api/models/(.*)/genes",GeneListHandler),
+                    (r"/api/models/(.*)/metabolites",MetaboliteListHandler),
+                    (r"/api/models/(.*)/metabolites/(.*)",MetaboliteHandler),
                     (r"/api/models/(.*)/genes/(.*)",GeneHandler),
                     (r"/api/models/(.*)/reactions/(.*)", ReactionHandler),
                     (r"/api/models/(.*)/reactions", ReactionListHandler),
@@ -125,12 +127,31 @@ class GeneListHandler(BaseHandler):
         self.finish()
 class GeneHandler(BaseHandler):
     @authenticated
-    def get(self,modelName,geneName):
+    def get(self,modelName,geneId):
         selectedModel =models.load_model(modelName)
-        reactions = selectedModel.genes.get_by_id(geneName).get_reaction()
-        dictionary = {"id": geneName, "reactions": [x.id for x in reactions]}
+        reactions = selectedModel.genes.get_by_id(geneId).get_reaction()
+        dictionary = {"id": geneId, "reactions": [x.id for x in reactions]}
         #data = json.dumps(dictionary)
         self.write(dictionary)
+        self.finish()
+class MetaboliteListHandler(BaseHandler):
+    @authenticated
+    def get(self, modelName):
+        selectedModel = models.load_model(modelName)
+        metaboliteList = [x.id for x in selectedModel.metabolites]
+        data = json.dumps(metaboliteList)
+        self.write(data)
+        self.finish()
+class MetaboliteHandler(BaseHandler):
+    @authenticated
+    def get(self, modelName, metaboliteId):
+        selectedModel = models.load_model(modelName)
+        name = selectedModel.metabolites.get_by_id(metaboliteId).name
+        formula = selectedModel.metabolites.get_by_id(metaboliteId).formula
+        reactions = selectedModel.metabolites.get_by_id(metaboliteId).get_reaction()
+        dictionary = {'name': name, 'id': metaboliteId, 'formula': formula.id, 'reactions':[x.id for x in reactions]}
+        data = json.dumps(dictionary)
+        self.write(data)
         self.finish()
 class AuthLoginHandler(BaseHandler):
     def get(self):
