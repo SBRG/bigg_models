@@ -14,12 +14,12 @@ from jinja2 import Environment, FileSystemLoader
 
 
 
-define("port", default = 8881, help="run on the given port", type=int)
+define("port", default = 8882, help="run on the given port", type=int)
 
 env = Environment(loader=FileSystemLoader('templates'))
 
 directory = abspath(dirname(__file__))
-model = cobra.test.create_test_model()
+#model = cobra.test.create_test_model()
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -27,6 +27,8 @@ class Application(tornado.web.Application):
                     (r"/", MainHandler),
                     (r"/auth/login", AuthLoginHandler),
                     (r"/auth/logout", AuthLogoutHandler),
+                    (r"/api/models/(.*)/genes",GeneListHandler),
+                    (r"/api/models/(.*)/genes/(.*)",GeneHandler),
                     (r"/api/models/(.*)/reactions/(.*)", ReactionHandler),
                     (r"/api/models/(.*)/reactions", ReactionListHandler),
                     (r"/api/models/(.*)", ModelHandler),
@@ -72,8 +74,7 @@ class ReactionHandler(BaseHandler):
             #reaction = selectedModel.reactions.get_by_id(reactionName)
             #dictionary = {"genes":,"reaction": reaction.reaction}
             #data = json.dumps(reactionDict.list_attr)
-            dictionary = {"id": reactionName, "name": reaction.name, "metabolites": [x.id for x in reaction._metabolites]}
-            
+            dictionary = {"id": reactionName, "name": reaction.name, "metabolites": [x.id for x in reaction._metabolites]}      
             data = json.dumps(dictionary)
             self.write(data)
             self.finish()
@@ -115,7 +116,22 @@ class ModelHandler(BaseHandler):
             data = json.dumps(dictionary)
             self.write(data)
             self.finish()
-        
+class GeneListHandler(BaseHandler):
+    @authenticated
+    def get(self, modelName):
+        selectedModel = models.load_model(modelName)
+        data = json.dumps([x.id for x in selectedModel.genes])
+        self.write(data)
+        self.finish()
+class GeneHandler(BaseHandler):
+    @authenticated
+    def get(self,modelName,geneName):
+        selectedModel =models.load_model(modelName)
+        reactions = selectedModel.genes.get_by_id(geneName).get_reaction()
+        dictionary = {"id": geneName, "reactions": [x.id for x in reactions]}
+        #data = json.dumps(dictionary)
+        self.write(dictionary)
+        self.finish()
 class AuthLoginHandler(BaseHandler):
     def get(self):
         template = env.get_template("login.html")
