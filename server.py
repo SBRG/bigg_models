@@ -14,7 +14,7 @@ from jinja2 import Environment, FileSystemLoader
 
 
 
-define("port", default = 8888, help="run on the given port", type=int)
+define("port", default = 8881, help="run on the given port", type=int)
 
 env = Environment(loader=FileSystemLoader('templates'))
 
@@ -68,19 +68,22 @@ class ReactionHandler(BaseHandler):
         else:
             selectedModel = models.load_model(modelName)
             reactionDict = selectedModel.reactions
+            reaction = reactionDict.get_by_id(reactionName)
             #reaction = selectedModel.reactions.get_by_id(reactionName)
             #dictionary = {"genes":,"reaction": reaction.reaction}
             #data = json.dumps(reactionDict.list_attr)
-            self.write("reaction name that corresponds to the id: ")
-            self.write(reactionDict.get_by_id(reactionName).name)
+            dictionary = {"id": reactionName, "name": reaction.name, "metabolites": [x.id for x in reaction._metabolites]}
+            
+            data = json.dumps(dictionary)
+            self.write(data)
             self.finish()
         
 class ReactionListHandler(BaseHandler):
     @authenticated
     def get(self, modelName):
         selectedModel = models.load_model(modelName)
-        reactionDict = selectedModel.reactions
-        data = json.dumps(reactionDict._dict)
+        #reactionDict = selectedModel.reactions
+        data = json.dumps([x.id for x in selectedModel.reactions])
         self.write(data)
         self.finish()
         
@@ -89,9 +92,10 @@ class ModelListHandler(BaseHandler):
     def get(self):
         modellist = models.get_model_list()
         #dictionary = {"name":reaction.name,"reaction": reaction.reaction}
-        data = json.dumps(modellist)
+        data = json.dumps(modellist)    
         self.write(data)
         self.finish()
+        return data
 
 class ModelHandler(BaseHandler):
     @authenticated
@@ -101,9 +105,15 @@ class ModelHandler(BaseHandler):
             self.finish()
         else:
             modelobject = models.load_model(modelName)
+            genelist = modelobject.genes
+            reactionlist = modelobject.reactions
+            metabolitelist = modelobject.metabolites
+            dictionary = {"model":modelName,"reaction_count":len(reactionlist),"metabolite_count":len(metabolitelist),
+                    "gene_count": len(genelist) }
+            
             #dictionary = {"name":modelName,"reaction": modelName}
-            #data = json.dumps(modelobject)
-            self.write(modelobject.description)
+            data = json.dumps(dictionary)
+            self.write(data)
             self.finish()
         
 class AuthLoginHandler(BaseHandler):
