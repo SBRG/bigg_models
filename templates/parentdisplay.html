@@ -10,19 +10,11 @@
 		<!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" />-->
 		<link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
 	</head>
-	<body>	
-		<div id="myCarousel" class="carousel container slide">
-			<div class="carousel-inner">
-				<div class="active item one"></div>
-				<div class="item two"></div>
-				<div class="item three"></div>
-			</div>
-		</div>
-		
+	<body>			
 		<div id="banner">
 			<a href="http://sbrg.ucsd.edu/"> <img src="assets/logo-header.png" alt="logo"></a>
 		</div>
-		
+		{% block navbar %}
 		<div class="navbar navbar-default" role="navigation">
 			<div class="container-fluid">
 				<div class="navbar-header">
@@ -39,7 +31,6 @@
 						<li><a href="/">Home</a></li>
 						<li><a href="#">Search Reactions</a></li>
 						<li><a href="#">SBML Export</a></li>
-						<li><a href="#">{{user}}'s profile</a></li>
 						<li><a href="#">Help</a></li>
 						
 					</ul>
@@ -51,6 +42,10 @@
 				</div>
 			</div>			
 		</div>
+		{% endblock %}	
+		{% block content %}
+		
+		{% endblock %}
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 		<!--<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>-->
 		<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
