@@ -14,7 +14,7 @@ from jinja2 import Environment, FileSystemLoader
 
 
 
-define("port", default = 8888, help="run on the given port", type=int)
+define("port", default = 8882, help="run on the given port", type=int)
 
 env = Environment(loader=FileSystemLoader('templates'))
 
@@ -35,6 +35,8 @@ class Application(tornado.web.Application):
                     (r"/api/models/(.*)/reactions", ReactionListHandler),
                     (r"/api/models/(.*)", ModelHandler),
                     (r"/api/models",ModelListHandler),
+                    (r"/models",ModelsListDisplayHandler),
+                    (r"/search",SearchHandler),
                     (r"/assets/(.*)", StaticFileHandler,{'path':join(directory, 'assets')})
         ]
         
@@ -64,7 +66,6 @@ class MainHandler(BaseHandler):
         self.finish()
 
 class ReactionHandler(BaseHandler):
-    @authenticated
     def get(self, modelName, reactionName):
         if reactionName == "":
             self.write("specify a reaction id")
@@ -82,26 +83,33 @@ class ReactionHandler(BaseHandler):
             self.finish()
         
 class ReactionListHandler(BaseHandler):
-    @authenticated
     def get(self, modelName):
         selectedModel = models.load_model(modelName)
         #reactionDict = selectedModel.reactions
         data = json.dumps([x.id for x in selectedModel.reactions])
         self.write(data)
         self.finish()
-        
-class ModelListHandler(BaseHandler):
+
+class ModelsListDisplayHandler(BaseHandler):
     @authenticated
+    @asynchronous
+    @gen.engine
+    def get(self):
+        template = env.get_template("listdisplay.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/models' % (options.port)
+        response = yield gen.Task(http_client.fetch, url_request)
+        dictionary = {"listValues":json.loads(response.body)}
+        self.write(template.render(dictionary)) 
+        self.finish() 
+class ModelListHandler(BaseHandler):
     def get(self):
         modellist = models.get_model_list()
-        #dictionary = {"name":reaction.name,"reaction": reaction.reaction}
         data = json.dumps(modellist)    
         self.write(data)
         self.finish()
-        return data
 
 class ModelHandler(BaseHandler):
-    @authenticated
     def get(self, modelName):
         if modelName =="":
             self.write("specify a model")
@@ -119,23 +127,20 @@ class ModelHandler(BaseHandler):
             self.write(data)
             self.finish()
 class GeneListHandler(BaseHandler):
-    @authenticated
     def get(self, modelName):
         selectedModel = models.load_model(modelName)
         data = json.dumps([x.id for x in selectedModel.genes])
         self.write(data)
         self.finish()
 class GeneHandler(BaseHandler):
-    @authenticated
     def get(self,modelName,geneId):
         selectedModel =models.load_model(modelName)
         reactions = selectedModel.genes.get_by_id(geneId).get_reaction()
         dictionary = {"id": geneId, "reactions": [x.id for x in reactions]}
-        #data = json.dumps(dictionary)
-        self.write(dictionary)
+        data = json.dumps(dictionary)
+        self.write(data)
         self.finish()
 class MetaboliteListHandler(BaseHandler):
-    @authenticated
     def get(self, modelName):
         selectedModel = models.load_model(modelName)
         metaboliteList = [x.id for x in selectedModel.metabolites]
@@ -143,7 +148,6 @@ class MetaboliteListHandler(BaseHandler):
         self.write(data)
         self.finish()
 class MetaboliteHandler(BaseHandler):
-    @authenticated
     def get(self, modelName, metaboliteId):
         selectedModel = models.load_model(modelName)
         name = selectedModel.metabolites.get_by_id(metaboliteId).name
@@ -152,6 +156,12 @@ class MetaboliteHandler(BaseHandler):
         dictionary = {'name': name, 'id': metaboliteId, 'formula': formula.id, 'reactions':[x.id for x in reactions]}
         data = json.dumps(dictionary)
         self.write(data)
+        self.finish()
+        
+class SearchHandler(BaseHandler):
+    def get(self):
+        q = self.get_argument("q","")
+        self.write(q)
         self.finish()
 class AuthLoginHandler(BaseHandler):
     def get(self):
