@@ -1,10 +1,40 @@
 <html>
-	{% extends "parentdisplay.html" %}
+{% extends "parentdisplay.html" %}
+
 {% block content %}
-	
-		{% for values in listValues %}
-  <li> {{values}}</li>
-{% endfor %}
-	
+	<style>
+		#bigg{
+			text-align:center;
+		}
+	</style>
+	<h1 id="bigg">BiGG</h1>
+	<div class="tabbable"> <!-- Only required for left/right tabs -->
+    	<ul class="nav nav-tabs">
+    		<li class="active"><a href="#tab1" data-toggle="tab">All Results</a></li>
+    		<li><a href="#tab2" data-toggle="tab">Model Results</a></li>
+    		<li><a href="#tab3" data-toggle="tab">Reaction Results</a></li>
+    		<li><a href="#tab4" data-toggle="tab">Gene Results</a></li>
+    		<li><a href="#tab5" data-toggle="tab">Metabolite Results</a></li>
+    	</ul>
+    	<div class="tab-content">
+    		<div class="tab-pane active" id="tab1">
+    			{% for values in modelResults %}
+  					<li> {{values}}</li>
+				{% endfor %}
+    		</div>
+    		<div class="tab-pane" id="tab2">
+    			<p>results are here.</p>
+    		</div>
+    		<div class="tab-pane" id="tab3">
+    			<p>results are here.</p>
+    		</div>
+    		<div class="tab-pane" id="tab4">
+    			<p>results are here.</p>
+    		</div>
+    		<div class="tab-pane" id="tab5">
+    			<p>results are here.</p>
+    		</div>
+    	</div>
+    </div>
 {% endblock %}	
 </html>
