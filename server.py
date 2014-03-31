@@ -99,7 +99,7 @@ class ModelsListDisplayHandler(BaseHandler):
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models' % (options.port)
         response = yield gen.Task(http_client.fetch, url_request)
-        dictionary = {"listValues":json.loads(response.body)}
+        dictionary = {"modelResults":json.loads(response.body)}
         self.write(template.render(dictionary)) 
         self.finish() 
 class ModelListHandler(BaseHandler):
