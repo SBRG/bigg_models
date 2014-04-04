@@ -7,7 +7,10 @@
 			text-align:center;
 		}
 	</style>
-	<h1 id="bigg">BiGG</h1>
+	<h1 id="bigg">BiGG Database</h1>
+	
+	<a href="http://localhost:8888/">Go Back to Search Page
+	</a>
 	<div class="tabbable"> <!-- Only required for left/right tabs -->
     	<ul class="nav nav-tabs">
     		<li class="active"><a href="#tab1" data-toggle="tab">All Results</a></li>
@@ -16,25 +19,78 @@
     		<li><a href="#tab4" data-toggle="tab">Gene Results</a></li>
     		<li><a href="#tab5" data-toggle="tab">Metabolite Results</a></li>
     	</ul>
+    	
     	<div class="tab-content">
-    		<div class="tab-pane active" id="tab1">
-    			{% for values in modelResults %}
-  					<li> {{values}}</li>
-				{% endfor %}
-    		</div>
-    		<div class="tab-pane" id="tab2">
-    			<p>results are here.</p>
-    		</div>
-    		<div class="tab-pane" id="tab3">
-    			<p>results are here.</p>
-    		</div>
-    		<div class="tab-pane" id="tab4">
-    			<p>results are here.</p>
-    		</div>
-    		<div class="tab-pane" id="tab5">
-    			<p>results are here.</p>
-    		</div>
+	    	<div class="tab-pane active" id="tab1">
+	    		<div class="container" style="margin-top: 20px;">
+	    			{% if modelResults%}
+	    			<h2>{{Models}}:</h2>
+	    			{% for values in modelResults %}
+						<div class="panel panel-default">
+	  						<div class="panel-heading">
+	    						<h3 class="panel-title">{{values[0]}}</h3>
+	  						</div>
+	    					<div class="panel-body"> 
+	    						{{values[1]}} 
+	    					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+					{%if reactionResults%}
+					<h2>{{Reactions}}:</h2>
+	    			{% for values in reactionResults %}
+						<div class="panel panel-default">
+	  						<div class="panel-heading">
+	    						<h3 class="panel-title">{{values[0]}}</h3>
+	  						</div>
+	    					<div class="panel-body"> 
+	    						{{values[1]}} 
+	    					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+				</div>	
+	    	</div>
+	    	<div class="tab-pane" id="tab2">
+	    		<div class="container" style="margin-top: 20px;">
+	    			{%if modelResults%}
+	    			{% for values in modelResults %}
+						<div class="panel panel-default">
+		  					<div class="panel-heading">
+		    					<h3 class="panel-title">{{values[0]}}</h3>
+		  					</div>
+		  					<div class="panel-body"> 
+		  						{{values[1]}} 
+		  					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+				</div>				
+	   		</div>
+	    	<div class="tab-pane" id="tab3">
+	    		<div class="container" style="margin-top: 20px;">
+	    			{%if reactionResults%}
+	    			{% for values in reactionResults %}
+						<div class="panel panel-default">
+		  					<div class="panel-heading">
+		    					<h3 class="panel-title">{{values[0]}}</h3>
+		  					</div>
+		  					<div class="panel-body"> 
+		  						{{values[1]}} 
+		  					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+				</div>	
+	    	</div>
+	    	<div class="tab-pane" id="tab4">
+	    		<p>results are here.</p>
+	    	</div>
+	    	<div class="tab-pane" id="tab5">
+	    		<p>results are here.</p>
+	    	</div>
     	</div>
     </div>
+  
 {% endblock %}	
 </html>
