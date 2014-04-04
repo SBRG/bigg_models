@@ -1,0 +1,17 @@
+<html>
+	{% extends "parentdisplay.html" %}
+		{% block content %}
+			<div class="container">
+				<p class="bg-info">
+					<h1>Reaction: {{ id }}</h1>
+					<h3>Model: {{ model }}</h3>
+					<hr>
+					<h3>ID: {{ id }}</h3>
+					<h2>Metabolites:</h2>
+					{% for metabolites in metaboliteList %}
+					<li>{{metabolites}}</li>
+					{% endfor %}
+				</p>
+			</div>
+		{% endblock %}	
+</html>
