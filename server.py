@@ -11,10 +11,10 @@ import cobra.test
 import json
 from theseus import models
 from jinja2 import Environment, FileSystemLoader
+import psycopg2
 
 
-
-define("port", default = 8882, help="run on the given port", type=int)
+define("port", default = 8888, help="run on the given port", type=int)
 
 env = Environment(loader=FileSystemLoader('templates'))
 
@@ -25,6 +25,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
                     (r"/", MainHandler),
+                    (r"/models/(.*)/reactions/(.*)",ReactionDisplayHandler),
                     (r"/auth/login", AuthLoginHandler),
                     (r"/auth/logout", AuthLogoutHandler),
                     (r"/api/models/(.*)/genes",GeneListHandler),
@@ -33,6 +34,7 @@ class Application(tornado.web.Application):
                     (r"/api/models/(.*)/genes/(.*)",GeneHandler),
                     (r"/api/models/(.*)/reactions/(.*)", ReactionHandler),
                     (r"/api/models/(.*)/reactions", ReactionListHandler),
+                    (r"/models/(.*)/reactions", ReactionListDisplayHandler),
                     (r"/api/models/(.*)", ModelHandler),
                     (r"/api/models",ModelListHandler),
                     (r"/models",ModelsListDisplayHandler),
@@ -56,7 +58,6 @@ class BaseHandler(RequestHandler):
             return None
 
 class MainHandler(BaseHandler):
-    @authenticated
     def get(self):
         username = self.get_current_user()
         dictionary = {'user' : username}
@@ -64,19 +65,29 @@ class MainHandler(BaseHandler):
         self.write(template.render(dictionary))
         self.set_header("Content-Type", "text/html")
         self.finish()
+        
+class ReactionDisplayHandler(BaseHandler):
+    @asynchronous
+    @gen.engine
+    def get(self, modelName, reactionName):
+        template = env.get_template("reactions.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/models/%s/reactions/%s' % (options.port, modelName, reactionName)
+        response = yield gen.Task(http_client.fetch, url_request)
+        results = json.loads(response.body)
+        metaboliteList = results['metabolites']
+        id = results['id']
+        name = results['name']
+        dictionary = {'metaboliteList':metaboliteList,'name':name,'id':id, 'model':modelName}
+        self.write(template.render(dictionary)) 
+        self.finish() 
+
 
 class ReactionHandler(BaseHandler):
     def get(self, modelName, reactionName):
-        if reactionName == "":
-            self.write("specify a reaction id")
-            self.finish()
-        else:
             selectedModel = models.load_model(modelName)
             reactionDict = selectedModel.reactions
             reaction = reactionDict.get_by_id(reactionName)
-            #reaction = selectedModel.reactions.get_by_id(reactionName)
-            #dictionary = {"genes":,"reaction": reaction.reaction}
-            #data = json.dumps(reactionDict.list_attr)
             dictionary = {"id": reactionName, "name": reaction.name, "metabolites": [x.id for x in reaction._metabolites]}      
             data = json.dumps(dictionary)
             self.write(data)
@@ -84,14 +95,21 @@ class ReactionHandler(BaseHandler):
         
 class ReactionListHandler(BaseHandler):
     def get(self, modelName):
-        selectedModel = models.load_model(modelName)
-        #reactionDict = selectedModel.reactions
-        data = json.dumps([x.id for x in selectedModel.reactions])
+        config = {}
+        execfile("model_database/config", config) 
+        conn_string = "host='%s' dbname='%s' user='%s' password='%s'"%(config['host'], config['dbname'], config['user'], config['password'])
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        query = "select abbreviation, equation from reaction where reaction.modelversion_id = %s" %(modelName)
+        cursor.execute(query)
+        results = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        data = json.dumps(results)    
         self.write(data)
         self.finish()
 
 class ModelsListDisplayHandler(BaseHandler):
-    @authenticated
     @asynchronous
     @gen.engine
     def get(self):
@@ -99,13 +117,35 @@ class ModelsListDisplayHandler(BaseHandler):
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models' % (options.port)
         response = yield gen.Task(http_client.fetch, url_request)
-        dictionary = {"modelResults":json.loads(response.body)}
+        dictionary = {"modelResults":json.loads(response.body),"Models":"Models"}
         self.write(template.render(dictionary)) 
-        self.finish() 
+        self.finish()
+
+class ReactionListDisplayHandler(BaseHandler):
+    @asynchronous
+    @gen.engine
+    def get(self, modelName):
+        template = env.get_template("listdisplay.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/models/%s/reactions' % (options.port, modelName)
+        response = yield gen.Task(http_client.fetch, url_request)
+        dictionary = {"reactionResults":json.loads(response.body),"Reactions":"Reactions"}
+        self.write(template.render(dictionary)) 
+        self.finish()
+         
 class ModelListHandler(BaseHandler):
     def get(self):
-        modellist = models.get_model_list()
-        data = json.dumps(modellist)    
+        config = {}
+        execfile("model_database/config", config) 
+        conn_string = "host='%s' dbname='%s' user='%s' password='%s'"%(config['host'], config['dbname'], config['user'], config['password'])
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        query = "select name, description from model"
+        cursor.execute(query)
+        results = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        data = json.dumps(results)    
         self.write(data)
         self.finish()
 
@@ -128,8 +168,17 @@ class ModelHandler(BaseHandler):
             self.finish()
 class GeneListHandler(BaseHandler):
     def get(self, modelName):
-        selectedModel = models.load_model(modelName)
-        data = json.dumps([x.id for x in selectedModel.genes])
+        config = {}
+        execfile("model_database/config", config) 
+        conn_string = "host='%s' dbname='%s' user='%s' password='%s'"%(config['host'], config['dbname'], config['user'], config['password'])
+        conn = psycopg2.connect(conn_string)
+        cursor = conn.cursor()
+        query = "select name, description from model"
+        cursor.execute(query)
+        results = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        data = json.dumps(results)    
         self.write(data)
         self.finish()
 class GeneHandler(BaseHandler):
@@ -160,8 +209,9 @@ class MetaboliteHandler(BaseHandler):
         
 class SearchHandler(BaseHandler):
     def get(self):
+        template = env.get_template("listdisplay.html")
         q = self.get_argument("q","")
-        self.write(q)
+        self.write(template.render())
         self.finish()
 class AuthLoginHandler(BaseHandler):
     def get(self):
