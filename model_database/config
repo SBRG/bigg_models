@@ -1,4 +1,4 @@
-host=
-user=
-dbname=
-password=
+host='pestis'
+user='justin'
+dbname='grmit'
+password='justin'

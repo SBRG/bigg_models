@@ -39,6 +39,7 @@ class Application(tornado.web.Application):
                     (r"/api/models",ModelListHandler),
                     (r"/models",ModelsListDisplayHandler),
                     (r"/search",SearchHandler),
+                    (r"/about",AboutHandler),
                     (r"/assets/(.*)", StaticFileHandler,{'path':join(directory, 'assets')})
         ]
         
@@ -56,7 +57,6 @@ class BaseHandler(RequestHandler):
             return user
         else:
             return None
-
 class MainHandler(BaseHandler):
     def get(self):
         username = self.get_current_user()
@@ -65,7 +65,14 @@ class MainHandler(BaseHandler):
         self.write(template.render(dictionary))
         self.set_header("Content-Type", "text/html")
         self.finish()
-        
+
+class AboutHandler(BaseHandler):
+    def get(self):
+        template = env.get_template("about.html")
+        self.write(template.render())
+        self.set_header("Content-Type", "text/html")
+        self.finish()
+
 class ReactionDisplayHandler(BaseHandler):
     @asynchronous
     @gen.engine
