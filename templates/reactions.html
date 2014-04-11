@@ -2,16 +2,70 @@
 	{% extends "parentdisplay.html" %}
 		{% block content %}
 			<div class="container">
-				<p class="bg-info">
-					<h1>Reaction: {{ id }}</h1>
-					<h3>Model: {{ model }}</h3>
+				<div class="col-lg-8">
+    				<h1>Reaction: <br><span style="text-transform:capitalize;">{{name}}</span></h1>
+    				<hr>
+					<p class="lead">Reaction ID: <br>{{id}}</p>
+					<p class="lead">Model: <br>{{ model }}</p>
+					
+					<p class="lead">Reaction String:</p>
+					{{reaction_string}}
+					<br>
+					<br>
+					<br>
+					<div class="list-group">
+  						<a href="#metabolitelist" class="list-group-item active">
+    						<span class="lead">Metabolites:</span>
+  						</a>
+  						{% for metabolites in metaboliteList %}
+  						<a href="#metabolite" class="list-group-item">{{metabolites}}</a>
+  						{% endfor %}
+					</div>
+					<p class="lead">Gene Reaction Rule: <br>{{gene_reaction_rule}}</p>
+					<p class="lead">Genes: {% for gene in genes %} <a href=#>{{gene}} </a>{% endfor %}</p>
 					<hr>
-					<h3>ID: {{ id }}</h3>
-					<h2>Metabolites:</h2>
-					{% for metabolites in metaboliteList %}
-					<li>{{metabolites}}</li>
-					{% endfor %}
-				</p>
+					<h2> Map </h2>
+					<img src="http://placehold.it/900x300" class="img-responsive">
+					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ac vestibulum ante. In ut pharetra nibh. Quisque sollicitudin felis vel enim viverra fermentum. Nulla sit amet odio gravida, egestas enim eget, lobortis mi. Aliquam diam augue, pellentesque eget orci non, aliquet cursus sapien. Mauris feugiat dignissim mauris, et consequat magna ultricies ac. Cras ut lectus magna. Integer at felis ultrices, ultrices dolor et, dictum lectus. </p>
+                <a class="btn btn-primary" href="#">Read More <span class="glyphicon glyphicon-chevron-right"></span></a>
+				<p></p>
+				<p></p>
+				</div>
+				<div class="col-lg-4">
+					<div class="well">
+                    	<h4>BiGG Search</h4>
+                    	<div class="input-group">
+      						<span class="input-group-btn">
+        						<button class="btn btn-default" type="button">Go!</button>
+      						</span>
+      						<input type="text" class="form-control">
+    					</div>
+                    </div>
+                    <div class="well">
+                    	<h4>Citations</h4>
+                    	<ul class="list-unstyled">
+                                <li><a href="#dinosaurs">Dinosaurs</a>
+                                </li>
+                                <li><a href="#spaceships">Spaceships</a>
+                                </li>
+                                <li><a href="#fried-foods">Fried Foods</a>
+                                </li>
+                                <li><a href="#wild-animals">Wild Animals</a>
+                                </li>
+                        </ul>
+                	</div>
+                    <!-- /input-group -->
+                </div>
+				
+				<footer>
+            		<div class="row">
+                		<div class="col-lg-12" style="margin:50px 0;">
+                			<hr>
+                    		<p>Copyright &copy; 2007 The Regents of the University of California.</p>
+                		</div>
+            		</div>
+        		</footer>
+					
 			</div>
 		{% endblock %}	
 </html>
