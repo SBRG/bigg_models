@@ -7,7 +7,6 @@ from tornado.web import StaticFileHandler, RequestHandler, authenticated,asynchr
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 from os.path import abspath, dirname, join
-import cobra.test
 import json
 from theseus import models
 from jinja2 import Environment, FileSystemLoader
@@ -40,6 +39,7 @@ class Application(tornado.web.Application):
                     (r"/models",ModelsListDisplayHandler),
                     (r"/search",SearchHandler),
                     (r"/about",AboutHandler),
+                    (r"/advancesearch",FormHandler),
                     (r"/assets/(.*)", StaticFileHandler,{'path':join(directory, 'assets')})
         ]
         
@@ -72,7 +72,12 @@ class AboutHandler(BaseHandler):
         self.write(template.render())
         self.set_header("Content-Type", "text/html")
         self.finish()
-
+class FormHandler(BaseHandler):
+	def get(self):
+		template = env.get_template("advancesearch.html")
+		self.write(template.render())
+		self.set_header("Content-Type", "text/html")
+		self.finish()
 class ReactionDisplayHandler(BaseHandler):
     @asynchronous
     @gen.engine
@@ -85,21 +90,27 @@ class ReactionDisplayHandler(BaseHandler):
         metaboliteList = results['metabolites']
         id = results['id']
         name = results['name']
-        dictionary = {'metaboliteList':metaboliteList,'name':name,'id':id, 'model':modelName}
+        reactionString = results['reaction_string']
+        genesList = results['genes']
+        geneReactionRule = results['gene_reaction_rule']
+        dictionary = {'metaboliteList':metaboliteList,'name':name,'id':id, 'model':modelName, 'reaction_string': reactionString, 'genes':genesList, 'gene_reaction_rule': geneReactionRule}
         self.write(template.render(dictionary)) 
         self.finish() 
-
 
 class ReactionHandler(BaseHandler):
     def get(self, modelName, reactionName):
             selectedModel = models.load_model(modelName)
             reactionDict = selectedModel.reactions
             reaction = reactionDict.get_by_id(reactionName)
-            dictionary = {"id": reactionName, "name": reaction.name, "metabolites": [x.id for x in reaction._metabolites]}      
+            geneList = []
+            for gene in reaction._genes.keys():
+            	geneList.append(gene.name)
+            dictionary = {"id": reaction.id, "name": reaction.name, "metabolites": [x.id for x in reaction._metabolites], "reaction_string":reaction.build_reaction_string(True), "genes": geneList,"gene_reaction_rule": reaction.gene_reaction_rule}      
             data = json.dumps(dictionary)
             self.write(data)
             self.finish()
-        
+            		
+"""    
 class ReactionListHandler(BaseHandler):
     def get(self, modelName):
         config = {}
@@ -115,6 +126,13 @@ class ReactionListHandler(BaseHandler):
         data = json.dumps(results)    
         self.write(data)
         self.finish()
+"""
+class ReactionListHandler(BaseHandler):
+	def get(self, modelName):
+		selectedModel = models.load_model(modelName)
+		data = json.dumps([x.id for x in selectedModel.reactions])
+		self.write(data)
+		self.finish()
 
 class ModelsListDisplayHandler(BaseHandler):
     @asynchronous
@@ -127,7 +145,20 @@ class ModelsListDisplayHandler(BaseHandler):
         dictionary = {"modelResults":json.loads(response.body),"Models":"Models"}
         self.write(template.render(dictionary)) 
         self.finish()
-
+     
+     
+   
+#TODO
+"""
+class ModelDisplayHandler(BaseHandler):
+	@asynchronous
+    @gen.engine
+	def get(self, modelName):
+		http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/models' % (options.port)
+        response = yield gen.Task(http_client.fetch, url_request)
+        
+"""        	
 class ReactionListDisplayHandler(BaseHandler):
     @asynchronous
     @gen.engine
@@ -139,7 +170,7 @@ class ReactionListDisplayHandler(BaseHandler):
         dictionary = {"reactionResults":json.loads(response.body),"Reactions":"Reactions"}
         self.write(template.render(dictionary)) 
         self.finish()
-         
+"""         
 class ModelListHandler(BaseHandler):
     def get(self):
         config = {}
@@ -155,7 +186,14 @@ class ModelListHandler(BaseHandler):
         data = json.dumps(results)    
         self.write(data)
         self.finish()
+"""
 
+class ModelListHandler(BaseHandler):
+	def get(self):
+		modellist = models.get_model_list()
+		data = json.dumps(modellist)    
+        	self.write(data)
+        	self.finish()
 class ModelHandler(BaseHandler):
     def get(self, modelName):
         if modelName =="":
