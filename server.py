@@ -30,11 +30,14 @@ class Application(tornado.web.Application):
                     (r"/api/models/(.*)/genes",GeneListHandler),
                     (r"/api/models/(.*)/metabolites",MetaboliteListHandler),
                     (r"/api/models/(.*)/metabolites/(.*)",MetaboliteHandler),
+                    (r"/models/(.*)/metabolites/(.*)",MetaboliteDisplayHandler),
                     (r"/api/models/(.*)/genes/(.*)",GeneHandler),
+                    (r"/models/(.*)/genes/(.*)",GeneDisplayHandler),
                     (r"/api/models/(.*)/reactions/(.*)", ReactionHandler),
                     (r"/api/models/(.*)/reactions", ReactionListHandler),
                     (r"/models/(.*)/reactions", ReactionListDisplayHandler),
                     (r"/api/models/(.*)", ModelHandler),
+                    (r"/models/(.*)", ModelDisplayHandler),
                     (r"/api/models",ModelListHandler),
                     (r"/models",ModelsListDisplayHandler),
                     (r"/search",SearchHandler),
@@ -87,14 +90,7 @@ class ReactionDisplayHandler(BaseHandler):
         url_request = 'http://localhost:%d/api/models/%s/reactions/%s' % (options.port, modelName, reactionName)
         response = yield gen.Task(http_client.fetch, url_request)
         results = json.loads(response.body)
-        metaboliteList = results['metabolites']
-        id = results['id']
-        name = results['name']
-        reactionString = results['reaction_string']
-        genesList = results['genes']
-        geneReactionRule = results['gene_reaction_rule']
-        dictionary = {'metaboliteList':metaboliteList,'name':name,'id':id, 'model':modelName, 'reaction_string': reactionString, 'genes':genesList, 'gene_reaction_rule': geneReactionRule}
-        self.write(template.render(dictionary)) 
+        self.write(template.render(results)) 
         self.finish() 
 
 class ReactionHandler(BaseHandler):
@@ -105,7 +101,7 @@ class ReactionHandler(BaseHandler):
             geneList = []
             for gene in reaction._genes.keys():
             	geneList.append(gene.name)
-            dictionary = {"id": reaction.id, "name": reaction.name, "metabolites": [x.id for x in reaction._metabolites], "reaction_string":reaction.build_reaction_string(True), "genes": geneList,"gene_reaction_rule": reaction.gene_reaction_rule}      
+            dictionary = {"model":selectedModel.id, "id": reaction.id, "name": reaction.name, "metabolites": [x.id for x in reaction._metabolites], "reaction_string":reaction.build_reaction_string(True), "genes": geneList,"geneReactionRule": reaction.gene_reaction_rule}      
             data = json.dumps(dictionary)
             self.write(data)
             self.finish()
@@ -194,6 +190,7 @@ class ModelListHandler(BaseHandler):
 		data = json.dumps(modellist)    
         	self.write(data)
         	self.finish()
+
 class ModelHandler(BaseHandler):
     def get(self, modelName):
         if modelName =="":
@@ -204,13 +201,26 @@ class ModelHandler(BaseHandler):
             genelist = modelobject.genes
             reactionlist = modelobject.reactions
             metabolitelist = modelobject.metabolites
-            dictionary = {"model":modelName,"reaction_count":len(reactionlist),"metabolite_count":len(metabolitelist),
+            dictionary = {"model":modelobject.id,"reaction_count":len(reactionlist),"metabolite_count":len(metabolitelist),
                     "gene_count": len(genelist) }
             
             #dictionary = {"name":modelName,"reaction": modelName}
             data = json.dumps(dictionary)
             self.write(data)
             self.finish()
+
+class ModelDisplayHandler(BaseHandler):
+	@asynchronous
+	@gen.engine
+	def get(self, modelName):
+		template = env.get_template("model.html")
+		http_client = AsyncHTTPClient()
+		url_request = 'http://localhost:%d/api/models/%s' % (options.port, modelName)
+		response = yield gen.Task(http_client.fetch, url_request)
+		results = json.loads(response.body)
+		self.write(template.render(results))
+		self.finish() 
+"""
 class GeneListHandler(BaseHandler):
     def get(self, modelName):
         config = {}
@@ -226,14 +236,32 @@ class GeneListHandler(BaseHandler):
         data = json.dumps(results)    
         self.write(data)
         self.finish()
+"""
+class GeneListHandler(BaseHandler):
+	def get(self,modelName):
+		selectedModel = models.load_model(modelName)
+		data = json.dumps([x.id for x in selectedModel.genes])
+		self.write(data)
+		self.finish()
 class GeneHandler(BaseHandler):
     def get(self,modelName,geneId):
         selectedModel =models.load_model(modelName)
         reactions = selectedModel.genes.get_by_id(geneId).get_reaction()
-        dictionary = {"id": geneId, "reactions": [x.id for x in reactions]}
+        dictionary = {"id": geneId, "model":selectedModel.id, "reactions": [x.id for x in reactions]}
         data = json.dumps(dictionary)
         self.write(data)
         self.finish()
+class GeneDisplayHandler(BaseHandler):
+	@asynchronous
+	@gen.engine
+	def get(self, modelName, geneId):
+		template = env.get_template("genes.html")
+		http_client = AsyncHTTPClient()
+		url_request = 'http://localhost:%d/api/models/%s/genes/%s' % (options.port, modelName, geneId)
+		response = yield gen.Task(http_client.fetch, url_request)
+		results = json.loads(response.body)
+		self.write(template.render(results))
+		self.finish() 
 class MetaboliteListHandler(BaseHandler):
     def get(self, modelName):
         selectedModel = models.load_model(modelName)
@@ -247,11 +275,21 @@ class MetaboliteHandler(BaseHandler):
         name = selectedModel.metabolites.get_by_id(metaboliteId).name
         formula = selectedModel.metabolites.get_by_id(metaboliteId).formula
         reactions = selectedModel.metabolites.get_by_id(metaboliteId).get_reaction()
-        dictionary = {'name': name, 'id': metaboliteId, 'formula': formula.id, 'reactions':[x.id for x in reactions]}
+        dictionary = {'name': name, 'id': metaboliteId, 'model': selectedModel.id,'formula': formula.id, 'reactions':[x.id for x in reactions]}
         data = json.dumps(dictionary)
         self.write(data)
         self.finish()
-        
+class MetaboliteDisplayHandler(BaseHandler):
+	@asynchronous
+	@gen.engine
+	def get(self, modelName, metaboliteId):
+		template = env.get_template("metabolites.html")
+		http_client = AsyncHTTPClient()
+		url_request = 'http://localhost:%d/api/models/%s/metabolites/%s' % (options.port, modelName, metaboliteId)
+		response = yield gen.Task(http_client.fetch, url_request)
+		results = json.loads(response.body)
+		self.write(template.render(results))
+		self.finish()      
 class SearchHandler(BaseHandler):
     def get(self):
         template = env.get_template("listdisplay.html")
