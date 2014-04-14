@@ -3,26 +3,18 @@
 		{% block content %}
 			<div class="container">
 				<div class="col-lg-8">
-    				<h1>Reaction: <br><span style="text-transform:capitalize;">{{id}}</span></h1>
+    				<h1>Gene: <br><span style="text-transform:capitalize;">{{id}}</span></h1>
     				<hr>
-					<p class="lead">Reaction name: <br>{{name}}</p>
 					<p class="lead">Model: <br>{{ model }}</p>
 					
-					<p class="lead">Reaction String:</p>
-					{{reaction_string}}
-					<br>
-					<br>
-					<br>
 					<div class="list-group">
-  						<a href="#metabolitelist" class="list-group-item active">
-    						<span class="lead">Metabolites:</span>
+  						<a href="#reactions" class="list-group-item active">
+    						<span class="lead">Reactions:</span>
   						</a>
-  						{% for metabolite in metabolites %}
-  						<a href="#metabolite" class="list-group-item">{{metabolite}}</a>
+  						{% for reaction in reactions %}
+  						<a href="#" class="list-group-item">{{reaction}}</a>
   						{% endfor %}
 					</div>
-					<p class="lead">Gene Reaction Rule: <br>{{geneReactionRule}}</p>
-					<p class="lead">Genes: {% for gene in genes %} <a href=#>{{gene}} </a>{% endfor %}</p>
 					<hr>
 					<h2> Map </h2>
 					<img src="http://placehold.it/900x300" class="img-responsive">
