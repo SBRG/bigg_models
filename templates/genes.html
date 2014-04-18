@@ -5,16 +5,24 @@
 				<div class="col-lg-8">
     				<h1>Gene: <br><span style="text-transform:capitalize;">{{id}}</span></h1>
     				<hr>
-					<p class="lead">Model: <br>{{ model }}</p>
+					<p class="lead">Model: <br><a href="/models/{{model}}">{{ model }}</a></p>
 					
-					<div class="list-group">
-  						<a href="#reactions" class="list-group-item active">
-    						<span class="lead">Reactions:</span>
-  						</a>
+					<table class="table table-bordered">
+						<thead>
+						<tr>
+							<th>Reaction ID</th>
+							<th>Gene Reaction Rule </th>	
+						</tr>
+						</thead>
+						<tbody>
   						{% for reaction in reactions %}
-  						<a href="#" class="list-group-item">{{reaction}}</a>
+  						<tr>
+  						<td><a href="/models/{{model}}/reactions/{{reaction[0]}}">{{reaction[0]}} </a></td>
+  						<td>{{reaction[1]}}<br> Genes: {% for gene in reaction[2] %}<a href="/models/{{model}}/genes/{{gene}}"> {{ gene }}{% endfor %}</a></td>
+  						</tr>
   						{% endfor %}
-					</div>
+  						</tbody>
+					</table>
 					<hr>
 					<h2> Map </h2>
 					<img src="http://placehold.it/900x300" class="img-responsive">

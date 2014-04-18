@@ -19,7 +19,7 @@ env = Environment(loader=FileSystemLoader('templates'))
 
 directory = abspath(dirname(__file__))
 #model = cobra.test.create_test_model()
-
+urlBasePath = "http://localhost:8888/"
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
@@ -28,9 +28,11 @@ class Application(tornado.web.Application):
                     (r"/auth/login", AuthLoginHandler),
                     (r"/auth/logout", AuthLogoutHandler),
                     (r"/api/models/(.*)/genes",GeneListHandler),
+                    (r"/models/(.*)/genes",GeneListDisplayHandler),
                     (r"/api/models/(.*)/metabolites",MetaboliteListHandler),
                     (r"/api/models/(.*)/metabolites/(.*)",MetaboliteHandler),
                     (r"/models/(.*)/metabolites/(.*)",MetaboliteDisplayHandler),
+                    (r"/models/(.*)/metabolites",MetabolitesListDisplayHandler),
                     (r"/api/models/(.*)/genes/(.*)",GeneHandler),
                     (r"/models/(.*)/genes/(.*)",GeneDisplayHandler),
                     (r"/api/models/(.*)/reactions/(.*)", ReactionHandler),
@@ -95,16 +97,17 @@ class ReactionDisplayHandler(BaseHandler):
 
 class ReactionHandler(BaseHandler):
     def get(self, modelName, reactionName):
-            selectedModel = models.load_model(modelName)
-            reactionDict = selectedModel.reactions
-            reaction = reactionDict.get_by_id(reactionName)
-            geneList = []
-            for gene in reaction._genes.keys():
-            	geneList.append(gene.name)
-            dictionary = {"model":selectedModel.id, "id": reaction.id, "name": reaction.name, "metabolites": [x.id for x in reaction._metabolites], "reaction_string":reaction.build_reaction_string(True), "genes": geneList,"geneReactionRule": reaction.gene_reaction_rule}      
-            data = json.dumps(dictionary)
-            self.write(data)
-            self.finish()
+        selectedModel = models.load_model(modelName)
+        reactionDict = selectedModel.reactions
+        reaction = reactionDict.get_by_id(reactionName)
+        geneList = []
+        for gene in reaction._genes.keys():
+            geneList.append(gene.name)
+        model = (selectedModel.id).replace(" ","_")
+        dictionary = {"model":model, "id": reaction.id, "name": reaction.name, "metabolites": [x.id for x in reaction._metabolites], "reaction_string":reaction.build_reaction_string(True), "genes": geneList,"geneReactionRule": reaction.gene_reaction_rule}      
+        data = json.dumps(dictionary)
+        self.write(data)
+        self.finish()
             		
 """    
 class ReactionListHandler(BaseHandler):
@@ -125,7 +128,7 @@ class ReactionListHandler(BaseHandler):
 """
 class ReactionListHandler(BaseHandler):
 	def get(self, modelName):
-		selectedModel = models.load_model(modelName)
+		selectedModel = models.load_model(modelName)		
 		data = json.dumps([x.id for x in selectedModel.reactions])
 		self.write(data)
 		self.finish()
@@ -163,7 +166,36 @@ class ReactionListDisplayHandler(BaseHandler):
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/reactions' % (options.port, modelName)
         response = yield gen.Task(http_client.fetch, url_request)
-        dictionary = {"reactionResults":json.loads(response.body),"Reactions":"Reactions"}
+        selectedModel = models.load_model(modelName)
+        model = selectedModel.id.replace(" ","_")
+        dictionary = {"reactionResults":json.loads(response.body),"Reactions":"Reactions","model":model}
+        self.write(template.render(dictionary)) 
+        self.finish()
+        
+class MetabolitesListDisplayHandler(BaseHandler):
+    @asynchronous
+    @gen.engine
+    def get(self, modelName):
+        template = env.get_template("listdisplay.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/models/%s/metabolites' % (options.port, modelName)
+        response = yield gen.Task(http_client.fetch, url_request)
+        selectedModel = models.load_model(modelName)
+        model = selectedModel.id.replace(" ","_")
+        dictionary = {"metaboliteResults":json.loads(response.body),"Metabolites":"Metabolites", "model":model}
+        self.write(template.render(dictionary)) 
+        self.finish()
+class GeneListDisplayHandler(BaseHandler):
+    @asynchronous
+    @gen.engine
+    def get(self, modelName):
+        template = env.get_template("listdisplay.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/models/%s/genes' % (options.port, modelName)
+        response = yield gen.Task(http_client.fetch, url_request)
+        selectedModel = models.load_model(modelName)
+        model = selectedModel.id.replace(" ","_")
+        dictionary = {"geneResults":json.loads(response.body),"Genes":"Genes","model":model}
         self.write(template.render(dictionary)) 
         self.finish()
 """         
@@ -186,7 +218,11 @@ class ModelListHandler(BaseHandler):
 
 class ModelListHandler(BaseHandler):
 	def get(self):
-		modellist = models.get_model_list()
+		uneditedlist = models.get_model_list()
+		modellist= []
+		for model in uneditedlist:
+			editedModel = model.replace(" ","_")
+			modellist.append(editedModel)
 		data = json.dumps(modellist)    
         	self.write(data)
         	self.finish()
@@ -201,7 +237,8 @@ class ModelHandler(BaseHandler):
             genelist = modelobject.genes
             reactionlist = modelobject.reactions
             metabolitelist = modelobject.metabolites
-            dictionary = {"model":modelobject.id,"reaction_count":len(reactionlist),"metabolite_count":len(metabolitelist),
+            modelid= modelobject.id.replace(" ","_")
+            dictionary = {"model":modelid,"reaction_count":len(reactionlist),"metabolite_count":len(metabolitelist),
                     "gene_count": len(genelist) }
             
             #dictionary = {"name":modelName,"reaction": modelName}
@@ -247,7 +284,18 @@ class GeneHandler(BaseHandler):
     def get(self,modelName,geneId):
         selectedModel =models.load_model(modelName)
         reactions = selectedModel.genes.get_by_id(geneId).get_reaction()
-        dictionary = {"id": geneId, "model":selectedModel.id, "reactions": [x.id for x in reactions]}
+        reactionList = []
+        for x in reactions:
+        	list = []
+        	list.append(x.id)
+        	list.append(x.gene_reaction_rule)
+        	geneList = []
+        	for gene in x._genes.keys():
+        		geneList.append(gene.name)
+        	list.append(geneList)
+        	reactionList.append(list)
+        	model = (selectedModel.id).replace(" ","_")
+        dictionary = {"id": geneId, "model":model, "reactions": reactionList}
         data = json.dumps(dictionary)
         self.write(data)
         self.finish()
@@ -275,7 +323,9 @@ class MetaboliteHandler(BaseHandler):
         name = selectedModel.metabolites.get_by_id(metaboliteId).name
         formula = selectedModel.metabolites.get_by_id(metaboliteId).formula
         reactions = selectedModel.metabolites.get_by_id(metaboliteId).get_reaction()
-        dictionary = {'name': name, 'id': metaboliteId, 'model': selectedModel.id,'formula': formula.id, 'reactions':[x.id for x in reactions]}
+       	model = (selectedModel.id).replace(" ", "_")
+       	#formula or use formula id? inconsistent
+       	dictionary = {'name': name, 'id': metaboliteId, 'model': model, 'formula': formula.id,'reactions':[x.id for x in reactions]}
         data = json.dumps(dictionary)
         self.write(data)
         self.finish()

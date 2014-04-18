@@ -6,7 +6,7 @@
     				<h1>Metabolite: <br><span style="text-transform:capitalize;">{{id}}</span></h1>
     				<hr>
 					<p class="lead">Metabolite name: <br>{{name}}</p>
-					<p class="lead">Model: <br>{{ model }}</p>
+					<p class="lead">Model: <br><a href="/models/{{model}}">{{ model }}</a></p>
 					
 					<p class="lead">Formula:</p>
 					{{formula}}
@@ -18,7 +18,7 @@
     						<span class="lead">Reactions:</span>
   						</a>
   						{% for reaction in reactions %}
-  						<a href="#" class="list-group-item">{{reaction}}</a>
+  						<a href="/models/{{model}}/reactions/{{reaction}}" class="list-group-item">{{reaction}}</a>
   						{% endfor %}
 					</div>
 					<hr>

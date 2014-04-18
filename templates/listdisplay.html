@@ -16,8 +16,8 @@
     		<li class="active"><a href="#tab1" data-toggle="tab">All Results</a></li>
     		<li><a href="#tab2" data-toggle="tab">Model Results</a></li>
     		<li><a href="#tab3" data-toggle="tab">Reaction Results</a></li>
-    		<li><a href="#tab4" data-toggle="tab">Gene Results</a></li>
-    		<li><a href="#tab5" data-toggle="tab">Metabolite Results</a></li>
+    		<li><a href="#tab4" data-toggle="tab">Metabolite Results</a></li>
+    		<li><a href="#tab5" data-toggle="tab">Gene Results</a></li>
     	</ul>
     	
     	<div class="tab-content">
@@ -28,7 +28,7 @@
 	    			{% for values in modelResults %}
 						<div class="panel panel-default">
 	  						<div class="panel-heading">
-	    						<h3 class="panel-title">{{values}}</h3>
+	    						<h3 class="panel-title"><a href="/models/{{values}}">{{values}}</a></h3>
 	  						</div>
 	    					<div class="panel-body"> 
 	    						{{values}} 
@@ -41,7 +41,33 @@
 	    			{% for values in reactionResults %}
 						<div class="panel panel-default">
 	  						<div class="panel-heading">
-	    						<h3 class="panel-title">{{values}}</h3>
+	    						<h3 class="panel-title"><a href="/models/{{model}}/reactions/{{values}}">{{values}}</a></h3>
+	  						</div>
+	    					<div class="panel-body"> 
+	    						{{values}} 
+	    					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+					{%if metaboliteResults%}
+					<h2>{{Metabolites}}:</h2>
+	    			{% for values in metaboliteResults %}
+						<div class="panel panel-default">
+	  						<div class="panel-heading">
+	    						<h3 class="panel-title"><a href="/models/{{model}}/metabolites/{{values}}">{{values}}</a></h3>
+	  						</div>
+	    					<div class="panel-body"> 
+	    						{{values}} 
+	    					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+					{%if geneResults%}
+					<h2>{{Genes}}:</h2>
+	    			{% for values in geneResults %}
+						<div class="panel panel-default">
+	  						<div class="panel-heading">
+	    						<h3 class="panel-title"><a href="/models/{{model}}/genes/{{values}}">{{values}}</a></h3>
 	  						</div>
 	    					<div class="panel-body"> 
 	    						{{values}} 
@@ -57,7 +83,7 @@
 	    			{% for values in modelResults %}
 						<div class="panel panel-default">
 		  					<div class="panel-heading">
-		    					<h3 class="panel-title">{{values}}</h3>
+		    					<h3 class="panel-title"><a href="/models/{{values}}">{{values}}</a></h3>
 		  					</div>
 		  					<div class="panel-body"> 
 		  						{{values}} 
@@ -73,10 +99,10 @@
 	    			{% for values in reactionResults %}
 						<div class="panel panel-default">
 		  					<div class="panel-heading">
-		    					<h3 class="panel-title">{{values[0]}}</h3>
+		    					<h3 class="panel-title"><a href="/models/{{model}}/reactions/{{values}}">{{values}}</a></h3>
 		  					</div>
 		  					<div class="panel-body"> 
-		  						{{values[1]}} 
+		  						{{values}} 
 		  					</div> 
 						</div>
 					{% endfor %}
@@ -84,10 +110,36 @@
 				</div>	
 	    	</div>
 	    	<div class="tab-pane" id="tab4">
-	    		<p></p>
+	    		<div class="container" style="margin-top: 20px;">
+	    			{%if metaboliteResults%}
+	    			{% for values in metaboliteResults %}
+						<div class="panel panel-default">
+		  					<div class="panel-heading">
+		    					<h3 class="panel-title"><a href="/models/{{model}}/metabolites/{{values}}">{{values}}</a></h3>
+		  					</div>
+		  					<div class="panel-body"> 
+		  						{{values}} 
+		  					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+				</div>
 	    	</div>
 	    	<div class="tab-pane" id="tab5">
-	    		<p></p>
+	    		<div class="container" style="margin-top: 20px;">
+	    			{%if geneResults%}
+	    			{% for values in geneResults %}
+						<div class="panel panel-default">
+		  					<div class="panel-heading">
+		    					<h3 class="panel-title"><a href="/models/{{model}}/genes/{{values}}">{{values}}</a></h3>
+		  					</div>
+		  					<div class="panel-body"> 
+		  						{{values}} 
+		  					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+				</div>
 	    	</div>
     	</div>
     </div>
