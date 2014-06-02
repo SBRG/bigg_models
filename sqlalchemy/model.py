@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, ForeignKey, Column, Integer, String, Numer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import UniqueConstraint
-engine = create_engine("postgresql://jslu@localhost:5432/bigg2")
+engine = create_engine("postgresql://dbuser@localhost:5432/bigg2")
 
 Base = declarative_base(bind=engine)
 metadata = MetaData(bind=engine)
@@ -10,6 +10,24 @@ metadata = MetaData(bind=engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
+class Gene(Base):
+	__tablename__='gene'
+	id = Column(Integer,primary_key=True)
+	name = Column(String)
+
+class Model_Gene(Base):
+	__tablename__='model_gene'
+	id = Column(Integer, primary_key=True)
+	model_id = Column(Integer, ForeignKey('model.id'), nullable=False)
+	gene_id = Column(Integer, ForeignKey('gene.id'), nullable=False)
+
+class GPR_Matrix(Base):
+    __tablename__='gpr_matrix'
+    id = Column(Integer, primary_key=True)
+    model_gene_id = Column(Integer, ForeignKey('model_gene.id'), nullable=False)
+    model_reaction_id = Column(Integer, ForeignKey('model_reaction.id'), nullable=False)
+    
+        
 class Component(Base):
 	__tablename__='component'
 	id = Column(Integer, primary_key=True)
@@ -27,6 +45,12 @@ class Compartmentalized_Component(Base):
 	component_id = Column(Integer, ForeignKey('component.id'), nullable=False)
 	compartment_id = Column(Integer, ForeignKey('compartment.id'), nullable=False)
 	UniqueConstraint('compartment_id', 'component_id')
+	
+class Model_Compartmentalized_Component(Base):
+	__tablename__='model_compartmentalized_component'
+	id = Column(Integer, primary_key=True)
+	model_id = Column(Integer, ForeignKey('model.id'), nullable=False)
+	compartmentalized_component_id = Column(Integer, ForeignKey('compartmentalized_component.id'), nullable=False)
 	
 class Compartment(Base):
 	__tablename__='compartment'
@@ -55,7 +79,6 @@ class Reaction_Matrix(Base):
 	id = Column(Integer, primary_key=True)
 	reaction_id = Column(Integer, ForeignKey('reaction.id'), nullable=False)
 	compartmentalized_component_id = Column(Integer, ForeignKey('compartmentalized_component.id'), nullable=False)
-	model_id = Column(Integer, ForeignKey('model.id'))
 	stoichiometry = Column(Numeric)
 	UniqueConstraint('reaction_id', 'compartmentalized_component', 'model_id')
 	
