@@ -1,0 +1,148 @@
+<html>
+{% extends "parentdisplay.html" %}
+
+{% block content %}
+	<style>
+		#bigg{
+			text-align:center;
+		}
+	</style>
+	<h1 id="bigg">BiGG Database</h1>
+	
+	<a href="http://localhost:8888/">Go Back to Search Page
+	</a>
+	<div class="tabbable"> <!-- Only required for left/right tabs -->
+    	<ul class="nav nav-tabs">
+    		<li class="active"><a href="#tab1" data-toggle="tab">All Results</a></li>
+    		<li><a href="#tab2" data-toggle="tab">Model Results</a></li>
+    		<li><a href="#tab3" data-toggle="tab">Reaction Results</a></li>
+    		<li><a href="#tab4" data-toggle="tab">Metabolite Results</a></li>
+    		<li><a href="#tab5" data-toggle="tab">Gene Results</a></li>
+    	</ul>
+    	
+    	<div class="tab-content">
+	    	<div class="tab-pane active" id="tab1">
+	    		<div class="container" style="margin-top: 20px;">
+	    			{% if modelResults%}
+	    			<h2>{{Models}}:</h2>
+	    			{% for values in modelResults %}
+						<div class="panel panel-default">
+	  						<div class="panel-heading">
+	    						<h3 class="panel-title"><a href="/models/{{values}}">{{values}}</a></h3>
+	  						</div>
+	    					<div class="panel-body"> 
+	    						<a href="/models/{{values}}">{{values}}</a>
+	    					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+					{%if reactionResults%}
+					<h2>{{Reactions}}:</h2>
+	    			{% for values in reactionResults %}
+						<div class="panel panel-default">
+	  						<div class="panel-heading">
+	    						<h3 class="panel-title"><a href="/models/{{model}}/reactions/{{values}}">{{values}}</a></h3>
+	  						</div>
+	    					<div class="panel-body"> 
+	    						<a href="/models/{{model}}/reactions/{{values}}">{{values}}</a> 
+	    					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+					{%if metaboliteResults%}
+					<h2>{{Metabolites}}:</h2>
+	    			{% for values in metaboliteResults %}
+						<div class="panel panel-default">
+	  						<div class="panel-heading">
+	    						<h3 class="panel-title"><a href="/models/{{model}}/metabolites/{{values}}">{{values}}</a></h3>
+	  						</div>
+	    					<div class="panel-body"> 
+	    						<a href="/models/{{model}}/metabolites/{{values}}">{{values}}</a> 
+	    					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+					{%if geneResults%}
+					<h2>{{Genes}}:</h2>
+	    			{% for values in geneResults %}
+						<div class="panel panel-default">
+	  						<div class="panel-heading">
+	    						<h3 class="panel-title"><a href="/models/{{model}}/genes/{{values}}">{{values}}</a></h3>
+	  						</div>
+	    					<div class="panel-body"> 
+	    						<a href="/models/{{model}}/genes/{{values}}">{{values}}</a> 
+	    					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+				</div>	
+	    	</div>
+	    	<div class="tab-pane" id="tab2">
+	    		<div class="container" style="margin-top: 20px;">
+	    			{%if modelResults%}
+	    			{% for values in modelResults %}
+						<div class="panel panel-default">
+		  					<div class="panel-heading">
+		    					<h3 class="panel-title"><a href="/models/{{values}}">{{values}}</a></h3>
+		  					</div>
+		  					<div class="panel-body"> 
+		  						<a href="/models/{{values}}">{{values}}</a> 
+		  					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+				</div>				
+	   		</div>
+	    	<div class="tab-pane" id="tab3">
+	    		<div class="container" style="margin-top: 20px;">
+	    			{%if reactionResults%}
+	    			{% for values in reactionResults %}
+						<div class="panel panel-default">
+		  					<div class="panel-heading">
+		    					<h3 class="panel-title"><a href="/models/{{model}}/reactions/{{values}}">{{values}}</a></h3>
+		  					</div>
+		  					<div class="panel-body"> 
+		  						<a href="/models/{{model}}/reactions/{{values}}">{{values}}</a> 
+		  					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+				</div>	
+	    	</div>
+	    	<div class="tab-pane" id="tab4">
+	    		<div class="container" style="margin-top: 20px;">
+	    			{%if metaboliteResults%}
+	    			{% for values in metaboliteResults %}
+						<div class="panel panel-default">
+		  					<div class="panel-heading">
+		    					<h3 class="panel-title"><a href="/models/{{model}}/metabolites/{{values}}">{{values}}</a></h3>
+		  					</div>
+		  					<div class="panel-body"> 
+		  						<a href="/models/{{model}}/metabolites/{{values}}">{{values}}</a> 
+		  					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+				</div>
+	    	</div>
+	    	<div class="tab-pane" id="tab5">
+	    		<div class="container" style="margin-top: 20px;">
+	    			{%if geneResults%}
+	    			{% for values in geneResults %}
+						<div class="panel panel-default">
+		  					<div class="panel-heading">
+		    					<h3 class="panel-title"><a href="/models/{{model}}/genes/{{values}}">{{values}}</a></h3>
+		  					</div>
+		  					<div class="panel-body"> 
+		  						<a href="/models/{{model}}/genes/{{values}}">{{values}}</a> 
+		  					</div> 
+						</div>
+					{% endfor %}
+					{%endif%}
+				</div>
+	    	</div>
+    	</div>
+    </div>
+  
+{% endblock %}	
+</html>
