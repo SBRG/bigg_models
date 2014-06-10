@@ -8,12 +8,13 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 from os.path import abspath, dirname, join
 import json
-from theseus import models
+
 from model import Model, Component, Reaction, Compartment, Metabolite, Compartmentalized_Component, Model_Reaction, Reaction_Matrix, GPR_Matrix, Model_Compartmentalized_Component, Model_Gene, Gene
 from jinja2 import Environment, FileSystemLoader
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from contextlib import contextmanager
+from collections import Counter
 
 
 define("port", default= 8886, help="run on given port", type=int)
@@ -104,23 +105,38 @@ class ReactionDisplayHandler(BaseHandler):
 class ReactionHandler(BaseHandler):
     def get(self, modelName, reactionName):
         session = Session()
-        #selectedModel = models.load_model(modelName)
-        #reactionDict = selectedModel.reactions
-        #reactionx = reactionDict.get_by_id(reactionName)
-        #geneList = []
-        #for gene in reactionx._genes.keys():
-        #    geneList.append(gene.name)
         dictionary = {}
-        #for object in session.query(Model_Reaction)	
-        	#for reaction in session.query(Reaction).filter(Reaction.id == object.reaction_id):
-        		#for comp in session.query(Reaction_Matrix).filter(Reaction_Matrix.reaction_id == reaction.id):
-        			#for metabolite in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.id == comp.compartmentalized_component_id):
         modelreaction = session.query(Model_Reaction, Reaction).join(Reaction).filter(reactionName == Reaction.name).first()[0]
         modelquery = session.query(Model).filter(Model.name == modelName).first()
         reaction = 	session.query(Model_Reaction, Reaction).join(Reaction).filter(reactionName == Reaction.name).first()[1]
-        metabolitelist = [x.identifier for x in session.query(Component).join(Compartmentalized_Component).join(Reaction_Matrix).filter(Reaction_Matrix.reaction_id == reaction.id).all()]
+        metabolitelist = [(x[0].identifier, str(x[1].stoichiometry)) for x in session.query(Component,Reaction_Matrix).join(Compartmentalized_Component).join(Reaction_Matrix).filter(Reaction_Matrix.reaction_id == reaction.id).all()]
+        post_reaction_string = ""
+        pre_reaction_string = ""
+        preCounter = Counter()
+        postCounter = Counter()
+        for metabolite in metabolitelist:
+            if float(metabolite[1]) < 0:
+                preCounter[metabolite[0]] += 1
+            else:
+                postCounter[metabolite[0]] += 1
+        for value in preCounter.keys():
+            if(preCounter[value]>1):
+                pre_reaction_string += str(preCounter[value]) + " " + value + " + "   
+            else:
+                pre_reaction_string += " " + value + " + "   
+        for value in postCounter.keys():
+            if(postCounter[value]>1):
+                post_reaction_string += str(postCounter[value]) + " " + value + " + " 
+            else:
+                post_reaction_string += " " + value + " + "
+                
+        if modelreaction.lowerbound >= 0:
+            reaction_string = pre_reaction_string[:-2] + " -> " + post_reaction_string[:-2]
+        else:
+            reaction_string = pre_reaction_string[:-2] + " <=> " + post_reaction_string[:-2]
         genelist = [x.name for x in session.query(Gene).join(Model_Gene).join(GPR_Matrix).join(Model_Reaction).join(Reaction).filter(reactionName == Reaction.name).all()]
-        dictionary = {"model":modelquery.name, "id": reaction.name, "name": reaction.long_name, "metabolites": metabolitelist, "gene_reaction_rule": modelreaction.gpr, "genes": genelist}      
+        genelist2 = modelreaction.gpr.replace("(","").replace(")","").replace("and","").split()
+        dictionary = {"model":modelquery.name, "id": reaction.name, "name": reaction.long_name, "metabolites": metabolitelist, "gene_reaction_rule": modelreaction.gpr, "genes": genelist2, "reaction_string": reaction_string }      
         data = json.dumps(dictionary)
         self.write(data)
         self.finish()
@@ -154,9 +170,9 @@ class ReactionListDisplayHandler(BaseHandler):
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/reactions' % (options.port, modelName)
         response = yield gen.Task(http_client.fetch, url_request)
-        selectedModel = models.load_model(modelName)
-        model = selectedModel.id.replace(" ","_")
-        dictionary = {"reactionResults":json.loads(response.body),"Reactions":"Reactions","model":model}
+        #selectedModel = models.load_model(modelName)
+        #model = selectedModel.id.replace(" ","_")
+        dictionary = {"reactionResults":json.loads(response.body),"Reactions":"Reactions","model":modelName}
         self.write(template.render(dictionary)) 
         self.finish()	
 
@@ -167,11 +183,6 @@ class ModelHandler(BaseHandler):
             self.write("specify a model")
             self.finish()
         else:
-            modelobject = models.load_model(modelName)
-            genelist = modelobject.genes
-            #reactionlist = modelobject.reactions
-            #metabolitelist = modelobject.metabolites
-            #modelid= modelobject.id.replace(" ","_")
             modelquery = session.query(Model).filter(Model.name == modelName).first()
             reactionquery = session.query(Model_Reaction).filter(Model_Reaction.model_id == modelquery.id).count()
             metabolitequery = session.query(Model_Compartmentalized_Component).filter(Model_Compartmentalized_Component.model_id == modelquery.id).count()
@@ -200,11 +211,8 @@ class ModelListHandler(BaseHandler):
 		uneditedlist = [x.name for x in session.query(Model).all()]
 		
 		#uneditedlist = models.get_model_list()
-		modellist= []
-		for model in uneditedlist:
-			editedModel = model.replace(" ","_")
-			modellist.append(editedModel)
-		data = json.dumps(modellist)    
+
+		data = json.dumps(uneditedlist)    
 		self.write(data)
 		self.finish()
 
@@ -224,12 +232,6 @@ class ModelsListDisplayHandler(BaseHandler):
 class MetaboliteHandler(BaseHandler):
     def get(self, modelName, metaboliteId):
         session = Session()
-        selectedModel = models.load_model(modelName)
-        name = selectedModel.metabolites.get_by_id(metaboliteId).name
-        formula = selectedModel.metabolites.get_by_id(metaboliteId).formula
-        reactions = selectedModel.metabolites.get_by_id(metaboliteId).get_reaction()
-       	model = (selectedModel.id).replace(" ", "_")
-       	#formula or use formula id? inconsistent
        	modelquery = session.query(Model).filter(Model.name == modelName).first()
        	componentquery = session.query(Component).filter(Component.identifier == metaboliteId).first()
 
@@ -254,7 +256,7 @@ class MetaboliteDisplayHandler(BaseHandler):
 class MetaboliteListHandler(BaseHandler):
     def get(self, modelName):
     	session = Session()
-    	metaboliteList = [x.identifier for x in session.query(Component).join(Compartmentalized_Component).join(Reaction_Matrix).join(Model).filter(Model.name == modelName).all()]
+    	metaboliteList = [x.identifier for x in session.query(Component).join(Compartmentalized_Component).join(Model_Compartmentalized_Component).join(Model).filter(Model.name == modelName).all()]
         #selectedModel = models.load_model(modelName)
         #metaboliteList = [x.id for x in selectedModel.metabolites]
         data = json.dumps(metaboliteList)
@@ -265,32 +267,17 @@ class MetabolitesListDisplayHandler(BaseHandler):
     @asynchronous
     @gen.engine
     def get(self, modelName):
-        template = env.get_template("listdisplay.html")
+        template = env.get_template("listdisplay2.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/metabolites' % (options.port, modelName)
         response = yield gen.Task(http_client.fetch, url_request)
-        selectedModel = models.load_model(modelName)
-        model = selectedModel.id.replace(" ","_")
-        dictionary = {"metaboliteResults":json.loads(response.body),"Metabolites":"Metabolites", "model":model}
+        dictionary = {"metaboliteResults":json.loads(response.body),"Metabolites":"Metabolites", "model":modelName}
         self.write(template.render(dictionary)) 
         self.finish()
  
 class GeneHandler(BaseHandler):
     def get(self,modelName,geneId):
         session = Session()
-        """selectedModel =models.load_model(modelName)
-        reactions = selectedModel.genes.get_by_id(geneId).get_reaction()
-        reactionList = []
-        for x in reactions:
-        	list = []
-        	list.append(x.id)
-        	list.append(x.gene_reaction_rule)
-        	geneList = []
-        	for gene in x._genes.keys():
-        		geneList.append(gene.name)
-        	list.append(geneList)
-        	reactionList.append(list)
-        	model = (selectedModel.id).replace(" ","_")"""
         reactionList = []
         
         #reactionquery = session.query(Model_Reaction).join(Model).filter(Model.name == modelName).first()
@@ -298,9 +285,7 @@ class GeneHandler(BaseHandler):
             list = []
             list.append(instance.name)
             list.append(instance.gpr)
-            geneList = []
-            for gene in session.query(Gene).join(Model_Gene).join(GPR_Matrix).filter(GPR_Matrix.model_reaction_id == instance.id):
-                geneList.append(gene.name)
+            geneList = instance.gpr.replace("(","").replace(")","").replace("and","").split()
             list.append(geneList)
             reactionList.append(list)
         dictionary = {"id": geneId, "model":modelName, "reactions": reactionList}

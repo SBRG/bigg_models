@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, ForeignKey, Column, Integer, String, Numer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
-import 
+
 
 Session = sessionmaker()
 

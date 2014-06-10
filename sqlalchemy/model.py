@@ -60,8 +60,9 @@ class Compartment(Base):
 class Model(Base):
 	__tablename__='model'
 	id = Column(Integer, primary_key=True)
-	name = Column(String, unique=True)
+	name = Column(String)
 	firstcreated = Column(DateTime)
+	UniqueConstraint('name', 'firstcreated')
 	
 class Model_Reaction(Base):
 	__tablename__='model_reaction'
@@ -80,7 +81,7 @@ class Reaction_Matrix(Base):
 	reaction_id = Column(Integer, ForeignKey('reaction.id'), nullable=False)
 	compartmentalized_component_id = Column(Integer, ForeignKey('compartmentalized_component.id'), nullable=False)
 	stoichiometry = Column(Numeric)
-	UniqueConstraint('reaction_id', 'compartmentalized_component', 'model_id')
+	UniqueConstraint('reaction_id', 'compartmentalized_component')
 	
 class Reaction(Base):
 	__tablename__='reaction'

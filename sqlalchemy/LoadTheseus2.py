@@ -20,7 +20,7 @@ class IndependentObjects:
 	
 	def loadModels(self, modellist, session):
 		for model in modellist:
-			modelObject = Model(name = model.id, firstcreated = '2008-11-11 13:23:44')
+			modelObject = Model(name = model.id, firstcreated = '2014-09-06 13:23:44')
 			session.add(modelObject)
 			
 	def loadComponents(self, modellist, session):
