@@ -20,7 +20,7 @@ class IndependentObjects:
 	
 	def loadModels(self, modellist, session):
 		for model in modellist:
-			modelObject = Model(name = model.id, firstcreated = '2014-09-06 13:23:44')
+			modelObject = Model(name = model.id, firstcreated = '2014-12-06 12:34:44')
 			session.add(modelObject)
 			
 	def loadComponents(self, modellist, session):
@@ -107,8 +107,8 @@ class DependentObjects:
 					for stoichKey in reaction._metabolites.keys():
 						if stoichKey == metabolite.id:
 							stoichiometryobject = reaction._metabolites[stoichKey]
-					object = Reaction_Matrix(reaction_id = reactionquery.id, compartmentalized_component_id = compartmentalized_component_query.id, stoichiometry = stoichiometryobject)
-					session.add(object)
+					    object = Reaction_Matrix(reaction_id = reactionquery.id, compartmentalized_component_id = compartmentalized_component_query.id, stoichiometry = stoichiometryobject)
+					    session.add(object)
 					
 		"""
 		insert a model and all its reactions and compartmentalized component id
@@ -116,6 +116,9 @@ class DependentObjects:
 		y = select compartment.id where compartment.name = reaction.compartment
 		z = select compartmentalized component where component = x and compartment = y
 		insert ReactionMatrix(model.id, model.reaction, z)
+		metabolite 217533 - 384507
+		gene 146482 - 313402
+		reaction 434095 - 607912
 		"""
 		
 @contextmanager
@@ -140,13 +143,13 @@ def run_program():
 		IndependentObjects().loadComponents(modelObjectList,session)
 		IndependentObjects().loadCompartments(modelObjectList, session)
 		IndependentObjects().loadReactions(modelObjectList, session)
-		DependentObjects().loadMetabolites(modelObjectList, session)
+		"""DependentObjects().loadMetabolites(modelObjectList, session)
 		DependentObjects().loadModelGenes(modelObjectList, session)		
 		DependentObjects().loadCompartmentalizedComponent(modelObjectList, session)
 		DependentObjects().loadModelReaction(modelObjectList, session)
 		DependentObjects().loadReactionMatrix(modelObjectList, session)
 		DependentObjects().loadGPRMatrix(modelObjectList, session)
-		DependentObjects().loadModelCompartmentalizedComponent(modelObjectList, session)
+		DependentObjects().loadModelCompartmentalizedComponent(modelObjectList, session)"""
 		
 if __name__ == '__main__':
 	run_program()
