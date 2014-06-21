@@ -102,6 +102,9 @@ def loadModelGenes(geneTable, modelTable, grmitsession, bigg2session):
             modelGeneObject = Model_Gene(model_id = m.id, gene_id = g.id)
             bigg2session.add(modelGeneObject)
             bigg2session.commit()
+            map = Map(bigg_id = modelGeneObject.id, grmit_id = g.id, category="model_gene")
+            bigg2session.add(map)
+            bigg2session.commit()
             grmitsession.close()
             bigg2session.close()
 
@@ -109,8 +112,8 @@ def loadCompartmentalizedComponent(metaboliteTable, grmitsession, bigg2session):
     for metabolite in grmitsession.query(metaboliteTable):
         for compartment in grmitsession.query(compartmentTable).filter(compartmentTable.c.name == metabolite.compartment):
             metaboliteMap = bigg2session.query(Map).filter(Map.category=="metabolite").filter(Map.grmit_id == metabolite.molecule_id).first()
-            m = bigg2session.query(Component).filter(Component.id == metaboliteMap.bigg_id).first()
-            compartmentalizedComponent = Compartmentalized_Component(component_id = m.id, compartment_id = compartment.id)
+            #m = bigg2session.query(Component).filter(Component.id == metaboliteMap.bigg_id).first()
+            compartmentalizedComponent = Compartmentalized_Component(component_id = metaboliteMap.bigg_id, compartment_id = compartment.id)
             bigg2session.add(compartmentalizedComponent)
             bigg2session.commit()
             map = Map(bigg_id =compartmentalizedComponent.id, grmit_id = metabolite.molecule_id, category = "compartmentalized_component")
@@ -122,7 +125,7 @@ def loadCompartmentalizedComponent(metaboliteTable, grmitsession, bigg2session):
 def loadModelCompartmentalizedComponent(metaboliteTable, grmitsession, bigg2session):
     for metabolite in grmitsession.query(metaboliteTable):
         compartmentalizedcomponentMap = bigg2session.query(Map).filter(Map.category == "compartmentalized_component").filter(Map.grmit_id == metabolite.molecule_id).first()
-        modelMap = bigg2session.query(Map).filter(Map.category=="model").filter(Map.grmit_id == metabolite.modelversion_id)
+        modelMap = bigg2session.query(Map).filter(Map.category=="model").filter(Map.grmit_id == metabolite.modelversion_id).first()
         object = Model_Compartmentalized_Component(compartmentalized_component_id = compartmentalizedcomponentMap.bigg_id, model_id = modelMap.bigg_id)
         bigg2session.add(object)
         bigg2session.commit()
@@ -130,7 +133,37 @@ def loadModelCompartmentalizedComponent(metaboliteTable, grmitsession, bigg2sess
         grmitsession.close()
 
 def loadModelReaction(reactionTable, grmitsession, bigg2session):
-           
+    for reaction in grmitsession.query(reactionTable):
+        modelMap = bigg2session.query(Map).filter(Map.category=="reaction").filter(Map.grmit_id == reaction.modelversion_id).first()
+        reactionMap = bigg2session.query(Map).filter(Map.category=="reaction").filter(Map.grmit_id == reaction.reaction_id).first()
+        object = Model_Reaction(reaction_id = reactionMap.bigg_id, model_id = modelMap.bigg_id, name = reaction.abbreviation, gpr = reaction.gpr, lowerbound = reaction.lower_bound, upperbound = reaction.upper_bound)
+        bigg2session.add(object)
+        bigg2session.commit()
+        map = Map(bigg_id = object.id, grmit_id = reaction.reaction_id, category = "model_reaction")
+        bigg2session.add(map)
+        bigg2session.commit()
+        bigg2session.close()
+        grmitsession.close()
+
+def loadGPRMatrix(gprTable, grmitsession, bigg2session):
+    for gpr in grmitsession.query(gprTable):
+        geneMap = bigg2session.query(Map).filter('model_gene').filter(Map.grmit_id == gpr.gene_id).first()
+        reactionMap = bigg2session.query(Map).filter('model_reaction').filter(Map.grmit_id == gpr.reaction_id).first()
+        object = GPR_Matrix(model_gene_id = geneMap.bigg_id, model_reaction_id = reactionMap.bigg_id)
+        bigg2session.add(object)
+        bigg2session.commit()
+        bigg2session.close()
+        gmitsession.close()
+
+def loadReactionMatrix(reactionmetaboliteTable, grmitsession, bigg2session):
+    for reactionmetabolite in grmitsession.query(reactionmetaboliteTable):
+        reactionMap = bigg2session.query(Map).filter('reaction').filter(Map.grmit_id == reactionmetabolite.reaction_id).first()
+        compartmentalizedcomponentMap = bigg2session.(Map).filter('compartmentalized_component').filter(Map.grmit_id = reactionmetabolite.molecule_id).first()
+        object = Reaction_Matrix(reaction_id = reactionMap.bigg_id, compartmentalized_component_id = compartmentalizedcomponentMap.bigg_id, stoichiometry = reactionmetabolite.s)
+        bigg2session.add(object)
+        bigg2session.commit()
+        bigg2session.close()
+        grmitsession.close()        
 """
 def loadModelGenes(geneTable, modelTable, grmitsession, bigg2sesssion):
     for model in grmitsession.query(modelTable):
