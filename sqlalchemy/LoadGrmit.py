@@ -85,12 +85,11 @@ def loadGenes(geneTable, grmitsession, bigg2session):
         
       
 def loadMetabolites(metaboliteTable, grmitsession, bigg2session):
-    for instance in session.query(Component):
+    for instance in bigg2session.query(Component):
         metaboliteObject = Metabolite(id=instance.id)
-        session.add(metaboliteObject)
+        bigg2session.add(metaboliteObject)
         bigg2session.commit()
-        grmitsession.close()
-        bigg2sesson.close()
+        bigg2session.close()
         
 def loadModelGenes(geneTable, modelTable, grmitsession, bigg2session):
     for model in grmitsession.query(modelTable):
@@ -158,7 +157,7 @@ def loadGPRMatrix(gprTable, grmitsession, bigg2session):
 def loadReactionMatrix(reactionmetaboliteTable, grmitsession, bigg2session):
     for reactionmetabolite in grmitsession.query(reactionmetaboliteTable):
         reactionMap = bigg2session.query(Map).filter('reaction').filter(Map.grmit_id == reactionmetabolite.reaction_id).first()
-        compartmentalizedcomponentMap = bigg2session.(Map).filter('compartmentalized_component').filter(Map.grmit_id = reactionmetabolite.molecule_id).first()
+        compartmentalizedcomponentMap = bigg2session.query(Map).filter('compartmentalized_component').filter(Map.grmit_id == reactionmetabolite.molecule_id).first()
         object = Reaction_Matrix(reaction_id = reactionMap.bigg_id, compartmentalized_component_id = compartmentalizedcomponentMap.bigg_id, stoichiometry = reactionmetabolite.s)
         bigg2session.add(object)
         bigg2session.commit()
@@ -227,6 +226,17 @@ loadComponent(metaboliteTable, grmitsession, bigg2session)
 loadCompartmentalizedComponent(metaboliteTable, grmitsession, bigg2session)
 loadModelCompartmentalizedComponent(metaboliteTable, grmitsession, bigg2session)
 """
+
 loadModel(modelTable, grmitsession, bigg2session)
+loadComponent(metaboliteTable, grmitsession, bigg2session)
+loadReaction(reactionTable, grmitsession, bigg2session)
+loadCompartment(metaboliteTable, grmitsession, bigg2session)
+loadMetabolites(metaboliteTable, grmitsession, bigg2session)
+loadCompartmentalizedComponent(metaboliteTable, grmitsession, bigg2session)
+loadModelCompartmentalizedComponent(metaboliteTable, grmitsession, bigg2session)
+loadModelReaction(reactionTable, grmitsession, bigg2session)
 loadGenes(geneTable, grmitsession, bigg2session)
+loadGPRMatrix(gprTable, grmitsession, bigg2session)
+loadReactionMatrix(reactionmetaboliteTable, grmitsession, bigg2session)
+
 loadModelGenes(geneTable, modelTable, grmitsession, bigg2session)

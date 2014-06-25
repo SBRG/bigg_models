@@ -99,5 +99,5 @@ class Map(Base):
    grmit_id = Column(Integer)
    category = Column(String)
    UniqueConstraint('bigg_id', 'grmit_id')
-Base.metadata.drop_all(engine)
-Base.metadata.create_all(engine)
+
+#Base.metadata.create_all(engine)

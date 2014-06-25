@@ -9,8 +9,7 @@
 	</style>
 	<h1 id="bigg">BiGG Database</h1>
 	
-	<a href="http://localhost:8888/">Go Back to Search Page
-	</a>
+
 	<div class="tabbable"> <!-- Only required for left/right tabs -->
     	<ul class="nav nav-tabs">
     		<li class="active"><a href="#tab1" data-toggle="tab">All Results</a></li>
@@ -85,7 +84,7 @@
 	    			<h3 style="text-align:center;">{{Genes}}:</h3>
 	    			<table class="table table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;">
 	    			<tr>
-	    			{% for values in metaboliteResults %}
+	    			{% for values in geneResults %}
 	    				{% if loop.index is divisibleby 3 %}
 	    				<td><a href="/models/{{model}}/genes/{{values}}">{{values}}</a></td>
 	    				</tr>
@@ -162,7 +161,7 @@
 	    			<h3 style="text-align:center;">{{Genes}}:</h3>
 	    			<table class="table table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;">
 	    			<tr>
-	    			{% for values in metaboliteResults %}
+	    			{% for values in geneResults %}
 	    				{% if loop.index is divisibleby 3 %}
 	    				<td><a href="/models/{{model}}/genes/{{values}}">{{values}}</a></td>
 	    				</tr>

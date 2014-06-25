@@ -20,7 +20,7 @@ class IndependentObjects:
 	
 	def loadModels(self, modellist, session):
 		for model in modellist:
-			modelObject = Model(name = model.id, firstcreated = '2014-12-06 12:34:44')
+			modelObject = Model(name = model.id, firstcreated = '')
 			session.add(modelObject)
 			
 	def loadComponents(self, modellist, session):
@@ -58,8 +58,6 @@ class DependentObjects:
 				object = Model_Gene(model_id = modelquery.id, gene_id = genequery.id)
 				session.add(object)
 				
-
-	
 	def loadCompartmentalizedComponent(self, modellist, session):		
 		for component in session.query(Component):
 			identifier = session.query(Compartment).filter(Compartment.name == component.identifier[-1:len(component.identifier)]).first()
@@ -143,13 +141,6 @@ def run_program():
 		IndependentObjects().loadComponents(modelObjectList,session)
 		IndependentObjects().loadCompartments(modelObjectList, session)
 		IndependentObjects().loadReactions(modelObjectList, session)
-		"""DependentObjects().loadMetabolites(modelObjectList, session)
-		DependentObjects().loadModelGenes(modelObjectList, session)		
-		DependentObjects().loadCompartmentalizedComponent(modelObjectList, session)
-		DependentObjects().loadModelReaction(modelObjectList, session)
-		DependentObjects().loadReactionMatrix(modelObjectList, session)
-		DependentObjects().loadGPRMatrix(modelObjectList, session)
-		DependentObjects().loadModelCompartmentalizedComponent(modelObjectList, session)"""
 		
 if __name__ == '__main__':
 	run_program()
