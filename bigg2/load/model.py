@@ -10,6 +10,11 @@ metadata = MetaData(bind=engine)
 
 Session = sessionmaker(bind=engine)
 session = Session()
+"""session.execute('CREATE EXTENSION pg_trgm;')
+session.execute('CREATE INDEX reaction_name_trigram_idx ON reaction USING gin (to_tsvector("english",name));')
+session.execute('CREATE INDEX model_name_trigram_idx ON reaction USING gin (to_tsvector("english",name));')
+session.execute('CREATE INDEX component_name_trigram_idx ON reaction USING gin (to_tsvector("english",name));')
+session.execute('CREATE INDEX gene_name_trigram_idx ON reaction USING gin (to_tsvector("english",name));')"""
 
 class Gene(Base):
 	__tablename__='gene'
@@ -35,6 +40,7 @@ class Component(Base):
 	identifier = Column(String)
 	name = Column(String)
 	formula = Column(String)
+	#keggid = Column(String)
 	
 class Metabolite(Base):
 	__tablename__='metabolite'

@@ -108,17 +108,6 @@ class DependentObjects:
 					    object = Reaction_Matrix(reaction_id = reactionquery.id, compartmentalized_component_id = compartmentalized_component_query.id, stoichiometry = stoichiometryobject)
 					    session.add(object)
 					
-		"""
-		insert a model and all its reactions and compartmentalized component id
-		x = select component.id where component.name = reaction.component
-		y = select compartment.id where compartment.name = reaction.compartment
-		z = select compartmentalized component where component = x and compartment = y
-		insert ReactionMatrix(model.id, model.reaction, z)
-		metabolite 217533 - 384507
-		gene 146482 - 313402
-		reaction 434095 - 607912
-		"""
-		
 @contextmanager
 def create_Session():
 	session = Session()

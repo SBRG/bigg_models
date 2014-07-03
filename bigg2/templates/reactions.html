@@ -9,19 +9,26 @@
 					<p class="lead">Model: <br><a href="/models/{{model}}">{{ model }}</a></p>
 					
 					<p class="lead">Reaction String:</p>
-					{{reaction_string}}
+					<p class="lead">{{reaction_string}}</p>
 					<br>
 					<br>
 					<br>
-					<div class="list-group">
+					<div class="panel panel-default">
   						<a href="#metabolitelist" class="list-group-item active">
-    						<span class="lead">Metabolites:</span>
+    						<div class="panel-heading"><span class="lead">Metabolites:</span></div>
   						</a>
+  						<table class="table">
+  						
   						{% for metabolite in metabolites %}
-  						<a href="/models/{{model}}/metabolites/{{metabolite}}" class="list-group-item">{{metabolite}}</a>
+  						<tr>
+  						<td><a href="/models/{{model}}/metabolites/{{metabolite[0]}}">{{metabolite[0]}}</a></td>
+  						<td>{{metabolite[1]}}</td>
+  						</tr>
   						{% endfor %}
+  						
+  						</table>
 					</div>
-					<p class="lead">Gene Reaction Rule: <br>{{geneReactionRule}}</p>
+					<p class="lead">Gene Reaction Rule: <br>{{gene_reaction_rule}}</p>
 					<p class="lead">Genes: {% for gene in genes %} <a href=/models/{{model}}/genes/{{gene}}>{{gene}} </a>{% endfor %}</p>
 					<hr>
 					<h2> Map </h2>
@@ -41,6 +48,10 @@
       						<input type="text" class="form-control">
     					</div>
                     </div>
+                     <div class="well">
+                    	<h4>Map</h4>
+                    	<button class="btn btn-default" type="button">View Map</button>
+                	</div>
                     <div class="well">
                     	<h4>Citations</h4>
                     	<ul class="list-unstyled">
@@ -54,6 +65,7 @@
                                 </li>
                         </ul>
                 	</div>
+                	   
                     <!-- /input-group -->
                 </div>
 				

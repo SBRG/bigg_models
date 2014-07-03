@@ -17,7 +17,7 @@
     <link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
 
     <!-- Add custom CSS here -->
-    <link href="assets/frontpage.css" rel="stylesheet">
+    <link href="static/css/frontpage.css" rel="stylesheet">
 	<style>
 		
 		.intro-divider{margin-bottom:100px;}
@@ -67,13 +67,15 @@
                         <h1>BiGG Database </h1>
                         <h3>Hosted and Maintained by SBRG</h3>
                         <hr class="intro-divider">
-                       <input type="text" class="form-control" placeholder="Search Database">
+                        <form action = "/listdisplay" method="get">
+                       <input type="text" name="input" class="form-control" placeholder="Search Database">
+                       </form>
                     </div>
                       <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
-      <img src="/assets/f21.png" alt="...">
+      <img src="/static/assets/f21.png" alt="...">
       <div class="caption">
-        <h3>Models</h3>
+        <a href=/models><h3>Models</h3></a>
         <p>...</p>
         
       </div>
@@ -81,17 +83,17 @@
   </div>
     <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
-      <img src="/assets/f22.png" alt="...">
+      <img src="/static/assets/f22.png" alt="...">
       <div class="caption">
-        <h3>Thumbnail label</h3>
+        <h3>Metabolites</h3>
         <p>...</p>
         
       </div>
     </div>
   </div>
-                        <div class="col-sm-6 col-md-4">
+    <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
-      <img src="/assets/f23.png" alt="...">
+      <img src="/static/assets/f23.png" alt="...">
       <div class="caption">
         <h3>Reactions</h3>
         <p>...</p>

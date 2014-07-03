@@ -38,6 +38,15 @@ def loadComponent(metaboliteTable, grmitsession, bigg2session):
     for id in modelversionID:
         for instance in grmitsession.query(metaboliteTable).filter(metaboliteTable.c.modelversion_id == id):
             componentObject = Component(identifier = instance.abbreviation, name = instance.officialname, formula = instance.formula)
+            """ componentquery = bigg2session.query(Component).filter(identifier == instance.abbreviation)
+                if componentquery.count()>0:
+                    //don't add new component object and only add mapp 
+                    component = componentquery.first() 
+                    map = Map(bigg_id = component.id, grmit_id = instance.molecule_id, category="metabolite") 
+                    bigg2session.add(map)
+                    bigg2session.commit()
+                    grmitsession.close()
+                    bigg2session.close()"""
             bigg2session.add(componentObject)
             bigg2session.commit()
             map = Map(bigg_id = componentObject.id, grmit_id = instance.molecule_id, category = "metabolite")
