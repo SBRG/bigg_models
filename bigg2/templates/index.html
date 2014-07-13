@@ -8,10 +8,10 @@
     <meta name="author" content="">
 
     <title>BiGG Database</title>
-
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-
+    
     <!-- Custom Google Web Font -->
    <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
     <link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
@@ -67,8 +67,8 @@
                         <h1>BiGG Database </h1>
                         <h3>Hosted and Maintained by SBRG</h3>
                         <hr class="intro-divider">
-                        <form action = "/listdisplay" method="get">
-                       <input type="text" name="input" class="form-control" placeholder="Search Database">
+                        <form action = "/search" method="get">
+                       <input id ="search" type="text" name="query" class="form-control" placeholder="Search Database"></input>
                        </form>
                     </div>
                       <div class="col-sm-6 col-md-4">
@@ -194,7 +194,29 @@
 			</div>
 		</div>
     <!-- JavaScript -->
+
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
+        <script>
+    $(function() {
+    
+    $("#search").autocomplete({
+    source: function (request, response) {
+        $.get("autocomplete", {
+            query: request.term
+        }, function (data) {
+            // assuming data is a JavaScript array such as
+            // ["one@abc.de", "onf@abc.de","ong@abc.de"]
+            // and not a string
+            response(data)
+            
+          
+        });
+    },
+    minLength: 3
+});
+});
+    </script>
 		<!--<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>-->
 		<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
 

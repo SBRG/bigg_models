@@ -45,7 +45,9 @@
       						<span class="input-group-btn">
         						<button class="btn btn-default" type="button">Go!</button>
       						</span>
-      						<input type="text" class="form-control">
+      						<form action = "/search" method="get">
+                       <input id ="search" type="text" name="query" class="form-control" placeholder="Search Database"></input>
+                       </form>
     					</div>
                     </div>
                      <div class="well">
@@ -53,16 +55,12 @@
                     	<button class="btn btn-default" type="button">View Map</button>
                 	</div>
                     <div class="well">
-                    	<h4>Citations</h4>
+                    	<h4>{{id}} in other Models:</h4>
                     	<ul class="list-unstyled">
-                                <li><a href="#dinosaurs">Dinosaurs</a>
+                                {% for altmodel in altModelList %}
+                                <li style="text-align: center"><a href="/models/{{altmodel}}/reactions/{{id}}">{{altmodel}}</a>
                                 </li>
-                                <li><a href="#spaceships">Spaceships</a>
-                                </li>
-                                <li><a href="#fried-foods">Fried Foods</a>
-                                </li>
-                                <li><a href="#wild-animals">Wild Animals</a>
-                                </li>
+                                {% endfor %}
                         </ul>
                 	</div>
                 	   
@@ -79,5 +77,6 @@
         		</footer>
 					
 			</div>
+			
 		{% endblock %}	
 </html>

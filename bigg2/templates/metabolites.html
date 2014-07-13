@@ -3,7 +3,7 @@
 		{% block content %}
 			<div class="container">
 				<div class="col-lg-8">
-    				<h1>Metabolite: <br><span style="text-transform:capitalize;">{{id}}</span></h1>
+    				<h1>Metabolite: <br><span>{{id}}</span></h1>
     				<hr>
 					<p class="lead">Metabolite name: <br>{{name}}</p>
 					<p class="lead">Model: <br><a href="/models/{{model}}">{{ model }}</a></p>
@@ -40,16 +40,12 @@
     					</div>
                     </div>
                     <div class="well">
-                    	<h4>Citations</h4>
+                    	<h4>{{id}} in other Models:</h4>
                     	<ul class="list-unstyled">
-                                <li><a href="#dinosaurs">Dinosaurs</a>
+                                {% for altmodel in altModelList %}
+                                <li style="text-align: center"><a href="/models/{{altmodel}}/metabolites/{{id}}">{{altmodel}}</a>
                                 </li>
-                                <li><a href="#spaceships">Spaceships</a>
-                                </li>
-                                <li><a href="#fried-foods">Fried Foods</a>
-                                </li>
-                                <li><a href="#wild-animals">Wild Animals</a>
-                                </li>
+                                {% endfor %}
                         </ul>
                 	</div>
                     <!-- /input-group -->

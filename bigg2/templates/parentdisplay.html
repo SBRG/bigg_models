@@ -2,13 +2,14 @@
 <html lang="en">
 	<head>
 		<!-- add in autocomplete with categories, data-toggle the model selects, figure out popovers -->
+		<title>BiGG Database</title>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 		<link rel="stylesheet" type="text/css" href="/static/css/style.css">
-		<!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" />-->
 		<link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+		<link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
 	</head>
 	<body>		
 		{% block navbar %}	
@@ -39,13 +40,15 @@
 						
 					</ul>
 					<ul class="nav navbar-nav navbar-right">
-						<form class="navbar-form" role="search">
-							<button type="submit" class="btn btn-default">Search</button>
+				        
+						<form class="navbar-form" action = "/search" method="get">
+						<button type="submit" class="btn btn-default">Search</button>
 							<div class="form-group">
-								<input type="text" class="form-control" placeholder="Search" name="srch-term" id="srch-term">
-							</div>
+                       <input id ="search1" type="text" name="query" class="form-control" placeholder="Search Database" style="width:330px;"></input>
+                            </div>
 						</form>
 						
+                       
 					</ul>
 					
 				</div>
@@ -57,9 +60,30 @@
 		
 		{% endblock %}
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
 		<!--<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>-->
 		<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="/static/js/script.js"></script>
+		        <script>
+    $(function() {
+    
+    $("#search").autocomplete({
+    source: function (request, response) {
+        $.get("/autocomplete", {
+            query: request.term
+        }, function (data) {
+            // assuming data is a JavaScript array such as
+            // ["one@abc.de", "onf@abc.de","ong@abc.de"]
+            // and not a string
+            response(data)
+            
+          
+        });
+    },
+    minLength: 3
+});
+});
+    </script>
 		
 	</body>
 </html>
