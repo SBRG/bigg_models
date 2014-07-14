@@ -7,7 +7,7 @@ from tornado.web import StaticFileHandler, RequestHandler, authenticated, asynch
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 from os.path import abspath, dirname, join
-import json
+import simplejson as json
 from load.model import (Model, Component, Reaction,Compartment, Metabolite,
                         Compartmentalized_Component, Model_Reaction, Reaction_Matrix,
                         GPR_Matrix, Model_Compartmentalized_Component, Model_Gene, Gene)
@@ -118,10 +118,11 @@ class ReactionHandler(BaseHandler):
         genelist = ReactionQuery().get_gene_list(reactionName, session)
         templist = modelreaction.gpr.replace("(","").replace(")","").split()
         genelist2 = [name for name in templist if name !="or" and name !="and"]
+        sortedMetaboliteList = sorted(metabolitelist, key=lambda metabolite: metabolite[0])
         dictionary = {"model":modelquery.name, "id": reaction.name, "name": reaction.long_name, 
-                        "metabolites": metabolitelist, "gene_reaction_rule": modelreaction.gpr, 
+                        "metabolites": sortedMetaboliteList, "gene_reaction_rule": modelreaction.gpr, 
                         "genes": genelist2, "reaction_string": reaction_string, "altModelList": altModelList }      
-        data = json.dumps(dictionary)
+        data = json.dumps(dictionary, use_decimal=True)
         self.write(data)
         self.set_header('Content-type','json')
         self.finish()
@@ -348,7 +349,8 @@ class MetaboliteHandler(BaseHandler):
                 model = MetaboliteQuery().get_model(model_reaction, session)
                 if model.name == modelquery.name:
                     reactionlist.append(x.name)
-        dictionary = {'name': componentquery.name, 'id': metaboliteId, 'model': modelquery.name, 'formula': componentquery.formula,'reactions':reactionlist, "altModelList": altModelList}
+        sortedReactionList = sorted(reactionlist)
+        dictionary = {'name': componentquery.name, 'id': metaboliteId, 'model': modelquery.name, 'formula': componentquery.formula,'reactions':sortedReactionList, "altModelList": altModelList}
         data = json.dumps(dictionary)
         self.write(data)
         self.set_header('Content-type','json')
