@@ -13,7 +13,7 @@ from load.model import (Model, Component, Reaction,Compartment, Metabolite,
                         GPR_Matrix, Model_Compartmentalized_Component, Model_Gene, Gene)
 from jinja2 import Environment, FileSystemLoader
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc, func
 from contextlib import contextmanager
 from collections import Counter
 from load.queries import (ReactionQuery, ModelQuery, MetaboliteQuery,
@@ -63,6 +63,7 @@ class Application(tornado.web.Application):
                     (r"/search$",SearchHandler),
                     (r"/autocomplete$",AutoCompleteHandler),
                     (r"/advancesearch$",FormHandler),
+                    (r"/webapi$",WebApiHandler),
                     (r"/static/(.*)$", StaticFileHandler,{'path':join(directory, 'static')})
         ]
         settings = {
@@ -93,11 +94,21 @@ class AboutHandler(BaseHandler):
         self.write(template.render())
         self.set_header('Content-type','text/html')
         self.finish()
+        
+class WebApiHandler(BaseHandler):
+    def get(self):
+        template = env.get_template('webapi.html')
+        self.write(template.render())
+        self.set_header('Content-type','text/html')
+        self.finish()
 
 class FormHandler(BaseHandler):
     def get(self):
         template = env.get_template('advancesearch.html')
-        self.write(template.render())
+        session = Session()
+        modellist = ModelQuery().get_model_list(session)
+        dictionary = {"modelResults":modellist}
+        self.write(template.render(dictionary))
         self.set_header('Content-type','text/html') 
         self.finish()
         
@@ -193,34 +204,29 @@ class SearchHandler(BaseHandler):
         modellist = []
         genelist = []
         
-        reactionQuery = "SELECT id, name, similarity(name,'"+input+"') as sim FROM reaction WHERE name % '"+input +"' AND similarity(name,'"+input+"')>"+similarityBoundary+" ORDER BY sim DESC"
-        result = session.execute(reactionQuery)
+        result = session.query(Reaction.id, Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            for reaction in session.query(Model_Reaction).filter(Model_Reaction.reaction_id == row['id']).all():   
+            for reaction in session.query(Model_Reaction).filter(Model_Reaction.reaction_id == row.id).all():   
                 model = session.query(Model).filter(Model.id == reaction.model_id).first()
-                reactionlist.append([model.name, row['name']])
+                reactionlist.append([model.name, row.name])
         
-        componentQuery = "SELECT id, identifier, similarity(identifier,'"+input+"') as sim FROM component WHERE identifier % '"+input +"' AND (similarity(identifier,'"+input+"')>"+similarityBoundary+") ORDER BY sim DESC"
-        result = session.execute(componentQuery)
-        
+        result = session.query(Component.id, Component.identifier, func.similarity(Component.identifier, str(input)).label("sim")).filter(Component.identifier % str(input)).filter(func.similarity(Component.identifier, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == row['id']).all():
+            for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == row.id).all():
                 for mcc in session.query(Model_Compartmentalized_Component).filter(Model_Compartmentalized_Component.compartmentalized_component_id ==cc.id).all():
                     model = session.query(Model).filter(Model.id == mcc.model_id).first()
-                    metabolitelist.append([model.name, row['identifier']]) 
-        
-        modelQuery = "SELECT id, name, similarity(name,'"+input+"') as sim FROM model WHERE name % '"+input +"' AND (similarity(name,'"+input+"')>"+similarityBoundary+") ORDER BY sim DESC"
-        result = session.execute(modelQuery)   
+                    metabolitelist.append([model.name, row.identifier]) 
+           
+        result = session.query(Model.id, Model.name, func.similarity(Model.name, str(input)).label("sim")).filter(Model.name % str(input)).filter(func.similarity(Model.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            modellist.append(row['name']) 
+            modellist.append(row.name) 
         
-        geneQuery = "SELECT id, name, similarity(name,'"+input+"') as sim FROM gene WHERE name % '"+input +"' AND similarity(name,'"+input+"')>"+similarityBoundary+" ORDER BY sim DESC"
-        result = session.execute(geneQuery)
+        result = session.query(Gene.id, Gene.name, func.similarity(Gene.name, str(input)).label("sim")).filter(Gene.name % str(input)).filter(func.similarity(Gene.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            model_gene = session.query(Model_Gene).filter(Model_Gene.gene_id == row['id']).first()
+            model_gene = session.query(Model_Gene).filter(Model_Gene.gene_id == row.id).first()
             model = session.query(Model).filter(Model.id == model_gene.model_id).first()
-            genelist.append([model.name, row['name']])
-        
+            genelist.append([model.name, row.name])
+        session.close()
         reactionData = json.dumps(reactionlist)
         metaboliteData = json.dumps(metabolitelist)
         modelData = json.dumps(modellist)
@@ -245,25 +251,23 @@ class AutoCompleteHandler(BaseHandler):
         modellist = []
         genelist = []
         
-        reactionQuery = "SELECT DISTINCT name, similarity(name,'"+input+"') as sim FROM reaction WHERE name % '"+input +"' AND similarity(name,'"+input+"')>"+similarityBoundary+" ORDER BY sim DESC"
-        result = session.execute(reactionQuery)
+        result = session.query(Reaction.id, Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            reactionlist.append([row['name'],row['sim']])
+            reactionlist.append([row.name,row.sim])
+               
+        result = session.query(Component.id, Component.identifier, func.similarity(Component.identifier, str(input)).label("sim")).filter(Component.identifier % str(input)).filter(func.similarity(Component.identifier, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        for row in result:
+            metabolitelist.append([row.identifier,row.sim]) 
         
-        componentQuery = "SELECT identifier, similarity(identifier,'"+input+"') as sim FROM component WHERE identifier % '"+input +"' AND (similarity(identifier,'"+input+"')>"+similarityBoundary+") ORDER BY sim DESC "
-        result = session.execute(componentQuery)       
+        result = session.query(Model.id, Model.name, func.similarity(Model.name, str(input)).label("sim")).filter(Model.name % str(input)).filter(func.similarity(Model.name, str(input))> similarityBoundary).order_by(desc('sim')).all()   
         for row in result:
-            metabolitelist.append([row['identifier'],row['sim']]) 
+            modellist.append([row.name,row.sim]) 
         
-        modelQuery = "SELECT DISTINCT name, similarity(name,'"+input+"') as sim FROM model WHERE name % '"+input +"' AND (similarity(name,'"+input+"')>"+similarityBoundary+") ORDER BY sim DESC"
-        result = session.execute(modelQuery)   
+        result = session.query(Gene.id, Gene.name, func.similarity(Gene.name, str(input)).label("sim")).filter(Gene.name % str(input)).filter(func.similarity(Gene.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            modellist.append([row['name'],row['sim']]) 
-        
-        geneQuery = "SELECT DISTINCT name, similarity(name,'"+input+"') as sim FROM gene WHERE name % '"+input +"' AND similarity(name,'"+input+"')>"+similarityBoundary+" ORDER BY sim DESC"
-        result = session.execute(geneQuery)
-        for row in result:
-            genelist.append([row['name'],row['sim']])
+            genelist.append([row.name,row.sim])
+            
+        session.close()
         
         x = 0
         dictionary = {}
