@@ -3,9 +3,9 @@
 		{% block content %}
 			<div class="container">
 				<div class="col-lg-8">
-    				<h1>Reaction: <br><span style="text-transform:capitalize;">{{id}}</span></h1>
+    				<h1>Reaction: <br><span>{{id}}</span></h1>
     				<hr>
-					<p class="lead">Reaction name: <br>{{name}}</p>
+					<!--<p class="lead">Reaction name: <br>{{name}}</p>--!>
 					<p class="lead">Model: <br><a href="/models/{{model}}">{{ model }}</a></p>
 					
 					<p class="lead">Reaction String:</p>
@@ -31,7 +31,7 @@
 					<p class="lead">Gene Reaction Rule: <br>{{gene_reaction_rule}}</p>
 					<p class="lead">Genes: {% for gene in genes %} <a href=/models/{{model}}/genes/{{gene}}>{{gene}} </a>{% endfor %}</p>
 					<hr>
-					<h2> Map </h2>
+					<h2> Escher Map </h2>
 					<img src="http://placehold.it/900x300" class="img-responsive">
 					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ac vestibulum ante. In ut pharetra nibh. Quisque sollicitudin felis vel enim viverra fermentum. Nulla sit amet odio gravida, egestas enim eget, lobortis mi. Aliquam diam augue, pellentesque eget orci non, aliquet cursus sapien. Mauris feugiat dignissim mauris, et consequat magna ultricies ac. Cras ut lectus magna. Integer at felis ultrices, ultrices dolor et, dictum lectus. </p>
                 <a class="btn btn-primary" href="#">Read More <span class="glyphicon glyphicon-chevron-right"></span></a>
@@ -51,16 +51,23 @@
     					</div>
                     </div>
                      <div class="well">
-                    	<h4>Map</h4>
+                    	<h4>View Escher Map</h4>
                     	<button class="btn btn-default" type="button">View Map</button>
                 	</div>
                     <div class="well">
                     	<h4>{{id}} in other Models:</h4>
                     	<ul class="list-unstyled">
+                    	<li style="text-align: center">
                                 {% for altmodel in altModelList %}
-                                <li style="text-align: center"><a href="/models/{{altmodel}}/reactions/{{id}}">{{altmodel}}</a>
-                                </li>
+                                
+                                {% if loop.index is divisibleby 3 %}
+                                </li><li style="text-align: center"><a href="/models/{{altmodel}}/reactions/{{id}}">{{altmodel}}</a>
+                                {% else %}
+                                    <a href="/models/{{altmodel}}/reactions/{{id}}">{{altmodel}}</a>
+                                {% endif %}
+                                
                                 {% endfor %}
+                                </li>
                         </ul>
                 	</div>
                 	   

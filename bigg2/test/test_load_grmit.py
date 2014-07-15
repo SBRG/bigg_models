@@ -8,7 +8,7 @@ from pytest import raises
 
 #unit testing sqlalchemy apps
 #http://alextechrants.blogspot.com/2013/08/unit-testing-sqlalchemy-apps.html
-
+#query bigg and then query grmit to see if they match
 
 
 def setup_module():

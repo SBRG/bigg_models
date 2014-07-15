@@ -21,7 +21,7 @@ class ReactionQuery():
                 .first()[1])
 
     def get_metabolite_list(self, modelquery, reaction, session):
-        return [(x[0].identifier, int(x[1].stoichiometry)) 
+        return [(x[0].identifier, x[1].stoichiometry) 
                 for x in (session
                         .query(Component,Reaction_Matrix)
                         .join(Compartmentalized_Component)
@@ -132,20 +132,20 @@ class StringBuilder():
         for metabolite in metabolitelist:
             if float(metabolite[1])<0:
                 if float(metabolite[1])!= -1:
-                    pre_reaction_string += str(abs(metabolite[1])) + " " + metabolite[0] + " + "
+                    pre_reaction_string += "{0:.2f}".format(abs(metabolite[1])) + " " + metabolite[0] + " + "
                 else:
                     pre_reaction_string += " " + metabolite[0] + " + "
             if float(metabolite[1])>0:
                 if float(metabolite[1])!= 1:
-                    post_reaction_string += str(abs(metabolite[1])) + " " + metabolite[0] + " + "
+                    post_reaction_string += "{0:.2f}".format(abs(metabolite[1])) + " " + metabolite[0] + " + "
                 else:
                     post_reaction_string += " " + metabolite[0] + " + "
         if modelreaction.lowerbound <0 and modelreaction.upperbound <=0:
-            reaction_string = pre_reaction_string[:-2] + " <-- " + post_reaction_string[:-2]
+            reaction_string = pre_reaction_string[:-2] + " &#10229; " + post_reaction_string[:-2]
         elif modelreaction.lowerbound >= 0:
-            reaction_string = pre_reaction_string[:-2] + " --> " + post_reaction_string[:-2]
+            reaction_string = pre_reaction_string[:-2] + " &#10230; " + post_reaction_string[:-2]
         else:
-            reaction_string = pre_reaction_string[:-2] + " <==> " + post_reaction_string[:-2]
+            reaction_string = pre_reaction_string[:-2] + " &#8646; " + post_reaction_string[:-2]
         return reaction_string
            
     

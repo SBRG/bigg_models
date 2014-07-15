@@ -48,11 +48,11 @@
 	    			{% for values in reactionResults %}
 	    				{% if loop.index is divisibleby 3 %}
 	    				
-	    				<td class="col-md-3">model: {{values[0]}}<br><a href="/models/{{values[0]}}/reactions/{{values[1]}}">{{values[1]}}</a> </td>
+	    				<td class="col-md-3"><a href="/models/{{values[0]}}/reactions/{{values[1]}}">{{values[1]}}</a> </td>
 	    				</tr>
 	    				<tr>
 	    				{% else %}
-	    				<td class="col-md-3">model: {{values[0]}}<br><a href="/models/{{values[0]}}/reactions/{{values[1]}}">{{values[1]}}</a> </td>
+	    				<td class="col-md-3"><a href="/models/{{values[0]}}/reactions/{{values[1]}}">{{values[1]}}</a> </td>
 						{% endif %}
 					{% endfor %}
 					
@@ -118,7 +118,7 @@
 					</tr>
 					</table>
 					{% else %}
-					 <h3 style="text-align:center;">Empty</h3>
+					 <h3 style="text-align:center;">None</h3>
 					{%endif%}			
 	   		</div>
 	    	<div class="tab-pane" id="tab3">
@@ -139,7 +139,7 @@
 					</tr>
 					</table>
 					{% else %}
-					 <h3 style="text-align:center;">Empty</h3>
+					 <h3 style="text-align:center;">None</h3>
 				{%endif%}	
 	    	</div>
 	    	<div class="tab-pane" id="tab4">
@@ -160,7 +160,7 @@
 					</tr>
 					</table>
 					{% else %}
-					 <h3 style="text-align:center;">Empty</h3>
+					 <h3 style="text-align:center;">None</h3>
 					{%endif%}
 	    	</div>
 	    	<div class="tab-pane" id="tab5">
@@ -181,7 +181,7 @@
 					</tr>
 					</table>
 					{% else %}
-					 <h3 style="text-align:center;">Empty</h3>   
+					 <h3 style="text-align:center;">None</h3>   
 					{%endif%}
 	    	</div>
     	</div>
