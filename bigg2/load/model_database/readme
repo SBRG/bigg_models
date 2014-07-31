@@ -1,0 +1,18 @@
+There are three functions in the database module:
+
+1. databasetomodel(modelversion_id, modelname=False):
+
+Takes a modelversion_id as the argument and builds a cobra model object.
+It also outputs an sbml file of the model.
+
+2. todatabase(file, description=False, modelversion_id=False):  
+
+Takes an sbml file as input, builds a cobra model and stores the model data
+in the grmit database. It returns the value of the modelversion_id. 
+
+3. def compare(model1, model2, logic='IN', table='reaction'):
+# use:
+# default, reactions in common to model1 and model2: compare(1,2)
+# reactions, exclusive to model1: compare(1,2,'NOT IN', 'reaction')
+# metabolites, all in common: compare(1,2,'IN', 'metabolite')
+# metabolites, exclusive to model1: compare(1,2, 'NOT IN', 'metabolite')

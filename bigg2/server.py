@@ -19,6 +19,8 @@ from collections import Counter
 from load.queries import (ReactionQuery, ModelQuery, MetaboliteQuery,
                         GeneQuery, StringBuilder)
 
+from download.sbml import sbmlio
+#write_cobra_model_to_sbml_file(cobra_model, sbml_filename)
 
 define("port", default= 8886, help="run on given port", type=int)
 
@@ -26,7 +28,7 @@ env = Environment(loader=FileSystemLoader('templates'))
 
 directory = abspath(dirname(__file__))
 
-urlBasePath = "http://localhost:8888/"
+urlBasePath = "http://localhost:8886/"
 
 engine = create_engine("postgresql://dbuser@localhost:5432/bigg2")
 
@@ -60,10 +62,13 @@ class Application(tornado.web.Application):
                     (r"/models$", ModelsListDisplayHandler),
                     (r"/models/(.*)$", ModelDisplayHandler),
                     (r"/about$",AboutHandler),
-                    (r"/search$",SearchHandler),
+                    (r"/search$",SearchDisplayHandler),
+                    (r"/api/search$",SearchHandler),
                     (r"/autocomplete$",AutoCompleteHandler),
                     (r"/advancesearch$",FormHandler),
+                    (r"/sbml$",DownloadPageHandler),
                     (r"/webapi$",WebApiHandler),
+                    (r"/download/(.*)$",DownLoadHandler,{'path':join(directory, 'download')}),
                     (r"/static/(.*)$", StaticFileHandler,{'path':join(directory, 'static')})
         ]
         settings = {
@@ -80,7 +85,25 @@ class BaseHandler(RequestHandler):
             return user
         else:
             return None
-            
+class DownLoadHandler(tornado.web.StaticFileHandler):
+    def post(self, path, include_body=True):
+        # your code from above, or anything else custom you want to do
+        self.set_header('Content-Type','text/xml')  
+        self.set_header('Accept-Ranges', 'bytes')  
+        self.set_header('Content-Encoding', 'none')  
+        self.set_header('Content-Disposition','attachment')
+        super(StaticFileHandler, self).get(path, include_body) 
+        
+class DownloadPageHandler(BaseHandler):
+    def get(self):
+        template = env.get_template('download.html')
+        input = self.get_argument("query")
+        model = sbmlio.createSBML(input)
+        dictionary = {"xml":model.id + ".xml"}
+        self.write(template.render(dictionary))
+        self.set_header('Content-type','text/html')
+        self.finish()
+  
 class MainHandler(BaseHandler):
     def get(self):
         template = env.get_template('index.html')
@@ -111,6 +134,7 @@ class FormHandler(BaseHandler):
         self.write(template.render(dictionary))
         self.set_header('Content-type','text/html') 
         self.finish()
+        session.close()
         
 class ReactionHandler(BaseHandler):
     def get(self, modelName, reactionName):
@@ -123,20 +147,22 @@ class ReactionHandler(BaseHandler):
         for rxn in session.query(Model_Reaction).filter(Model_Reaction.reaction_id == reaction.id).all():
             if rxn.model_id != modelquery.id:
                 altModel = session.query(Model).filter(Model.id == rxn.model_id).first()
-                altModelList.append(altModel.name)
+                altModelList.append(altModel.biggid)
         metabolitelist = ReactionQuery().get_metabolite_list(modelquery, reaction, session)          
         reaction_string = StringBuilder().build_reaction_string(metabolitelist, modelreaction)
         genelist = ReactionQuery().get_gene_list(reactionName, session)
         templist = modelreaction.gpr.replace("(","").replace(")","").split()
         genelist2 = [name for name in templist if name !="or" and name !="and"]
         sortedMetaboliteList = sorted(metabolitelist, key=lambda metabolite: metabolite[0])
-        dictionary = {"model":modelquery.name, "id": reaction.name, "name": reaction.long_name, 
+        dictionary = {"model":modelquery.biggid, "id": reaction.biggid, "name": reaction.name, 
                         "metabolites": sortedMetaboliteList, "gene_reaction_rule": modelreaction.gpr, 
                         "genes": genelist2, "reaction_string": reaction_string, "altModelList": altModelList }      
         data = json.dumps(dictionary, use_decimal=True)
         self.write(data)
+        #self.write(json.dumps(metabolitelist))
         self.set_header('Content-type','json')
         self.finish()
+        session.close()
         
 class ReactionDisplayHandler(BaseHandler):
     @asynchronous
@@ -155,19 +181,17 @@ class ReactionListHandler(BaseHandler):
     def get(self, modelName):
         session = Session()
         reactionList = ReactionQuery().get_reaction_list(modelName, session)
-        finalReactionList = []
-        for reaction in reactionList:
-            finalReactionList.append([modelName, reaction])
-        data = json.dumps(finalReactionList)
+        data = json.dumps(reactionList)
         self.write(data)
         self.set_header('Content-type','json')
         self.finish()   
+        session.close()
         
 class ReactionListDisplayHandler(BaseHandler):
     @asynchronous
     @gen.engine
     def get(self, modelName):
-        template = env.get_template("listdisplay.html")
+        template = env.get_template("listdisplay2.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/reactions' % (options.port, modelName)
         response = yield gen.Task(http_client.fetch, url_request)
@@ -186,17 +210,18 @@ class UniversalReactionHandler(BaseHandler):
         for mr in model_reactions:
             model = session.query(Model).filter(Model.id == mr.model_id).first()
             reaction = session.query(Reaction).filter(Reaction.id == mr.reaction_id).first()
-            reactionList.append([model.name, reaction.name])
-        dictionary = {"reactions":reactionList, "biggid":reactionName, "name": reaction.long_name}
+            reactionList.append([model.biggid, reaction.biggid])
+        dictionary = {"reactions":reactionList, "biggid":reactionName, "name": reaction.name}
         data = json.dumps(dictionary)
         self.write(data)
         self.set_header('Content-type','json')
         self.finish()
+        session.close()
         
 class SearchHandler(BaseHandler):
     def get(self):
         session = Session()
-        similarityBoundary = str(.4)
+        similarityBoundary = str(.2)
         template = env.get_template("listdisplay.html")
         input = self.get_argument("query")
         reactionlist = []
@@ -204,46 +229,56 @@ class SearchHandler(BaseHandler):
         modellist = []
         genelist = []
         
-        result = session.query(Reaction.id, Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Reaction.id, Reaction.biggid, func.similarity(Reaction.biggid, str(input)).label("sim")).filter(Reaction.biggid % str(input)).filter(func.similarity(Reaction.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             for reaction in session.query(Model_Reaction).filter(Model_Reaction.reaction_id == row.id).all():   
                 model = session.query(Model).filter(Model.id == reaction.model_id).first()
-                reactionlist.append([model.name, row.name])
+                reactionlist.append([model.biggid, row.biggid])
         
-        result = session.query(Component.id, Component.identifier, func.similarity(Component.identifier, str(input)).label("sim")).filter(Component.identifier % str(input)).filter(func.similarity(Component.identifier, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Component.id, Component.biggid, func.similarity(Component.biggid, str(input)).label("sim")).filter(Component.biggid % str(input)).filter(func.similarity(Component.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == row.id).all():
                 for mcc in session.query(Model_Compartmentalized_Component).filter(Model_Compartmentalized_Component.compartmentalized_component_id ==cc.id).all():
                     model = session.query(Model).filter(Model.id == mcc.model_id).first()
-                    metabolitelist.append([model.name, row.identifier]) 
+                    metabolitelist.append([model.biggid, row.biggid]) 
            
-        result = session.query(Model.id, Model.name, func.similarity(Model.name, str(input)).label("sim")).filter(Model.name % str(input)).filter(func.similarity(Model.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Model.id, Model.biggid, func.similarity(Model.biggid, str(input)).label("sim")).filter(Model.biggid % str(input)).filter(func.similarity(Model.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            modellist.append(row.name) 
+            modellist.append(row.biggid) 
         
         result = session.query(Gene.id, Gene.name, func.similarity(Gene.name, str(input)).label("sim")).filter(Gene.name % str(input)).filter(func.similarity(Gene.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             model_gene = session.query(Model_Gene).filter(Model_Gene.gene_id == row.id).first()
             model = session.query(Model).filter(Model.id == model_gene.model_id).first()
-            genelist.append([model.name, row.name])
+            genelist.append([model.biggid, row.name])
         session.close()
-        reactionData = json.dumps(reactionlist)
-        metaboliteData = json.dumps(metabolitelist)
-        modelData = json.dumps(modellist)
-        geneData = json.dumps(genelist)
-        dictionary = {"reactionResults":json.loads(reactionData), "Reactions":"Reactions",
-                        "metaboliteResults":json.loads(metaboliteData),
+        dictionary = {"reactionResults":reactionlist, "Reactions":"Reactions",
+                        "metaboliteResults":metabolitelist,
                         "Metabolites":"Metabolites", 
-                        "modelResults":json.loads(modelData),"Models":"Models",
-                        "geneResults":json.loads(geneData), "Genes":"Genes" } 
-        self.write(template.render(dictionary)) 
-        self.set_header('Content-type','text/html')
+                        "modelResults":modellist,"Models":"Models",
+                        "geneResults":genelist, "Genes":"Genes" } 
+        self.write(json.dumps(dictionary)) 
+        self.set_header('Content-type','json')
         self.finish()
+        session.close()
 
+class SearchDisplayHandler(BaseHandler):
+    @asynchronous
+    @gen.engine
+    def get(self):
+        template = env.get_template("listdisplay.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/search?query=%s' % (options.port, self.get_argument("query"))
+        response = yield gen.Task(http_client.fetch, url_request)
+        results = json.loads(response.body)
+        self.write(template.render(results))
+        self.set_header('Content-type','text/html')
+        self.finish() 
+    
 class AutoCompleteHandler(BaseHandler):
     def get(self):
         session = Session()
-        similarityBoundary = str(.4)
+        similarityBoundary = str(.2)
         template = env.get_template("listdisplay.html")
         input = self.get_argument("query")
         reactionlist = []
@@ -251,17 +286,17 @@ class AutoCompleteHandler(BaseHandler):
         modellist = []
         genelist = []
         
-        result = session.query(Reaction.id, Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Reaction.id, Reaction.biggid, func.similarity(Reaction.biggid, str(input)).label("sim")).filter(Reaction.biggid % str(input)).filter(func.similarity(Reaction.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            reactionlist.append([row.name,row.sim])
+            reactionlist.append([row.biggid,row.sim])
                
-        result = session.query(Component.id, Component.identifier, func.similarity(Component.identifier, str(input)).label("sim")).filter(Component.identifier % str(input)).filter(func.similarity(Component.identifier, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Component.id, Component.biggid, func.similarity(Component.biggid, str(input)).label("sim")).filter(Component.biggid % str(input)).filter(func.similarity(Component.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            metabolitelist.append([row.identifier,row.sim]) 
+            metabolitelist.append([row.biggid,row.sim]) 
         
-        result = session.query(Model.id, Model.name, func.similarity(Model.name, str(input)).label("sim")).filter(Model.name % str(input)).filter(func.similarity(Model.name, str(input))> similarityBoundary).order_by(desc('sim')).all()   
+        result = session.query(Model.id, Model.biggid, func.similarity(Model.biggid, str(input)).label("sim")).filter(Model.biggid % str(input)).filter(func.similarity(Model.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()   
         for row in result:
-            modellist.append([row.name,row.sim]) 
+            modellist.append([row.biggid,row.sim]) 
         
         result = session.query(Gene.id, Gene.name, func.similarity(Gene.name, str(input)).label("sim")).filter(Gene.name % str(input)).filter(func.similarity(Gene.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
@@ -278,7 +313,8 @@ class AutoCompleteHandler(BaseHandler):
             x+=1  
         self.write(json.dumps(dictionary))
         self.set_header('Content-type','json')
-        self.finish()       
+        self.finish()
+        session.close()       
 
 class ModelHandler(BaseHandler):
     def get(self, modelName):
@@ -291,12 +327,13 @@ class ModelHandler(BaseHandler):
             reactionquery = ModelQuery().get_model_reaction_count(modelquery, session)
             metabolitequery = ModelQuery().get_model_metabolite_count(modelquery, session)
             genequery = ModelQuery().get_gene_count(modelquery, session)
-            dictionary = {"model":modelquery.name,"reaction_count":reactionquery,"metabolite_count":metabolitequery,
+            dictionary = {"model":modelquery.biggid,"reaction_count":reactionquery,"metabolite_count":metabolitequery,
                    "gene_count": genequery }
             data = json.dumps(dictionary)
             self.write(data)
             self.set_header('Content-type','json')
             self.finish()
+            session.close()
 
 class ModelDisplayHandler(BaseHandler):
     @asynchronous
@@ -319,6 +356,7 @@ class ModelListHandler(BaseHandler):
         self.write(data)
         self.set_header('Content-type','json')
         self.finish()
+        session.close()
 
 class ModelsListDisplayHandler(BaseHandler):
     @asynchronous
@@ -338,44 +376,48 @@ class ModelsListDisplayHandler(BaseHandler):
 class MetaboliteHandler(BaseHandler):
     def get(self, modelName, metaboliteId):
         session = Session()
-        modelquery = session.query(Model).filter(Model.name == modelName).first()
-        componentquery = session.query(Component).filter(Component.identifier == metaboliteId).first()
+        
+        modelquery = session.query(Model).filter(Model.biggid == modelName).first()
+        componentquery = session.query(Component).filter(Component.biggid == metaboliteId).first()
+        metabolitequery = session.query(Metabolite).filter(componentquery.id == Metabolite.component_id).first()
         altModelList = []
         for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).all():
             for mcc in session.query(Model_Compartmentalized_Component).filter(Model_Compartmentalized_Component.compartmentalized_component_id == cc.id).all():
                 if mcc.model_id != modelquery.id:
                     altModel = session.query(Model).filter(Model.id == mcc.model_id).first()
-                    altModelList.append(altModel.name)
+                    altModelList.append(str(altModel.biggid))
                     
         reactionlist = []
-        for x in MetaboliteQuery().get_reactions(metaboliteId, session):
-            for model_reaction in MetaboliteQuery().get_model_reaction(x, session):
-                model = MetaboliteQuery().get_model(model_reaction, session)
-                if model.name == modelquery.name:
-                    reactionlist.append(x.name)
+        
+        for x in MetaboliteQuery().get_model_reactions(metaboliteId, modelquery, session):
+            reactionlist.append(str(x.biggid))
+               
         sortedReactionList = sorted(reactionlist)
-        dictionary = {'name': componentquery.name, 'id': metaboliteId, 'model': modelquery.name, 'formula': componentquery.formula,'reactions':sortedReactionList, "altModelList": altModelList}
+        dictionary = {'name': str(componentquery.name), 'id': str(componentquery.biggid), 'cas_number':str(metabolitequery.cas_number), 'kegg_id': str(metabolitequery.kegg_id),'reactions':reactionlist, 'model': str(modelquery.biggid), 'formula': str(componentquery.formula), "altModelList": altModelList}
         data = json.dumps(dictionary)
+        
         self.write(data)
         self.set_header('Content-type','json')
         self.finish()
+        session.close()
         
 class UniversalMetaboliteHandler(BaseHandler):
     def get(self, metaboliteId):
         session = Session()
-        componentquery = session.query(Component).filter(Component.identifier == metaboliteId).first()
+        componentquery = session.query(Component).filter(Component.biggid == metaboliteId).first()
         model_components = session.query(Model_Compartmentalized_Component).join(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).all()
         dictionary = {}
         metaboliteList = []
         for mc in model_components:
             model = session.query(Model).filter(Model.id == mc.model_id).first()
-            metaboliteList.append([model.name, componentquery.identifier])
-        dictionary = {'name':componentquery.name, 'biggid': componentquery.identifier, 
+            metaboliteList.append([model.biggid, componentquery.biggid])
+        dictionary = {'name':componentquery.biggid, 'biggid': componentquery.biggid, 
                     'formula': componentquery.formula, 'metaboliteList':metaboliteList}
         data = json.dumps(dictionary)
         self.write(data)
         self.set_header('Content-type','json')
-        self.finish()            
+        self.finish()
+        session.close()            
                 
 class MetaboliteDisplayHandler(BaseHandler):
     @asynchronous
@@ -394,19 +436,17 @@ class MetaboliteListHandler(BaseHandler):
     def get(self, modelName):
         session = Session()
         metaboliteList = MetaboliteQuery().get_metabolite_list(modelName, session)
-        finalMetaboliteList = []
-        for metabolite in metaboliteList:
-            finalMetaboliteList.append([modelName, metabolite])
-        data = json.dumps(finalMetaboliteList)
+        data = json.dumps(metaboliteList)
         self.write(data)
         self.set_header('Content-type','json')
         self.finish()
+        session.close()
         
 class MetabolitesListDisplayHandler(BaseHandler):
     @asynchronous
     @gen.engine
     def get(self, modelName):
-        template = env.get_template("listdisplay.html")
+        template = env.get_template("listdisplay2.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/metabolites' % (options.port, modelName)
         response = yield gen.Task(http_client.fetch, url_request)
@@ -419,7 +459,7 @@ class GeneListDisplayHandler(BaseHandler):
     @asynchronous
     @gen.engine
     def get(self, modelName):
-        template = env.get_template("listdisplay.html")
+        template = env.get_template("listdisplay2.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/genes' % (options.port, modelName)
         response = yield gen.Task(http_client.fetch, url_request)
@@ -436,13 +476,13 @@ class GeneHandler(BaseHandler):
         gene = session.query(Gene).filter(Gene.name==geneId).first()
         for gm in session.query(Model_Gene).filter(Model_Gene.gene_id == gene.id).all():
             model = session.query(Model).filter(Model.id == gm.model_id).first()
-            if model.name != modelName:
-                altModelList.append(model.name)
+            if model.biggid != modelName:
+                altModelList.append(model.biggid)
         for instance in GeneQuery().get_model_reaction(geneId, session):
             model = GeneQuery().get_model(instance, session)
-            if model.name == modelName:
+            if model.biggid == modelName:
                 list = []
-                list.append(instance.name)
+                list.append(instance.biggid)
                 list.append(instance.gpr)
                 geneList = instance.gpr.replace("(","").replace(")","").split()
                 list.append([name for name in geneList if name !="or" and name !="and"])
@@ -453,6 +493,7 @@ class GeneHandler(BaseHandler):
         self.write(data)
         self.set_header('Content-type','json')
         self.finish()
+        session.close()
         
 class UniversalGeneHandler(BaseHandler):
     def get(self, geneId):
@@ -463,24 +504,23 @@ class UniversalGeneHandler(BaseHandler):
         dictionary = {}
         for mg in model_genes:
             model = session.query(Model).filter(Model.id == mg.model_id).first()
-            geneList.append([model.name, gene.name])
-        dictionary = {"biggid":gene.name, "genelist":geneList}
+            geneList.append([model.biggid, gene.name])
+        dictionary = {"biggid":gene.biggid, "genelist":geneList}
         data = json.dumps(dictionary)
         self.write(data)
         self.set_header('Content-type', 'json')
         self.finish()
+        session.close()
 
 class GeneListHandler(BaseHandler):
     def get(self, modelName):
         session = Session()
         geneList = GeneQuery().get_gene_list(modelName, session)
-        finalGeneList = []
-        for gene in geneList:
-            finalGeneList.append([modelName, gene])
-        data = json.dumps(finalGeneList)
+        data = json.dumps(geneList)
         self.write(data)
         self.set_header('Content-type','json')
         self.finish()
+        session.close()
 
 class GeneDisplayHandler(BaseHandler):
     @asynchronous

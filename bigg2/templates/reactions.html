@@ -1,9 +1,19 @@
 <html>
 	{% extends "parentdisplay.html" %}
 		{% block content %}
+		<link rel="stylesheet" href="//zakandrewking.github.io/escher/escher/css/builder.css">
+
+            <style>
+            #map {
+                width: 100%; 
+                height: 500px; 
+                border: 1px solid #DDD; 
+                border-radius: 4px;
+            }
+            </style>
 			<div class="container">
 				<div class="col-lg-8">
-    				<h1>Reaction: <br><span>{{id}}</span></h1>
+    				<h1>Reaction: <br><span id ="reactionName">{{id}}</span></h1>
     				<hr>
 					<!--<p class="lead">Reaction name: <br>{{name}}</p>--!>
 					<p class="lead">Model: <br><a href="/models/{{model}}">{{ model }}</a></p>
@@ -17,7 +27,7 @@
   						<a href="#metabolitelist" class="list-group-item active">
     						<div class="panel-heading"><span class="lead">Metabolites:</span></div>
   						</a>
-  						<table class="table">
+  						<table class="table table-striped">
   						
   						{% for metabolite in metabolites %}
   						<tr>
@@ -32,11 +42,29 @@
 					<p class="lead">Genes: {% for gene in genes %} <a href=/models/{{model}}/genes/{{gene}}>{{gene}} </a>{% endfor %}</p>
 					<hr>
 					<h2> Escher Map </h2>
-					<img src="http://placehold.it/900x300" class="img-responsive">
-					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ac vestibulum ante. In ut pharetra nibh. Quisque sollicitudin felis vel enim viverra fermentum. Nulla sit amet odio gravida, egestas enim eget, lobortis mi. Aliquam diam augue, pellentesque eget orci non, aliquet cursus sapien. Mauris feugiat dignissim mauris, et consequat magna ultricies ac. Cras ut lectus magna. Integer at felis ultrices, ultrices dolor et, dictum lectus. </p>
-                <a class="btn btn-primary" href="#">Read More <span class="glyphicon glyphicon-chevron-right"></span></a>
+                    <div id="map"></div>  
+                    <p></p>              
+                    <a class="btn btn-primary" href="#">Read More <span class="glyphicon glyphicon-chevron-right"></span></a>
 				<p></p>
 				<p></p>
+				<hr>
+				    <h3> Comments/Error Reporting </h3>
+				    <div class="form-group">
+				    <label>Email address</label>
+                    <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email">    
+				    </div>
+				    <form class="form-inline" role="form">
+				    <div class="form-group">
+    <label class="sr-only" for="exampleInputEmail2">Correct the Kegg ID</label>
+    <input type="email" class="form-control" id="exampleInputEmail2" placeholder="Correct the Kegg ID">
+  </div>
+  <div class="form-group">
+    <label class="sr-only" for="exampleInputEmail2">Correct the CAS number</label>
+    <input type="email" class="form-control" id="exampleInputEmail2" placeholder="Correct the CAS number">
+  </div>
+                        </form>
+				    <textarea class="form-control" rows="3" placeholder="Comments"></textarea>
+				
 				</div>
 				<div class="col-lg-4">
 					<div class="well">
@@ -55,19 +83,12 @@
                     	<button class="btn btn-default" type="button">View Map</button>
                 	</div>
                     <div class="well">
-                    	<h4>{{id}} in other Models:</h4>
+                    	<h4 style="text-align: center">{{id}} in other Models:</h4>
                     	<ul class="list-unstyled">
-                    	<li style="text-align: center">
-                                {% for altmodel in altModelList %}
-                                
-                                {% if loop.index is divisibleby 3 %}
-                                </li><li style="text-align: center"><a href="/models/{{altmodel}}/reactions/{{id}}">{{altmodel}}</a>
-                                {% else %}
-                                    <a href="/models/{{altmodel}}/reactions/{{id}}">{{altmodel}}</a>
-                                {% endif %}
-                                
-                                {% endfor %}
+                    	{% for altmodel in altModelList %}
+                                <li style="text-align: center"><a href="/models/{{altmodel}}/reactions/{{id}}">{{altmodel}}</a>
                                 </li>
+                                {% endfor %}
                         </ul>
                 	</div>
                 	   
@@ -84,6 +105,53 @@
         		</footer>
 					
 			</div>
-			
+		<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+        <script src="//zakandrewking.github.io/escher/escher.1.0.0b2.js"></script>
+        <script>
+   
+    // Set up map and styles
+    // Requires two local files:  iJO1366_central_metabolism.json and builder-embed.css
+    var map_sel = d3.select('#map'),
+        reaction_name = document.getElementById('reactionName').innerHTML,  // replace all 'reaction' with 'metabolite' for metabolite page
+        reaction_data = {};
+    reaction_data[reaction_name] = 1;
+    var b = escher.Builder({ selection: d3.select('#map'),
+			     menu: 'zoom',
+			     scroll_behavior: 'none',
+			     map_path: '/static/lib/iJO1366_central_metabolism.json',
+			     css_path: '/static/css/builder-embed.css',
+			     reaction_data: reaction_data,
+			     reaction_styles: ['color'],
+			     auto_reaction_domain: false,
+			     reaction_domain: [-1, 0, 1],
+			     reaction_color_range: ['unused', 'rgb(200,200,200)', '#106F94'],
+			     enable_editing: false });
+
+    // find the reaction or metabolite, and zoom in on it
+    function go_to() {
+	var results = b.map.search_index.find(reaction_name);
+	if (results !== null && results.length > 0) {
+	    var r = results[0];
+	    if (r.type=='reaction') {		
+		b.map.zoom_to_reaction(r.reaction_id);
+		b.map.highlight_reaction(r.reaction_id);
+	    } else if (r.type=='metabolite') {
+		b.map.zoom_to_node(r.node_id);
+		b.map.highlight_node(r.node_id);
+	    }
+	}
+    }
+    window.setTimeout(function() { 
+        go_to();
+        map_sel.selectAll('.simple-button').each(function() {
+	var t = d3.select(this);
+	if (t.attr('title').indexOf('canvas')!=-1) {
+	t.on('click', null);
+	t.on('click', function() { go_to(); });
+	}
+	});
+    }, 1000);
+
+    </script>	
 		{% endblock %}	
 </html>

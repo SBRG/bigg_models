@@ -1,13 +1,20 @@
 from theseus import models
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, Table, MetaData
 
 from model import Model, Component, Reaction, Compartment, Metabolite, Compartmentalized_Component, Model_Reaction, Reaction_Matrix, Gene, Model_Compartmentalized_Component, Model_Gene, GPR_Matrix
 Session = sessionmaker()
 
-engine = create_engine("postgresql://dbuser@localhost:5432/bigg2")
 
+grmitengine = create_engine("postgresql://justin:justin@pestis:5432/grmit")
+Session.configure(bind=grmitengine)
+grmitsession = Session()
+meta = MetaData()
+keggcasTable = Table('metabolite_keggcass', meta, autoload=True, autoload_with=grmitengine)
+
+
+engine = create_engine("postgresql://dbuser@localhost:5432/bigg2")
 Session.configure(bind=engine)
 
 class IndependentObjects:
@@ -15,26 +22,39 @@ class IndependentObjects:
     def loadGenes(self, modellist, session):
         for model in modellist:
             for gene in model.genes:
-                geneObject = Gene(name = gene.id)
-                session.add(geneObject)
-    
+                if not session.query(Gene).filter(Gene.name == gene.id).count():
+                    geneObject = Gene(name = gene.id)
+                    session.add(geneObject)
+                
     def loadModels(self, modellist, session):
         for model in modellist:
-            modelObject = Model(name = model.id, firstcreated = '')
+            modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22')
             session.add(modelObject)
             
+    
     def loadComponents(self, modellist, session):
-        for m in modellist:
-            for component in m.metabolites:
-                if not session.query(Component).filter(Component.identifier == component.id).count():
-                    componentObject = Component(identifier = component.id, name = component.name, formula = str(component.formula))
+        for model in modellist:
+            for component in model.metabolites:
+                if not session.query(Component).filter(Component.biggid == component.id).count():
+                    componentObject = Component(biggid = component.id, name = component.name, formula = str(component.formula))
                     session.add(componentObject)
-                
+                                
     def loadReactions(self , modellist, session):
         for model in modellist:
             for reaction in model.reactions:
-                reactionObject = Reaction(name = reaction.id, long_name = reaction.name)
-                session.add(reactionObject)
+                if not session.query(Reaction).filter(Reaction.biggid == reaction.id).count():
+                    reactionObject = Reaction(biggid = reaction.id, name = reaction.name)
+                    session.add(reactionObject)
+                    for metabolite in reaction._metabolites:
+                        componentquery = session.query(Component).filter(Component.biggid == metabolite.id).first()
+                        compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).first()
+                        #reactionquery = session.query(Reaction).filter(Reaction.biggid == reaction.id).first()
+                    
+                        for stoichKey in reaction._metabolites.keys():
+                            if str(stoichKey) == metabolite.id:
+                                stoichiometryobject = reaction._metabolites[stoichKey]
+                        RMobject = Reaction_Matrix(reaction_id = reactionObject.id, compartmentalized_component_id = compartmentalized_component_query.id, stoichiometry = stoichiometryobject)
+                        session.add(RMobject)
     
     def loadCompartments(self, modellist, session):
         for model in modellist:
@@ -47,30 +67,36 @@ class IndependentObjects:
 class DependentObjects:
     def loadMetabolites(self, modellist, session):
         for instance in session.query(Component):
-            metaboliteObject = Metabolite(id = instance.id)
-            session.add(metaboliteObject)
+            keggcasQuery = grmitsession.query(keggcasTable).filter(keggcasTable.c.abbreviation == instance.biggid).filter(keggcasTable.c.officialname == instance.name).filter(keggcasTable.c.formula == instance.formula).first()    
+            if keggcasQuery== None:
+                metaboliteObject = Metabolite(component_id = instance.id, kegg_id = None, cas_number = None)
+                session.add(metaboliteObject)
+            else:
+                metaboliteObject = Metabolite(component_id = instance.id, kegg_id = keggcasQuery.keggid, cas_number = keggcasQuery.casnumber)
+                session.add(metaboliteObject)
+                
 
     def loadModelGenes(self, modellist, session):
         for model in modellist:
             for gene in model.genes:
                 genequery = session.query(Gene).filter(Gene.name == gene.id).first()
-                modelquery = session.query(Model).filter(Model.name == model.id).first()
+                modelquery = session.query(Model).filter(Model.biggid == model.id).first()
                 object = Model_Gene(model_id = modelquery.id, gene_id = genequery.id)
                 session.add(object)
                 
     def loadCompartmentalizedComponent(self, modellist, session):       
         for component in session.query(Component):
-            identifier = session.query(Compartment).filter(Compartment.name == component.identifier[-1:len(component.identifier)]).first()
-            #instance = session.query(Component).filter(Component.identifier == component.identifier[:-2]).first()
+            identifier = session.query(Compartment).filter(Compartment.name == component.biggid[-1:len(component.biggid)]).first()
+            #instance = session.query(Component).filter(Component.biggid == component.biggid[:-2]).first()
             object = Compartmentalized_Component(component_id = component.id, compartment_id = identifier.id)
             session.add(object)
                 
     def loadModelCompartmentalizedComponent(self, modellist, session):
         for model in modellist:
             for metabolite in model.metabolites:
-                componentquery = session.query(Component).filter(Component.identifier == metabolite.id).first()
+                componentquery = session.query(Component).filter(Component.biggid == metabolite.id).first()
                 compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).first()
-                modelquery = session.query(Model).filter(Model.name == model.id).first()
+                modelquery = session.query(Model).filter(Model.biggid == model.id).first()
                 object = Model_Compartmentalized_Component(model_id = modelquery.id, compartmentalized_component_id = compartmentalized_component_query.id)
                 session.add(object)
 
@@ -78,36 +104,37 @@ class DependentObjects:
     def loadModelReaction(self, modellist, session):
         for model in modellist:
             for reaction in model.reactions:
-                reactionquery = session.query(Reaction).filter(Reaction.name == reaction.id).first()
-                modelquery = session.query(Model).filter(Model.name == model.id).first()
-                object = Model_Reaction(reaction_id = reactionquery.id, model_id = modelquery.id, name = reaction.id, upperbound = reaction.upper_bound, lowerbound = reaction.lower_bound, gpr = reaction.gene_reaction_rule)
+                reactionquery = session.query(Reaction).filter(Reaction.biggid == reaction.id).first()
+                modelquery = session.query(Model).filter(Model.biggid == model.id).first()
+                object = Model_Reaction(reaction_id = reactionquery.id, model_id = modelquery.id, biggid = reaction.id, upperbound = reaction.upper_bound, lowerbound = reaction.lower_bound, gpr = reaction.gene_reaction_rule)
                 session.add(object)
             
     
     def loadGPRMatrix(self, modellist, session):
         for model in modellist:
             for reaction in model.reactions:
-                for gene in reaction._genes.keys():
-                    model_gene_query = session.query(Model_Gene).join(Gene).filter(Gene.name == gene.name).first()
-                    model_reaction_query = session.query(Model_Reaction).filter(Model_Reaction.name == reaction.id).first()
-                    object = GPR_Matrix(model_gene_id = model_gene_query.gene_id, model_reaction_id = model_reaction_query.id) 
+                for gene in reaction._genes:
+                    model_query = session.query(Model).filter(Model.biggid == model.id).first()
+                    model_gene_query = session.query(Model_Gene).join(Gene).filter(Gene.name == gene.name).filter(Model_Gene.model_id == model_query.id).first()
+                    model_reaction_query = session.query(Model_Reaction).filter(Model_Reaction.biggid == reaction.id).filter(Model_Reaction.model_id == model_query.id).first()
+                    object = GPR_Matrix(model_gene_id = model_gene_query.id, model_reaction_id = model_reaction_query.id) 
                     session.add(object)
-                        
+                
     def loadReactionMatrix(self, modellist, session):
         for model in modellist:
-            for metabolite in model.metabolites:
-                for reaction in metabolite._reaction:
-                    componentquery = session.query(Component).filter(Component.identifier == metabolite.id).first()
+            for reaction in model.reactions:
+                for metabolite in reaction._metabolites:
+                    componentquery = session.query(Component).filter(Component.biggid == metabolite.id).first()
                     compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).first()
                     #modelquery = session.query(Model).filter(Model.name == model.id).first()
-                    reactionquery = session.query(Reaction).filter(Reaction.name == reaction.id).first()
+                    reactionquery = session.query(Reaction).filter(Reaction.biggid == reaction.id).first()
                     
                     for stoichKey in reaction._metabolites.keys():
-                        if stoichKey == metabolite.id:
+                        if str(stoichKey) == metabolite.id:
                             stoichiometryobject = reaction._metabolites[stoichKey]
-                        object = Reaction_Matrix(reaction_id = reactionquery.id, compartmentalized_component_id = compartmentalized_component_query.id, stoichiometry = stoichiometryobject)
-                        session.add(object)
-                    
+                    object = Reaction_Matrix(reaction_id = reactionquery.id, compartmentalized_component_id = compartmentalized_component_query.id, stoichiometry = stoichiometryobject)
+                    session.add(object)
+
 @contextmanager
 def create_Session():
     session = Session()
@@ -118,18 +145,32 @@ def create_Session():
         session.rollback()
         raise
     finally:
+        print "close"
         session.close()
         
 def run_program():
     modelObjectList = []
     for m in models.get_model_list():
         modelObjectList.append(models.load_model(m))
+    
+    #modelObjectList.append(models.load_model('iJO1366'))
     with create_Session() as session:
+        
         IndependentObjects().loadModels(modelObjectList, session)
         IndependentObjects().loadGenes(modelObjectList, session)
         IndependentObjects().loadComponents(modelObjectList,session)
         IndependentObjects().loadCompartments(modelObjectList, session)
+        DependentObjects().loadCompartmentalizedComponent(modelObjectList, session)
         IndependentObjects().loadReactions(modelObjectList, session)
+        
+        DependentObjects().loadMetabolites(modelObjectList, session)
+        DependentObjects().loadModelGenes(modelObjectList, session)
+        
+        DependentObjects().loadModelCompartmentalizedComponent(modelObjectList, session)
+        DependentObjects().loadModelReaction(modelObjectList, session)
+        DependentObjects().loadGPRMatrix(modelObjectList, session)
+        DependentObjects().loadReactionMatrix(modelObjectList, session)
+        
         
 if __name__ == '__main__':
     run_program()

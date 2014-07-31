@@ -39,8 +39,8 @@ modelversionID = [253]
 def loadComponent(metaboliteTable, grmitsession, bigg2session):
     for id in modelversionID:
         for instance in grmitsession.query(metaboliteTable).filter(metaboliteTable.c.modelversion_id == id):
-            componentObject = Component(identifier = instance.abbreviation, name = instance.officialname, formula = instance.formula)
-            componentquery = bigg2session.query(Component).filter(Component.identifier == instance.abbreviation)
+            componentObject = Component(biggid = instance.abbreviation, name = instance.officialname, formula = instance.formula)
+            componentquery = bigg2session.query(Component).filter(Component.biggid == instance.abbreviation)
             if componentquery.count()>0:
                 #don't add new component object and only add map 
                 component = componentquery.first() 
@@ -61,7 +61,7 @@ def loadComponent(metaboliteTable, grmitsession, bigg2session):
 def loadModel(modelTable, grmitsession, bigg2session):
     for id in modelversionID:
         instance = grmitsession.query(modelTable).filter(modelTable.c.modelversion_id == id).first()
-        modelObject = Model(name = 'iJO1366', firstcreated = instance.firstcreated)
+        modelObject = Model(biggid = 'iJO1366', firstcreated = instance.firstcreated)
         bigg2session.add(modelObject)
         bigg2session.commit()
         map = Map(bigg_id = modelObject.id, grmit_id = instance.modelversion_id, category = "model")
@@ -73,8 +73,8 @@ def loadModel(modelTable, grmitsession, bigg2session):
 def loadReaction(reactionTable, grmitsession, bigg2session):
     for id in modelversionID:
         for instance in grmitsession.query(reactionTable).filter(reactionTable.c.modelversion_id == id):
-            reactionObject = Reaction(name = instance.abbreviation)
-            reactionquery = bigg2session.query(Reaction).filter(Reaction.name == instance.abbreviation)
+            reactionObject = Reaction(biggid = instance.abbreviation, name = instance.officialname)
+            reactionquery = bigg2session.query(Reaction).filter(Reaction.biggid == instance.abbreviation)
             if reactionquery.count() > 0:
                 reaction = reactionquery.first()
                 map = Map(bigg_id = reaction.id, grmit_id = instance.reaction_id, category = "reaction")
@@ -161,7 +161,7 @@ def loadModelReaction(reactionTable, grmitsession, bigg2session):
         for reaction in grmitsession.query(reactionTable).filter(reactionTable.c.modelversion_id == id):
             modelMap = bigg2session.query(Map).filter(Map.category=="model").filter(Map.grmit_id == reaction.modelversion_id).first()
             reactionMap = bigg2session.query(Map).filter(Map.category=="reaction").filter(Map.grmit_id == reaction.reaction_id).first()
-            object = Model_Reaction(reaction_id = reactionMap.bigg_id, model_id = modelMap.bigg_id, name = reaction.abbreviation, gpr = reaction.gpr, lowerbound = reaction.lower_bound, upperbound = reaction.upper_bound)
+            object = Model_Reaction(reaction_id = reactionMap.bigg_id, model_id = modelMap.bigg_id, biggid = reaction.abbreviation, gpr = reaction.gpr, lowerbound = reaction.lower_bound, upperbound = reaction.upper_bound)
             bigg2session.add(object)
             bigg2session.commit()
             map = Map(bigg_id = object.id, grmit_id = reaction.reaction_id, category = "model_reaction")
