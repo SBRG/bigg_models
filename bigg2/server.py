@@ -30,7 +30,7 @@ directory = abspath(dirname(__file__))
 
 urlBasePath = "http://localhost:8886/"
 
-engine = create_engine("postgresql://dbuser@localhost:5432/bigg2")
+engine = create_engine("postgresql://dbuser@localhost:5432/ome")
 
 Session = sessionmaker(bind = engine)
 
@@ -328,7 +328,7 @@ class ModelHandler(BaseHandler):
             metabolitequery = ModelQuery().get_model_metabolite_count(modelquery, session)
             genequery = ModelQuery().get_gene_count(modelquery, session)
             dictionary = {"model":modelquery.biggid,"reaction_count":reactionquery,"metabolite_count":metabolitequery,
-                   "gene_count": genequery }
+                   "gene_count": genequery}
             data = json.dumps(dictionary)
             self.write(data)
             self.set_header('Content-type','json')
