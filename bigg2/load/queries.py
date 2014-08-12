@@ -101,7 +101,7 @@ class MetaboliteQuery():
             .first())
     def get_metabolite_list(self, modelName, session):
         return [x.biggid for x in (session
-                .query(Component)
+                .query(Metabolite)
                 .join(Compartmentalized_Component)
                 .join(Model_Compartmentalized_Component)
                 .join(Model)

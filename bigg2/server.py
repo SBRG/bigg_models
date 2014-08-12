@@ -379,7 +379,7 @@ class MetaboliteHandler(BaseHandler):
         
         modelquery = session.query(Model).filter(Model.biggid == modelName).first()
         componentquery = session.query(Component).filter(Component.biggid == metaboliteId).first()
-        metabolitequery = session.query(Metabolite).filter(componentquery.id == Metabolite.component_id).first()
+        metabolitequery = session.query(Metabolite).filter(componentquery.id == Metabolite.id).first()
         altModelList = []
         for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).all():
             for mcc in session.query(Model_Compartmentalized_Component).filter(Model_Compartmentalized_Component.compartmentalized_component_id == cc.id).all():
@@ -469,26 +469,30 @@ class GeneListDisplayHandler(BaseHandler):
         self.finish()
  
 class GeneHandler(BaseHandler):
-    def get(self,modelName,geneId):
+    def get(self,modelName,geneName):
         session = Session()
         reactionList = []
         altModelList = []
-        gene = session.query(Gene).filter(Gene.name==geneId).first()
+        gene = session.query(Gene).filter(Gene.name==geneName).first()
         for gm in session.query(Model_Gene).filter(Model_Gene.gene_id == gene.id).all():
             model = session.query(Model).filter(Model.id == gm.model_id).first()
             if model.biggid != modelName:
                 altModelList.append(model.biggid)
-        for instance in GeneQuery().get_model_reaction(geneId, session):
+        for instance in GeneQuery().get_model_reaction(geneName, session):
             model = GeneQuery().get_model(instance, session)
+            geneList = []
             if model.biggid == modelName:
                 list = []
                 list.append(instance.biggid)
                 list.append(instance.gpr)
-                geneList = instance.gpr.replace("(","").replace(")","").split()
-                list.append([name for name in geneList if name !="or" and name !="and"])
+                for gene in session.query(Gene).join(Model_Gene).join(GPR_Matrix).filter(GPR_Matrix.model_reaction_id == instance.id):
+                    geneList.append(gene.name)
+                list.append(geneList)
+                #geneList = instance.gpr.replace("(","").replace(")","").split()
+                #list.append([name for name in geneList if name !="or" and name !="and"])
                 reactionList.append(list)
                 
-        dictionary = {"id": geneId, "model":modelName, "reactions": reactionList, "altModelList": altModelList}
+        dictionary = {"name": geneName,"id":gene.locus_id, "model":modelName, "reactions": reactionList, "altModelList": altModelList}
         data = json.dumps(dictionary)
         self.write(data)
         self.set_header('Content-type','json')

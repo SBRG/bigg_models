@@ -37,7 +37,7 @@ class IndependentObjects:
     def loadComponents(self, modellist, session):
         for model in modellist:
             for component in model.metabolites:
-                if not session.query(Component).filter(Component.name == component.name).count():
+                if not session.query(Metabolite).filter(Metabolite.biggid == component.id).count():
                     #componentObject = Component()
                     #session.add(componentObject)
                     metaboliteObject = Metabolite(biggid = component.id, name = component.name, kegg_id = component.notes.get("KEGGID"), cas_number = component.notes.get("CASNUMBER"), formula = str(component.formula))
@@ -93,7 +93,7 @@ class DependentObjects:
     def loadModelCompartmentalizedComponent(self, modellist, session):
         for model in modellist:
             for metabolite in model.metabolites:
-                componentquery = session.query(Component).filter(Component.name == metabolite.name).first()
+                componentquery = session.query(Metabolite).filter(Metabolite.biggid == metabolite.id).first()
                 compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).first()
                 modelquery = session.query(Model).filter(Model.biggid == model.id).first()
                 object = Model_Compartmentalized_Component(model_id = modelquery.id, compartmentalized_component_id = compartmentalized_component_query.id)
@@ -115,15 +115,17 @@ class DependentObjects:
                 for gene in reaction._genes:
                     model_query = session.query(Model).filter(Model.biggid == model.id).first()
                     model_gene_query = session.query(Model_Gene).join(Gene).filter(Gene.locus_id == gene.id).filter(Model_Gene.model_id == model_query.id).first()
-                    model_reaction_query = session.query(Model_Reaction).filter(Model_Reaction.biggid == reaction.id).filter(Model_Reaction.model_id == model_query.id).first()
-                    object = GPR_Matrix(model_gene_id = model_gene_query.id, model_reaction_id = model_reaction_query.id) 
-                    session.add(object)
+                    
+                    if model_gene_query != None:
+                        model_reaction_query = session.query(Model_Reaction).filter(Model_Reaction.biggid == reaction.id).filter(Model_Reaction.model_id == model_query.id).first()
+                        object = GPR_Matrix(model_gene_id = model_gene_query.id, model_reaction_id = model_reaction_query.id) 
+                        session.add(object)
                 
     def loadReactionMatrix(self, modellist, session):
         for model in modellist:
             for reaction in model.reactions:
                 for metabolite in reaction._metabolites:
-                    componentquery = session.query(Component).filter(Component.name == metabolite.name).first()
+                    componentquery = session.query(Metabolite).filter(Metabolite.biggid == metabolite.id).first()
                     compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).first()
                     #modelquery = session.query(Model).filter(Model.name == model.id).first()
                     reactionquery = session.query(Reaction).filter(Reaction.name == reaction.name).first()
@@ -155,11 +157,12 @@ def create_Session():
         
 def run_program():
     modelObjectList = []
-    """or m in models.get_model_list():
+    """for m in models.get_model_list():
         modelObjectList.append(models.load_model(m))
     """
     modelObjectList.append(models.load_model('iJO1366'))
     with create_Session() as session:
+        
         component_loading.load_genomes(base, components)
         IndependentObjects().loadModels(modelObjectList, session)
         #IndependentObjects().loadGenes(modelObjectList, session)
@@ -173,8 +176,9 @@ def run_program():
         
         DependentObjects().loadModelCompartmentalizedComponent(modelObjectList, session)
         DependentObjects().loadModelReaction(modelObjectList, session)
-        #DependentObjects().loadGPRMatrix(modelObjectList, session)
+        DependentObjects().loadGPRMatrix(modelObjectList, session)
         DependentObjects().loadReactionMatrix(modelObjectList, session)
+        
         
         DependentObjects().loadEscher(session)
         
