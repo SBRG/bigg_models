@@ -148,15 +148,16 @@ class ReactionHandler(BaseHandler):
             if rxn.model_id != modelquery.id:
                 altModel = session.query(Model).filter(Model.id == rxn.model_id).first()
                 altModelList.append(altModel.biggid)
-        metabolitelist = ReactionQuery().get_metabolite_list(modelquery, reaction, session)          
+        metabolitelist = ReactionQuery().get_metabolite_list(modelquery, reaction, session) 
+        #metabolitelist = [x.compartmentalized_component_id for x in session.query(Reaction_Matrix).filter(Reaction_Matrix.reaction_id == reaction.id).all() ]        
         reaction_string = StringBuilder().build_reaction_string(metabolitelist, modelreaction)
         genelist = ReactionQuery().get_gene_list(reactionName, session)
         templist = modelreaction.gpr.replace("(","").replace(")","").split()
         genelist2 = [name for name in templist if name !="or" and name !="and"]
         sortedMetaboliteList = sorted(metabolitelist, key=lambda metabolite: metabolite[0])
         dictionary = {"model":modelquery.biggid, "id": reaction.biggid, "name": reaction.name, 
-                        "metabolites": sortedMetaboliteList, "gene_reaction_rule": modelreaction.gpr, 
-                        "genes": genelist2, "reaction_string": reaction_string, "altModelList": altModelList }      
+                        "metabolites": metabolitelist, "gene_reaction_rule": modelreaction.gpr, 
+                        "genes": genelist2, "reaction_string": reaction_string, "altModelList": altModelList}      
         data = json.dumps(dictionary, use_decimal=True)
         self.write(data)
         #self.write(json.dumps(metabolitelist))
@@ -235,11 +236,13 @@ class SearchHandler(BaseHandler):
                 model = session.query(Model).filter(Model.id == reaction.model_id).first()
                 reactionlist.append([model.biggid, row.biggid])
         
-        result = session.query(Component.id, Component.biggid, func.similarity(Component.biggid, str(input)).label("sim")).filter(Component.biggid % str(input)).filter(func.similarity(Component.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Metabolite.id, Metabolite.biggid, func.similarity(Metabolite.biggid, str(input)).label("sim")).filter(Metabolite.biggid % str(input)).filter(func.similarity(Metabolite.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == row.id).all():
                 for mcc in session.query(Model_Compartmentalized_Component).filter(Model_Compartmentalized_Component.compartmentalized_component_id ==cc.id).all():
+                    
                     model = session.query(Model).filter(Model.id == mcc.model_id).first()
+                    #session.query(Compartment).filter
                     metabolitelist.append([model.biggid, row.biggid]) 
            
         result = session.query(Model.id, Model.biggid, func.similarity(Model.biggid, str(input)).label("sim")).filter(Model.biggid % str(input)).filter(func.similarity(Model.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
@@ -290,7 +293,7 @@ class AutoCompleteHandler(BaseHandler):
         for row in result:
             reactionlist.append([row.biggid,row.sim])
                
-        result = session.query(Component.id, Component.biggid, func.similarity(Component.biggid, str(input)).label("sim")).filter(Component.biggid % str(input)).filter(func.similarity(Component.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Metabolite.id, Metabolite.biggid, func.similarity(Metabolite.biggid, str(input)).label("sim")).filter(Metabolite.biggid % str(input)).filter(func.similarity(Metabolite.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             metabolitelist.append([row.biggid,row.sim]) 
         
@@ -378,7 +381,7 @@ class MetaboliteHandler(BaseHandler):
         session = Session()
         
         modelquery = session.query(Model).filter(Model.biggid == modelName).first()
-        componentquery = session.query(Component).filter(Component.biggid == metaboliteId).first()
+        componentquery = session.query(Metabolite).filter(Metabolite.biggid == metaboliteId).first()
         metabolitequery = session.query(Metabolite).filter(componentquery.id == Metabolite.id).first()
         altModelList = []
         for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).all():

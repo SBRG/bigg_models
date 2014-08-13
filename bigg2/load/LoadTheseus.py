@@ -37,10 +37,10 @@ class IndependentObjects:
     def loadComponents(self, modellist, session):
         for model in modellist:
             for component in model.metabolites:
-                if not session.query(Metabolite).filter(Metabolite.biggid == component.id).count():
+                if not session.query(Component).filter(Component.name == component.name).count() and not session.query(Metabolite).filter(Metabolite.biggid == component.id[0:-2]).count():
                     #componentObject = Component()
                     #session.add(componentObject)
-                    metaboliteObject = Metabolite(biggid = component.id, name = component.name, kegg_id = component.notes.get("KEGGID"), cas_number = component.notes.get("CASNUMBER"), formula = str(component.formula))
+                    metaboliteObject = Metabolite(biggid = component.id[0:-2], name = component.name, kegg_id = component.notes.get("KEGGID"), cas_number = component.notes.get("CASNUMBER"), formula = str(component.formula))
                     session.add(metaboliteObject)
                                 
     def loadReactions(self , modellist, session):
@@ -51,7 +51,7 @@ class IndependentObjects:
                     session.add(reactionObject)
                     for metabolite in reaction._metabolites:
                         
-                        componentquery = session.query(Component).filter(Component.biggid == metabolite.id).first()
+                        componentquery = session.query(Metabolite).filter(Metabolite.biggid == metabolite.id).first()
                         if componentquery is not None:
                             compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).first()
                             #reactionquery = session.query(Reaction).filter(Reaction.biggid == reaction.id).first()
@@ -82,19 +82,28 @@ class DependentObjects:
                     object = Model_Gene(model_id = modelquery.id, gene_id = genequery.id)
                     session.add(object)
                 
-    def loadCompartmentalizedComponent(self, modellist, session):       
-        for component in session.query(Component):
+    def loadCompartmentalizedComponent(self, modellist, session):
+        for model in modellist:
+            for metabolite in model.metabolites:
+                identifier = session.query(Compartment).filter(Compartment.name == metabolite.id[-1:len(metabolite.id)]).first()
+                m = session.query(Metabolite).filter(Metabolite.biggid == metabolite.id[0:-2]).first()
+                object = Compartmentalized_Component(component_id = m.id, compartment_id = identifier.id)
+                session.add(object)
+        """       
+        for component in session.query(Metabolite):
             if component.biggid is not None:
                 identifier = session.query(Compartment).filter(Compartment.name == component.biggid[-1:len(component.biggid)]).first()
                 #instance = session.query(Component).filter(Component.biggid == component.biggid[:-2]).first()
                 object = Compartmentalized_Component(component_id = component.id, compartment_id = identifier.id)
                 session.add(object)
+        """
                 
     def loadModelCompartmentalizedComponent(self, modellist, session):
         for model in modellist:
             for metabolite in model.metabolites:
-                componentquery = session.query(Metabolite).filter(Metabolite.biggid == metabolite.id).first()
-                compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).first()
+                componentquery = session.query(Metabolite).filter(Metabolite.biggid == metabolite.id[0:-2]).first()
+                compartmentquery = session.query(Compartment).filter(Compartment.name == metabolite.id[-1:len(metabolite.id)]).first()
+                compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).filter(Compartmentalized_Component.compartment_id == compartmentquery.id).first()
                 modelquery = session.query(Model).filter(Model.biggid == model.id).first()
                 object = Model_Compartmentalized_Component(model_id = modelquery.id, compartmentalized_component_id = compartmentalized_component_query.id)
                 session.add(object)
@@ -125,8 +134,9 @@ class DependentObjects:
         for model in modellist:
             for reaction in model.reactions:
                 for metabolite in reaction._metabolites:
-                    componentquery = session.query(Metabolite).filter(Metabolite.biggid == metabolite.id).first()
-                    compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).first()
+                    componentquery = session.query(Metabolite).filter(Metabolite.biggid == metabolite.id[0:-2]).first()
+                    compartmentquery = session.query(Compartment).filter(Compartment.name == metabolite.id[-1:len(metabolite.id)]).first()
+                    compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).filter(Compartmentalized_Component.compartment_id == compartmentquery.id).first()
                     #modelquery = session.query(Model).filter(Model.name == model.id).first()
                     reactionquery = session.query(Reaction).filter(Reaction.name == reaction.name).first()
                     

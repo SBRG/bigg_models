@@ -19,18 +19,36 @@ class ReactionQuery():
                 .join(Reaction)
                 .filter(reactionName == Reaction.biggid)
                 .first()[1])
-
+    """
     def get_metabolite_list(self, modelquery, reaction, session):
-        return [(x[0].biggid, x[1].stoichiometry) 
+        return [(x[0].biggid, x[1].stoichiometry, x[2].name) 
                 for x in (session
-                        .query(Component,Reaction_Matrix)
+                        .query(Metabolite,Reaction_Matrix,Compartment)
+                        .join(Component)
                         .join(Compartmentalized_Component)
+                        
                         .join(Model_Compartmentalized_Component)
                         .join(Model)
                         .join(Reaction_Matrix)
                         .filter(Reaction_Matrix.reaction_id == reaction.id)
                         .filter(Model.id == modelquery.id)
-                        .distinct(Component.biggid))]
+                        )]
+    """
+    def get_metabolite_list(self, modelquery, reaction, session):
+        return [(x[0].biggid, x[1].stoichiometry, x[2].name) 
+                for x in (session
+                        .query(Metabolite,Reaction_Matrix,Compartment)
+                        #.join(Metabolite)
+                        #.join(Component)
+                        .join(Compartmentalized_Component)
+                        .join(Compartment)
+                        .join(Model_Compartmentalized_Component)
+                        .join(Model)
+                        .join(Reaction_Matrix)
+                        .filter(Reaction_Matrix.reaction_id == reaction.id)
+                        #.distinct(Reaction_Matrix.compartmentalized_component_id)
+                        .filter(Model.id == modelquery.id)
+                        )]
     def get_gene_list(self , reactionName, session):
         return [x.name for x in (session
                                 .query(Gene)
@@ -83,7 +101,8 @@ class MetaboliteQuery():
                 .join(Reaction_Matrix)
                 .join(Compartmentalized_Component)
                 .join(Component)
-                .filter(Component.biggid == metaboliteId)
+                .join(Metabolite)
+                .filter(Metabolite.biggid == metaboliteId)
                 .filter(Model_Reaction.model_id == modelquery.id)
                 .all())
     """         
@@ -136,14 +155,14 @@ class StringBuilder():
         for metabolite in metabolitelist:
             if float(metabolite[1])<0:
                 if float(metabolite[1])!= -1:
-                    pre_reaction_string += "{0:.2f}".format(abs(metabolite[1])) + " " + metabolite[0] + " + "
+                    pre_reaction_string += "{0:.2f}".format(abs(metabolite[1])) + " " + metabolite[0]+"_"+metabolite[2] + " + "
                 else:
-                    pre_reaction_string += " " + metabolite[0] + " + "
+                    pre_reaction_string += " " + metabolite[0]+"_"+metabolite[2] + " + "
             if float(metabolite[1])>0:
                 if float(metabolite[1])!= 1:
-                    post_reaction_string += "{0:.2f}".format(abs(metabolite[1])) + " " + metabolite[0] + " + "
+                    post_reaction_string += "{0:.2f}".format(abs(metabolite[1])) + " " + metabolite[0]+"_"+metabolite[2] + " + "
                 else:
-                    post_reaction_string += " " + metabolite[0] + " + "
+                    post_reaction_string += " " + metabolite[0]+"_"+metabolite[2] + " + "
         if modelreaction.lowerbound <0 and modelreaction.upperbound <=0:
             reaction_string = pre_reaction_string[:-2] + " &#10229; " + post_reaction_string[:-2]
         elif modelreaction.lowerbound >= 0:
