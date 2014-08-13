@@ -238,11 +238,11 @@ class SearchHandler(BaseHandler):
         
         result = session.query(Metabolite.id, Metabolite.biggid, func.similarity(Metabolite.biggid, str(input)).label("sim")).filter(Metabolite.biggid % str(input)).filter(func.similarity(Metabolite.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == row.id).all():
+            for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == row.id).distinct(Compartmentalized_Component.component_id).all():
                 for mcc in session.query(Model_Compartmentalized_Component).filter(Model_Compartmentalized_Component.compartmentalized_component_id ==cc.id).all():
                     
                     model = session.query(Model).filter(Model.id == mcc.model_id).first()
-                    #session.query(Compartment).filter
+                    compartment = session.query(Compartment).join(Compartmentalized_Component).filter(Compartmentalized_Component.id == cc.id).first()
                     metabolitelist.append([model.biggid, row.biggid]) 
            
         result = session.query(Model.id, Model.biggid, func.similarity(Model.biggid, str(input)).label("sim")).filter(Model.biggid % str(input)).filter(func.similarity(Model.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
