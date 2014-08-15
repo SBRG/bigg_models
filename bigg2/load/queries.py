@@ -50,7 +50,7 @@ class ReactionQuery():
                         .filter(Model.id == modelquery.id)
                         )]
     def get_gene_list(self , reactionName, session):
-        return [x.name for x in (session
+        return [(x.name,x.locus_id) for x in (session
                                 .query(Gene)
                                 .join(Model_Gene)
                                 .join(GPR_Matrix).
@@ -163,7 +163,9 @@ class StringBuilder():
                     post_reaction_string += "{0:.2f}".format(abs(metabolite[1])) + " " + metabolite[0]+"_"+metabolite[2] + " + "
                 else:
                     post_reaction_string += " " + metabolite[0]+"_"+metabolite[2] + " + "
-        if modelreaction.lowerbound <0 and modelreaction.upperbound <=0:
+        if len(metabolitelist) == 1:
+            reaction_string = pre_reaction_string[:-2] + " &#8652; " + post_reaction_string[:-2]
+        elif modelreaction.lowerbound <0 and modelreaction.upperbound <=0:
             reaction_string = pre_reaction_string[:-2] + " &#10229; " + post_reaction_string[:-2]
         elif modelreaction.lowerbound >= 0:
             reaction_string = pre_reaction_string[:-2] + " &#10230; " + post_reaction_string[:-2]

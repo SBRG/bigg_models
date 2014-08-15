@@ -1,5 +1,14 @@
 $( document ).ready(function() {
-
+      $("#submit").click(function(){
+    $.post("hey",
+    {
+      name:"Donald Duck",
+      city:"Duckburg"
+    },
+    function(data,status){
+      alert("Data: " + data + "\nStatus: " + status);
+    });
+  });
 	var navPos = $('.navbar').offset().top;
 
 	$(window).scroll(function(){

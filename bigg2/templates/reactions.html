@@ -39,7 +39,7 @@
   						</table>
 					</div>
 					<p class="lead">Gene Reaction Rule: <br>{{gene_reaction_rule}}</p>
-					<p class="lead">Genes: {% for gene in genes %} <a href=/models/{{model}}/genes/{{gene}}>{{gene}} </a>{% endfor %}</p>
+					<p class="lead">Gene Names: {% for gene in genes %} <br><a href=/models/{{model}}/genes/{{gene[0]}}>{{gene[0]}} </a>({{gene[1]}}){% endfor %}</p>
 					<hr>
 					<h2> Escher Map </h2>
                     <div id="map"></div>  
@@ -49,6 +49,7 @@
 				<p></p>
 				<hr>
 				    <h3> Comments/Error Reporting </h3>
+				    
 				    <div class="form-group">
 				    <label>Email address</label>
                     <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email">    
@@ -68,8 +69,10 @@
   </div>
                         </form>
 				    <textarea class="form-control" rows="3" placeholder="Comments"></textarea>
-				
+				    <br>
+				<button id="submit" type="submit" value="Submit">Submit</button>
 				</div>
+				
 				<div class="col-lg-4">
 					<div class="well">
                     	<h4>BiGG Search</h4>
@@ -112,7 +115,7 @@
 		<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
         <script src="//zakandrewking.github.io/escher/escher.1.0.0b2.js"></script>
         <script>
-   
+ 
     // Set up map and styles
     // Requires two local files:  iJO1366_central_metabolism.json and builder-embed.css
     var map_sel = d3.select('#map'),

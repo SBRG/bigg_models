@@ -8,7 +8,10 @@
     				<hr>
     				<p class="lead">ID: {{id}}</p>
 					<p class="lead">Model: <br><a href="/models/{{model}}">{{ model }}</a></p>
-					Reactions That Contain This Gene:
+					<span class="lead">Description:</span>
+					<p style="font-size:medium;color:blue;">{{info}}</p>
+					<br>
+					<p class="lead">Reactions That Contain This Gene:</p>
 					<table class="table table-bordered">
 						<thead>
 						<tr>
@@ -20,7 +23,7 @@
   						{% for reaction in reactions %}
   						<tr>
   						<td><a href="/models/{{model}}/reactions/{{reaction[0]}}">{{reaction[0]}} </a></td>
-  						<td>{{reaction[1]}}<br> Genes: {% for gene in reaction[2] %}<a href="/models/{{model}}/genes/{{gene}}"> {{ gene }}{% endfor %}</a></td>
+  						<td>{{reaction[1]}}<br> Gene Names: {% for gene in reaction[2] %}<a href="/models/{{model}}/genes/{{gene}}"> {{ gene }}{% endfor %}</a></td>
   						</tr>
   						{% endfor %}
   						</tbody>
