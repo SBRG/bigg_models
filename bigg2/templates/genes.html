@@ -8,6 +8,7 @@
     				<hr>
     				<p class="lead">ID: {{id}}</p>
 					<p class="lead">Model: <br><a href="/models/{{model}}">{{ model }}</a></p>
+					<p class="lead">Left Postion: {{leftpos}} Right Position: {{rightpos}}</p>
 					<span class="lead">Description:</span>
 					<p style="font-size:medium;color:blue;">{{info}}</p>
 					<br>
@@ -50,7 +51,7 @@
                     	<h4>{{id}} in other Models:</h4>
                     	<ul class="list-unstyled">
                             {% for altmodel in altModelList %}
-                            <li style="text-align: center"><a href="/models/{{altmodel}}/genes/{{id}}">{{altmodel}}</a></li>
+                            <li style="text-align: center"><a href="/models/{{altmodel}}/genes/{{name}}">{{altmodel}}</a></li>
                             {% endfor %}
                         </ul>
                 	</div>

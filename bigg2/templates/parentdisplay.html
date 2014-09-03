@@ -40,7 +40,7 @@
 						
 						<li><a href="/">Home</a></li>
 						<li><a href="/advancesearch">Advance Search</a></li>
-						<li><a href="#">SBML Export</a></li>
+						
 						<li><a href="/webapi">Web API</a></li>
 						<li><a href="#">Help</a></li>
 						
@@ -72,7 +72,7 @@
 		<script type="text/javascript" src="/static/js/script.js"></script>
 		        <script>
     $(function() {
-    
+
     $("#search1").autocomplete({
     source: function (request, response) {
         $.get("/autocomplete", {

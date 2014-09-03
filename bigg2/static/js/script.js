@@ -1,12 +1,16 @@
 $( document ).ready(function() {
       $("#submit").click(function(){
-    $.post("hey",
+    $.post("/submiterror",
     {
-      name:"Donald Duck",
-      city:"Duckburg"
+      email: $.trim($("input[name='email']").val()),
+      keggid:$.trim($("input[name='keggid']").val()),
+      casnumber:$.trim($("input[name='casnumber']").val()),
+      biggid:$.trim($("input[name='biggid']").val()),
+      comments:$.trim($("textarea[name='comments']").val()),
+      formula:$.trim($("input[name='theformula']").val())
     },
     function(data,status){
-      alert("Data: " + data + "\nStatus: " + status);
+      alert(data);
     });
   });
 	var navPos = $('.navbar').offset().top;

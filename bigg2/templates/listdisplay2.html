@@ -68,11 +68,11 @@
 	    			<tr>
 	    			{% for value in metaboliteResults %}
 	    				{% if loop.index is divisibleby 3 %}
-	    				<td class="col-md-3"><a href="/models/{{model}}/metabolites/{{value}}">{{value}}</a></td>
+	    				<td class="col-md-3"><a href="/models/{{model}}/metabolites/{{value[0]}}_{{value[1]}}">{{value[0]}}_{{value[1]}}</a></td>
 	    				</tr>
 	    				<tr>
 	    				{% else %}
-	    				<td class="col-md-3"><a href="/models/{{model}}/metabolites/{{value}}">{{value}}</a></td>
+	    				<td class="col-md-3"><a href="/models/{{model}}/metabolites/{{value[0]}}_{{value[1]}}">{{value[0]}}_{{value[1]}}</a></td>
 						{% endif %}
 					{% endfor %}
 					
@@ -145,11 +145,11 @@
 	    			<tr>
 	    			{% for value in metaboliteResults %}
 	    				{% if loop.index is divisibleby 3 %}
-	    				<td class="col-md-3"><a href="/models/{{model}}/metabolites/{{value}}">{{value}}</a></td>
+	    				<td class="col-md-3"><a href="/models/{{model}}/metabolites/{{value[0]}}_{{value[1]}}">{{value[0]}}_{{value[1]}}</a></td>
 	    				</tr>
 	    				<tr>
 	    				{% else %}
-	    				<td class="col-md-3"><a href="/models/{{model}}/metabolites/{{value}}">{{value}}</a></td>
+	    				<td class="col-md-3"><a href="/models/{{model}}/metabolites/{{value[0]}}_{{value[1]}}">{{value[0]}}_{{value[1]}}</a></td>
 						{% endif %}
 					{% endfor %}
 					

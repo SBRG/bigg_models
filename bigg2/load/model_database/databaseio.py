@@ -67,7 +67,9 @@ def databasetomodel(modelversion_id, modelname=False):
         the_metabolites.clear()
         for officialname, formula, reactant, compartment, charge, casnumber, keggid in reactants: #get all the metabolites for one reaction:
     
-            name=(Metabolite(reactant, formula, officialname, compartment))
+            name=(Metabolite(reactant, '', officialname, compartment))
+            
+            name.notes={'CHARGE':charge, 'KEGGID': keggid, 'CASNUMBER':casnumber, 'FORMULA1':formula}
             
             countmetabolite +=1
             if 'deleted' in name.id: 
@@ -83,9 +85,9 @@ def databasetomodel(modelversion_id, modelname=False):
             newvar.name.replace('\(','_')
             newvar.name.replace('\)','_')
                  
-            newvalue=(Metabolite(reactant, formula, officialname, compartment))
+            newvalue=(Metabolite(reactant, '', officialname, compartment))
     
-            newvalue.notes={'CHARGE':charge, 'KEGGID': keggid, 'CASNUMBER':casnumber} #pm to add charge
+            newvalue.notes={'CHARGE':charge, 'KEGGID': keggid, 'CASNUMBER':casnumber, 'FORMULA1' : formula} #pm to add charge
                 
             #exec('%s=%r') % (newvar, newvalue) 
             
@@ -98,7 +100,7 @@ def databasetomodel(modelversion_id, modelname=False):
             if (newvalue=="M_"):
                 print "error no newvalue for :  ", reactant
             try:   
-                query= "select molecule_id from metabolite where abbreviation='%s' and modelversion_id='%d'"%(reactant,modelversion)
+                query= "select molecule_id from metabolite_keggcass where abbreviation='%s' and modelversion_id='%d'"%(reactant,modelversion)
                 cursor.execute(query)
                 mid = cursor.fetchone()
                 conn.commit
@@ -582,5 +584,7 @@ def validateuser(name, email):
     todo
     #return T/F on login
     
-for x in xrange(118,172):
-    databasetomodel(x)
+#modellist = [408, 260, 257, 258, 162]
+#for x in modellist:
+#    databasetomodel(x)
+databasetomodel(409)

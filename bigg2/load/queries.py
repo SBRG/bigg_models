@@ -17,7 +17,7 @@ class ReactionQuery():
         return (session
                 .query(Model_Reaction, Reaction)
                 .join(Reaction)
-                .filter(reactionName == Reaction.biggid)
+                .filter(reactionName == Reaction.name)
                 .first()[1])
     """
     def get_metabolite_list(self, modelquery, reaction, session):
@@ -35,10 +35,9 @@ class ReactionQuery():
                         )]
     """
     def get_metabolite_list(self, modelquery, reaction, session):
-        return [(x[0].biggid, x[1].stoichiometry, x[2].name) 
+        return [(x[0].name, x[1].stoichiometry, x[2].name) 
                 for x in (session
                         .query(Metabolite,Reaction_Matrix,Compartment)
-                        #.join(Metabolite)
                         #.join(Component)
                         .join(Compartmentalized_Component)
                         .join(Compartment)
@@ -46,20 +45,21 @@ class ReactionQuery():
                         .join(Model)
                         .join(Reaction_Matrix)
                         .filter(Reaction_Matrix.reaction_id == reaction.id)
-                        #.distinct(Reaction_Matrix.compartmentalized_component_id)
                         .filter(Model.id == modelquery.id)
                         )]
-    def get_gene_list(self , reactionName, session):
+    def get_gene_list(self , reaction, modelquery, session):
         return [(x.name,x.locus_id) for x in (session
                                 .query(Gene)
                                 .join(Model_Gene)
-                                .join(GPR_Matrix).
-                                join(Model_Reaction)
+                                .join(GPR_Matrix)
+                                .join(Model_Reaction)
+                                .join(Model)
                                 .join(Reaction)
-                                .filter(reactionName == Reaction.biggid)
+                                .filter(modelquery.genome_id == Gene.genome_id)
+                                .filter(reaction.id == Reaction.id)
                                 .all())]
     def get_reaction_list(self, modelName, session):
-        return [(x.biggid) 
+        return [(x.name) 
                 for x in (session
                 .query(Reaction)
                 .join(Model_Reaction)
@@ -86,7 +86,11 @@ class ModelQuery():
     
     def get_gene_count(self, modelquery, session):
         return (session.query(Model_Gene)
+                #.join(Model)
+                #.join(Gene)
+                #.filter(Model.genome_id  == Gene.genome_id)
                 .filter(Model_Gene.model_id == modelquery.id)
+                
                 .count())
                 
     def get_model_list(self, session):
@@ -94,15 +98,17 @@ class ModelQuery():
                                 .query(Model).all())]
                 
 class MetaboliteQuery():
-    def get_model_reactions(self, metaboliteId, modelquery, session):
+    def get_model_reactions(self, metaboliteId, compartmentName, modelquery, session):
         return (session
                 .query(Reaction)
                 .join(Model_Reaction)
                 .join(Reaction_Matrix)
                 .join(Compartmentalized_Component)
+                .join(Compartment)
                 .join(Component)
                 .join(Metabolite)
-                .filter(Metabolite.biggid == metaboliteId)
+                .filter(Compartment.name == compartmentName)
+                .filter(Metabolite.name == metaboliteId.split("_")[0])
                 .filter(Model_Reaction.model_id == modelquery.id)
                 .all())
     """         
@@ -119,11 +125,13 @@ class MetaboliteQuery():
             .filter( Model.id == modelReaction.model_id)
             .first())
     def get_metabolite_list(self, modelName, session):
-        return [x.biggid for x in (session
-                .query(Metabolite)
+        return [(x[0].name, x[1].name) for x in (session
+                .query(Metabolite, Compartment)
                 .join(Compartmentalized_Component)
+                #.join(Compartment)
                 .join(Model_Compartmentalized_Component)
                 .join(Model)
+                .filter(Compartmentalized_Component.compartment_id == Compartment.id)
                 .filter(Model.biggid == modelName)
                 .all())]
 
@@ -145,6 +153,7 @@ class GeneQuery():
                                 .query(Gene)
                                 .join(Model_Gene)
                                 .join(Model)
+                                #.filter(Model.genome_id == Gene.genome_id)
                                 .filter(Model.biggid == modelName)
                                 .all())]
                                 
@@ -155,12 +164,12 @@ class StringBuilder():
         for metabolite in metabolitelist:
             if float(metabolite[1])<0:
                 if float(metabolite[1])!= -1:
-                    pre_reaction_string += "{0:.2f}".format(abs(metabolite[1])) + " " + metabolite[0]+"_"+metabolite[2] + " + "
+                    pre_reaction_string += "{0:.1f}".format(abs(metabolite[1])) + " " + metabolite[0]+"_"+metabolite[2] + " + "
                 else:
                     pre_reaction_string += " " + metabolite[0]+"_"+metabolite[2] + " + "
             if float(metabolite[1])>0:
                 if float(metabolite[1])!= 1:
-                    post_reaction_string += "{0:.2f}".format(abs(metabolite[1])) + " " + metabolite[0]+"_"+metabolite[2] + " + "
+                    post_reaction_string += "{0:.1f}".format(abs(metabolite[1])) + " " + metabolite[0]+"_"+metabolite[2] + " + "
                 else:
                     post_reaction_string += " " + metabolite[0]+"_"+metabolite[2] + " + "
         if len(metabolitelist) == 1:

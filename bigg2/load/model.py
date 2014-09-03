@@ -29,9 +29,9 @@ class Gene(Base):
 class Model(Base):
     __tablename__='model'
     id = Column(Integer, Sequence('wids'), primary_key=True)
-    #name = Column(String)
     biggid = Column(String)
     firstcreated = Column(DateTime)
+    genome_id = Column(Integer, ForeignKey('genome.id'))
     UniqueConstraint('name', 'firstcreated')
     
 class Model_Gene(Base):
@@ -39,6 +39,8 @@ class Model_Gene(Base):
     id = Column(Integer, Sequence('wids'), primary_key=True)
     model_id = Column(Integer, ForeignKey('model.id'), nullable=False)
     gene_id = Column(Integer, ForeignKey('gene.id'), nullable=False)
+    
+
 """
 class Reaction(Base):
     __tablename__='reaction'
@@ -52,7 +54,7 @@ class Model_Reaction(Base):
     id = Column(Integer, Sequence('wids'), primary_key=True)
     reaction_id = Column(Integer, ForeignKey('reaction.id'), nullable=False)
     model_id = Column(Integer, ForeignKey('model.id'), nullable=False)
-    biggid = Column(String)
+    name = Column(String)
     upperbound = Column(Numeric)
     lowerbound = Column(Numeric)
     gpr = Column(String)
@@ -91,14 +93,13 @@ class Model_Compartmentalized_Component(Base):
     id = Column(Integer, Sequence('wids'), primary_key=True)
     model_id = Column(Integer, ForeignKey('model.id'), nullable=False)
     compartmentalized_component_id = Column(Integer, ForeignKey('compartmentalized_component.id'), nullable=False)
+    compartment_id = Column(Integer, ForeignKey('compartment.id'), nullable=False)
     
 class Compartment(Base):
     __tablename__='compartment'
     id = Column(Integer, Sequence('wids'), primary_key=True)
     name = Column(String, unique = True)
     
-
-
 class Reaction_Matrix(Base):
     __tablename__='reaction_matrix'
     id = Column(Integer, Sequence('wids'), primary_key=True)
