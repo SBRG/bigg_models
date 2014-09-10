@@ -1,0 +1,60 @@
+<html>
+{% extends "parentdisplay.html" %}
+
+{% block content %}
+
+<h1 style="padding-left:7px;text-align:center;">Advance Search</h1>
+    				<hr>
+<div class="container">
+	     <div class="col-lg-12" >
+            <div class="panel panel-primary" >
+              <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-check"></i>Choose Models</h3>
+              </div>
+              <div class="panel-body">
+                <div class="form-group">
+                	  <div class="checkbox">
+                	  {% for value in modelResults %}
+                	  	<input type="checkbox"> {{ value }} </input>
+                	  	<br>
+                	  	{% endfor %}      
+                        </div>
+               
+                </div>
+              </div>
+              
+            </div>
+            
+            <div class="panel panel-primary" >
+              <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-check"></i>Choose Category</h3>
+              </div>
+              <div class="panel-body">
+                <div class="form-group">
+                	  <div class="checkbox">
+                	  	<input type="checkbox"> reactions </input>
+                	  	<br>
+                	  	<input type="checkbox"> metabolites </input>
+                	  	<br> 
+                	  	<input type="checkbox"> genes </input>
+                	  	<br>
+                	  	<input type="checkbox"> all </input>
+                	  	<br>    
+                        </div>
+               
+                </div>
+              </div>
+              
+            </div>
+            <h3>Input Key Words</h3>
+            <form action = "/search" method="get">
+                       <input id ="search" type="text" name="query" class="form-control" placeholder="Examples.."></input>
+            </form>
+            
+            <button type="button" class="btn btn-default" style="margin-top:20px;">Submit</button>
+          </div>
+</div>
+{% endblock %}	
+
+
+</html>
