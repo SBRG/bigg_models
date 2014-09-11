@@ -12,7 +12,6 @@ from theseus import models
 from jinja2 import Environment, FileSystemLoader
 import psycopg2
 
-
 define("port", default = 8888, help="run on the given port", type=int)
 
 env = Environment(loader=FileSystemLoader('templates'))

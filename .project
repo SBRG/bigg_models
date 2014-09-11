@@ -3,6 +3,7 @@
 	<name>BIGG2</name>
 	<comment></comment>
 	<projects>
+		<project>bigg</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -10,8 +11,14 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
+		<buildCommand>
+			<name>com.aptana.ide.core.unifiedBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
 	</buildSpec>
 	<natures>
+		<nature>com.aptana.projects.webnature</nature>
 		<nature>org.python.pydev.pythonNature</nature>
 	</natures>
 </projectDescription>
