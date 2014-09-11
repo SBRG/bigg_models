@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>BiGG Database</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    
+    <!-- Custom Google Web Font -->
+   <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+    <link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
+
+    <!-- Add custom CSS here -->
+    <link href="static/css/frontpage.css" rel="stylesheet">
+	<style>
+		
+		.intro-divider{margin-bottom:100px;}
+		.form-control{margin-bottom:20px;}
+	</style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="http://systemsbiology.ucsd.edu/">SBRG</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse navbar-right navbar-ex1-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="#about">About</a>
+                    </li>
+                    <li><a href="advancesearch">Advance Search</a>
+                    </li>
+                    <li><a href="#export">Export SBML</a>
+                    </li>
+                    <li><a href="#help">Help</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <div class="intro-header">
+
+        <div class="container">
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="intro-message">
+                        <h1>BiGG Database </h1>
+                        <h3>Hosted and Maintained by SBRG</h3>
+                        <hr class="intro-divider">
+                        <form action = "/search" method="get">
+                       <input id ="search" type="text" name="query" class="form-control" placeholder="Search Database"></input>
+                       </form>
+                    </div>
+                      <div class="col-sm-6 col-md-4">
+    <div class="thumbnail">
+      <img src="/static/assets/f21.png" alt="...">
+      <div class="caption">
+        <a href=/models><h3>Models</h3></a>
+        <p>...</p>
+        
+      </div>
+    </div>
+  </div>
+    <div class="col-sm-6 col-md-4">
+    <div class="thumbnail">
+      <img src="/static/assets/f22.png" alt="...">
+      <div class="caption">
+        <h3>Metabolites</h3>
+        <p>...</p>
+        
+      </div>
+    </div>
+  </div>
+    <div class="col-sm-6 col-md-4">
+    <div class="thumbnail">
+      <img src="/static/assets/f23.png" alt="...">
+      <div class="caption">
+        <h3>Reactions</h3>
+        <p>...</p>
+        
+      </div>
+    </div>
+  </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- /.container -->
+
+    </div>
+    <!-- /.intro-header -->
+
+    
+ 
+        <!-- /.container -->
+
+    <!-- /.banner -->
+
+    <div class="banner">
+
+        <div class="container">
+
+            <div class="row">
+          		<div class="col-lg-6">
+                    <h2>Connect to BiGG:</h2>
+                </div>
+                <div class="col-lg-6">
+                    <ul class="list-inline banner-social-buttons">
+                        <li><a href="https://twitter.com/ucsd_sbrg" class="btn btn-default btn-lg"><i class="fa fa-twitter fa-fw"></i> <span class="network-name"> Twitter</span></a>
+                        </li>
+                        <li><a href="https://github.com/IronSummitMedia/startbootstrap" class="btn btn-default btn-lg"><i class="fa fa-github fa-fw"></i> <span class="network-name"> Github</span></a>
+                        </li>
+                        <li><a href="http://www.biomedcentral.com/1471-2105/11/213" class="btn btn-default btn-lg"><i class="fa fa-info-circle"></i> <span class="network-name"> Published Paper</span></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+        <!-- /.container -->
+
+    </div>
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <ul class="list-inline">
+                        <li><a href="#home">Home</a>
+                        </li>
+                        <li class="footer-menu-divider">&sdot;</li>
+                        <li><a href="#about">SBRG website</a>
+                        </li>
+                        <li class="footer-menu-divider">&sdot;</li>
+                        <li><a href="#services">Disclaimer</a>
+                        </li>
+                        <li class="footer-menu-divider">&sdot;</li>
+                        <li><a href="#contact" data-toggle="modal">Contact</a>
+                        </li>
+                    </ul>
+                    <p class="copyright text-muted small">BiGG is hosted and maintained by the Systems Biology Research Group at the University of California, San Diego. <br> Copyright 2007 The Regents of the University of California. All Rights Reserved.
+                    	</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+		<div id="contact" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" 
+							data-dismiss="modal" aria-hidden="true">
+							&times;
+						</button>
+						<h4 class="modal-title" id="myModalLabel">
+							Contact Us
+						</h4>
+					</div>
+					<div class="modal-body">
+						<p>In Silico Lab:  858-822-1144</p>
+						<br>
+						<p>Wet Lab:  858-822-0028</p>
+						<br>
+						<p>FAX: 858-822-3120</p>
+						<br>
+						<p>Location: </p>
+						<br>
+						<p>417 Powell-Focht Bioengineering Hall</p>
+						<br>
+						<p>9500 Gilman Drive La Jolla, CA 92093-0412</p>
+						
+					</div>
+					
+				</div>
+			</div>
+		</div>
+    <!-- JavaScript -->
+
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
+        <script>
+    $(function() {
+    
+    $("#search").autocomplete({
+    source: function (request, response) {
+        $.get("autocomplete", {
+            query: request.term
+        }, function (data) {
+            // assuming data is a JavaScript array such as
+            // ["one@abc.de", "onf@abc.de","ong@abc.de"]
+            // and not a string
+            response(data)
+            
+          
+        });
+    },
+    minLength: 3
+});
+});
+    </script>
+		<!--<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>-->
+		<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>

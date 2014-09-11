@@ -1,0 +1,191 @@
+<html>
+{% extends "parentdisplay.html" %}
+
+{% block content %}
+	<style>
+		#bigg{
+			text-align:center;
+		}
+	</style>
+	<h1 id="bigg">BiGG Database</h1>
+	
+
+	<div class="tabbable"> <!-- Only required for left/right tabs -->
+    	<ul class="nav nav-tabs">
+    		<li class="active"><a href="#tab1" data-toggle="tab">All Results</a></li>
+    		<li><a href="#tab2" data-toggle="tab">Model Results</a></li>
+    		<li><a href="#tab3" data-toggle="tab">Reaction Results</a></li>
+    		<li><a href="#tab4" data-toggle="tab">Metabolite Results</a></li>
+    		<li><a href="#tab5" data-toggle="tab">Gene Results</a></li>
+    	</ul>
+    	
+    	<div class="tab-content">
+	    	<div class="tab-pane active" id="tab1">
+	    		
+	    			{% if modelResults%}
+	    			<h3 style="text-align:center;">{{Models}}:</h3>
+	    			<table class="table table-striped table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;border-width:2px;">
+	    			<tr>
+	    			{% for values in modelResults %}
+	    				{% if loop.index is divisibleby 3 %}
+	    				<td class="col-md-3"><a href="/models/{{values}}">{{values}}</a></td>
+	    				</tr>
+	    				<tr>
+	    				{% else %}
+	    				<td class="col-md-3"><a href="/models/{{values}}">{{values}}</a></td>
+						{% endif %}
+					{% endfor %}
+					
+					</tr>
+					</table>
+					{%endif%}
+					
+					
+					{%if reactionResults%}
+					<h3 style="text-align:center;">{{Reactions}}:</h3>
+					<table class="table table-striped table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;border-width:2px;">
+	    			<tr>
+	    			{% for values in reactionResults %}
+	    				{% if loop.index is divisibleby 3 %}
+	    				
+	    				<td class="col-md-3">model: {{values[0]}}<br><a href="/models/{{values[0]}}/reactions/{{values[1]}}">{{values[1]}}</a> </td>
+	    				</tr>
+	    				<tr>
+	    				{% else %}
+	    				<td class="col-md-3">model: {{values[0]}}<br><a href="/models/{{values[0]}}/reactions/{{values[1]}}">{{values[1]}}</a> </td>
+						{% endif %}
+					{% endfor %}
+					
+					</tr>
+					</table>
+					{%endif%}
+					
+					
+				
+	    			{% if metaboliteResults%}
+	    			<h3 style="text-align:center;">{{Metabolites}}:</h3>
+	    			<table class="table table-striped table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;border-width:2px;">
+	    			<tr>
+	    			{% for values in metaboliteResults %}
+	    				{% if loop.index is divisibleby 3 %}
+	    				<td class="col-md-3"> model: {{values[0]}}<br><a href="/models/{{values[0]}}/metabolites/{{values[1]}}">{{values[1]}}</a></td>
+	    				</tr>
+	    				<tr>
+	    				{% else %}
+	    				<td class="col-md-3"> model: {{values[0]}}<br><a href="/models/{{values[0]}}/metabolites/{{values[1]}}">{{values[1]}}</a></td>
+						{% endif %}
+					{% endfor %}
+					
+					</tr>
+					</table>
+					{%endif%}
+					
+					
+	    			{% if geneResults%}
+	    			<h3 style="text-align:center;">{{Genes}}:</h3>
+	    			<table class="table table-striped table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;border-width:2px;">
+	    			<tr>
+	    			{% for values in geneResults %}
+	    				{% if loop.index is divisibleby 3 %}
+	    				<td class="col-md-3"> model: {{values[0]}}<br><a href="/models/{{values[0]}}/genes/{{values[1]}}">{{values[1]}}</a></td>
+	    				</tr>
+	    				<tr>
+	    				{% else %}
+	    				<td class="col-md-3"> model: {{values[0]}}<br><a href="/models/{{values[0]}}/genes/{{values[1]}}">{{values[1]}}</a></td>
+						{% endif %}
+					{% endfor %}
+					
+					</tr>
+					</table>
+					{%endif%}
+				</div>	
+	    	
+	    	<div class="tab-pane" id="tab2">
+	    			{% if modelResults%}
+	    			<h3 style="text-align:center;">{{Models}}:</h3>
+	    			<table class="table table-striped table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;border-width:2px;">
+	    			<tr>
+	    			{% for values in modelResults %}
+	    				{% if loop.index is divisibleby 3 %}
+	    				<td class="col-md-3"><a href="/models/{{values}}">{{values}}</a></td>
+	    				</tr>
+	    				<tr>
+	    				{% else %}
+	    				<td class="col-md-3"><a href="/models/{{values}}">{{values}}</a></td>
+						{% endif %}
+					{% endfor %}
+					
+					</tr>
+					</table>
+					{% else %}
+					 <h3 style="text-align:center;">None</h3>
+					{%endif%}			
+	   		</div>
+	    	<div class="tab-pane" id="tab3">
+				{%if reactionResults%}
+					<h3 style="text-align:center;">{{Reactions}}:</h3>
+					<table class="table table-striped table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;border-width:2px;">
+	    			<tr>
+	    			{% for values in reactionResults %}
+	    				{% if loop.index is divisibleby 3 %}
+	    				    <td class="col-md-3" style="border-width:2px;">model: {{values[0]}}<br><a href="/models/{{values[0]}}/reactions/{{values[1]}}">{{values[1]}}</a> </td>
+	    				    </tr>
+	    				    <tr>
+	    				{% else %}
+	    				    <td class="col-md-3" style="border-width:2px;">model: {{values[0]}}<br><a href="/models/{{values[0]}}/reactions/{{values[1]}}">{{values[1]}}</a> </td>
+						{% endif %}
+					{% endfor %}
+					
+					</tr>
+					</table>
+					{% else %}
+					 <h3 style="text-align:center;">None</h3>
+				{%endif%}	
+	    	</div>
+	    	<div class="tab-pane" id="tab4">
+	    			{% if metaboliteResults%}
+	    			<h3 style="text-align:center;">{{Metabolites}}:</h3>
+	    			<table class="table table-striped table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;border-width:2px;">
+	    			<tr>
+	    			{% for values in metaboliteResults %}
+	    				{% if loop.index is divisibleby 3 %}
+	    				<td class="col-md-3">model: {{values[0]}}<br><a href="/models/{{values[0]}}/metabolites/{{values[1]}}">{{values[1]}}</a></td>
+	    				</tr>
+	    				<tr>
+	    				{% else %}
+	    				<td class="col-md-3">model: {{values[0]}}<br><a href="/models/{{values[0]}}/metabolites/{{values[1]}}">{{values[1]}}</a></td>
+						{% endif %}
+					{% endfor %}
+					
+					</tr>
+					</table>
+					{% else %}
+					 <h3 style="text-align:center;">None</h3>
+					{%endif%}
+	    	</div>
+	    	<div class="tab-pane" id="tab5">
+	    			{% if geneResults%}
+	    			<h3 style="text-align:center;">{{Genes}}:</h3>
+	    			<table class="table table-striped table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;border-width:2px;">
+	    			<tr>
+	    			{% for values in geneResults %}
+	    				{% if loop.index is divisibleby 3 %}
+	    				<td class="col-md-3">model: {{values[0]}}<br><a href="/models/{{values[0]}}/genes/{{values[1]}}">{{values[1]}}</a></td>
+	    				</tr>
+	    				<tr>
+	    				{% else %}
+	    				<td class="col-md-3">model: {{values[0]}}<br><a href="/models/{{values[0]}}/genes/{{values[1]}}">{{values[1]}}</a></td>
+						{% endif %}
+					{% endfor %}
+					
+					</tr>
+					</table>
+					{% else %}
+					 <h3 style="text-align:center;">None</h3>   
+					{%endif%}
+	    	</div>
+    	</div>
+    </div>
+  
+{% endblock %}	
+</html>
