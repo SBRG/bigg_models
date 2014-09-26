@@ -3,9 +3,10 @@ from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 from sqlalchemy import create_engine, Table, MetaData, update
 from ome import base, components
-from model import Model, Escher_Map, Component, Reaction, Compartment, Metabolite, Compartmentalized_Component, Model_Reaction, Reaction_Matrix, Gene, Model_Compartmentalized_Component, Model_Gene, GPR_Matrix
+from model import Model, Escher_Map, Component, Reaction, Compartment, Metabolite, Compartmentalized_Component, Model_Reaction, Reaction_Matrix, Gene, Model_Compartmentalized_Component, Model_Gene, GPR_Matrix, Synonyms, Genome
 from ome.loading import component_loading
 from LoadGenome import load_genomes
+import re
 Session = sessionmaker()
 
 
@@ -19,6 +20,8 @@ keggcasTable = Table('metabolite_keggcass', meta, autoload=True, autoload_with=g
 engine = create_engine("postgresql://dbuser@localhost:5432/ome")
 Session.configure(bind=engine)
 
+
+
 class IndependentObjects:
 
     def loadGenes(self, modellist, session):
@@ -28,42 +31,58 @@ class IndependentObjects:
                     geneObject = Gene(locus_id = gene.id)
                     session.add(geneObject)
                 
-    def loadModels(self, modellist, session):
+    def loadModels(self, modellist, session, dict):
         for model in modellist:
+            genome = session.query(Genome).filter(Genome.ncbi_id == dict[model.id][0]).first()
+            if genome != None:
+                modelObject = Model(biggid = model.id, firstcreated = dict[model.id][1], genome_id = genome.id)
+                session.add(modelObject)
+            else:
+                print model.id
+                print "corresponding genbank file was not uploaded"
+        """
             if(model.id == 'iSF1195'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 6)
+                modelObject = Model(biggid = model.id, firstcreated = '2014-9-16 14:26:22', genome_id = 7)
             if(model.id == 'iSB619'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 1)
-            if(model.id == 'iJN746'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 5)
-            if(model.id == 'iIT341'):
                 modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 3)
+            if(model.id == 'iJN746'):
+                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 6)
+            if(model.id == 'iIT341'):
+                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 4)
             if(model.id == 'iNJ661'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 2)
+                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 3)
             if(model.id == 'iJO1366'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 14)  
+                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 15)  
             if(model.id == 'iAF692'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 4)        
+                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 5) 
+            if(model.id == 'model'):
+                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 1)
+            if(model.id == 'iAPECO1_1312 '):
+                
             session.add(modelObject)
-            
+        """    
     
     def loadComponents(self, modellist, session):
         for model in modellist:
             for component in model.metabolites:
-                metabolite = session.query(Metabolite).filter(Metabolite.name == component.id.split("_")[0]) 
+                metabolite = session.query(Metabolite).filter(Metabolite.name == component.id.split("_")[0])
+                #metabolite = session.query(Metabolite).filter(Metabolite.kegg_id == component.notes.get("KEGGID")[0]) 
                 if not metabolite.count():
-                    metaboliteObject = Metabolite(name = component.id.split("_")[0], long_name = component.name, kegg_id = component.notes.get("KEGGID"), cas_number = component.notes.get("CASNUMBER"), formula = component.notes.get("FORMULA1"))
+                    if component.notes.get("KEGGID")[0] == '' or component.notes.get("KEGGID")[0]== None:
+                        metaboliteObject = Metabolite(name = component.id.split("_")[0], long_name = component.name, kegg_id = component.notes.get("KEGGID")[0], cas_number = component.notes.get("CASNUMBER")[0], formula = component.notes.get("FORMULA1")[0], flag=False)
+                    else:
+                        metaboliteObject = Metabolite(name = component.id.split("_")[0], long_name = component.name, kegg_id = component.notes.get("KEGGID")[0], cas_number = component.notes.get("CASNUMBER")[0], formula = component.notes.get("FORMULA1")[0], flag=True)
                     session.add(metaboliteObject)
                 else:
-                    meatboliteObject = metabolite.first()               
+                    metaboliteObject = metabolite.first()               
                     if metaboliteObject.kegg_id == None or metaboliteObject.kegg_id == '':
-                        metaboliteObject.kegg_id = str(component.notes.get("KEGGID"))
+                        metaboliteObject.kegg_id = component.notes.get("KEGGID")[0]
                         #metabolite.update({Metabolite.kegg_id: str(component.notes.get("KEGGID"))})
                     if metaboliteObject.cas_number == None or metaboliteObject.cas_number == '':
-                        metaboliteObject.cas_number = str(component.notes.get("CASNUMBER"))
+                        metaboliteObject.cas_number = component.notes.get("CASNUMBER")[0]
                         #metabolite.update({Metabolite.cas_number: str(component.notes.get("CASNUMBER"))})
                     if metaboliteObject.formula == None or metaboliteObject.formula == '':
-                        metaboliteObject.formula = str(component.notes.get("FORMULA1"))
+                        metaboliteObject.formula = component.notes.get("FORMULA1")[0]
                         #metabolite.update({Metabolite.formula: str(component.notes.get("FORMULA1"))})
                                 
     def loadReactions(self , modellist, session):
@@ -72,20 +91,6 @@ class IndependentObjects:
                 if not session.query(Reaction).filter(Reaction.name == reaction.id).count():
                     reactionObject = Reaction(name = reaction.id, long_name = reaction.name)
                     session.add(reactionObject)
-                    """
-                    for metabolite in reaction._metabolites:
-                        
-                        componentquery = session.query(Metabolite).filter(Metabolite.name == metabolite.id.split("_")[0]).first()
-                        if componentquery is not None:
-                            compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).first()
-                            #reactionquery = session.query(Reaction).filter(Reaction.biggid == reaction.id).first()
-                    
-                            for stoichKey in reaction._metabolites.keys():
-                                if str(stoichKey) == metabolite.id:
-                                    stoichiometryobject = reaction._metabolites[stoichKey]
-                            RMobject = Reaction_Matrix(reaction_id = reactionObject.id, compartmentalized_component_id = compartmentalized_component_query.id, stoichiometry = stoichiometryobject)
-                            session.add(RMobject)
-                    """
     
     def loadCompartments(self, modellist, session):
         for model in modellist:
@@ -102,27 +107,33 @@ class DependentObjects:
         for model in modellist:
             for gene in model.genes:
                 if gene.id != 's0001':
-                    if session.query(Gene).filter(Gene.locus_id == gene.id).count() != 0:
+                    if session.query(Gene).filter(Gene.locus_id == gene.id).first() != None:
                         genequery = session.query(Gene).filter(Gene.locus_id == gene.id).first()          
                         modelquery = session.query(Model).filter(Model.biggid == model.id).first()
                         #genequery = session.query(Gene).filter(Gene.locus_id == gene.id).filter(Gene.genome_id == modelquery.genome_id).first()
                         object = Model_Gene(model_id = modelquery.id, gene_id = genequery.id)
                         session.add(object)
-                    elif session.query(Gene).filter(Gene.name == gene.id).count() != 0:
+                    elif session.query(Gene).filter(Gene.name == gene.id).first() != None:
                         genequery = session.query(Gene).filter(Gene.name == gene.id).first()
                         modelquery = session.query(Model).filter(Model.biggid == model.id).first()
                         object = Model_Gene(model_id = modelquery.id, gene_id = genequery.id)
                         session.add(object)
                     else:
-                        if not session.query(Gene).filter(Gene.name == gene.id).count():
-                            geneObject = Gene(locus_id = gene.id, leftpos=None, rightpos=None, strand=None, name=gene.id)
-                            session.add(geneObject)
+                        #geneObject = Gene(locus_id = gene.id, leftpos=None, rightpos=None, strand=None, name=gene.id)
+                        #session.add(geneObject)
+                        genequery = session.query(Synonyms).filter(Synonyms.synonym == gene.id.split(".")[0]).first()
+                        if genequery != None:
                             modelquery = session.query(Model).filter(Model.biggid == model.id).first()
-                            object = Model_Gene(model_id = modelquery.id, gene_id = geneObject.id)
+                            object = Model_Gene(model_id = modelquery.id, gene_id = genequery.gene_id)
                             session.add(object)
+                            if modelquery.biggid == "RECON1":
+                                gene = session.query(Gene).filter(Gene.id == genequery.gene_id).first()
+                                gene.locus_id = gene.id    
+                        else:
+                            print gene.id, model.id
                         """
                         print gene.id +' not found!'
-                        pWW0_128 not found!
+pWW0_128 not found!
 pWW0_131 not found!
 pWW0_097 not found!
 pWW0_091 not found!
@@ -181,22 +192,15 @@ Mbar_A1502 not found!
             for metabolite in model.metabolites:
                 identifier = session.query(Compartment).filter(Compartment.name == metabolite.id[-1:len(metabolite.id)]).first()
                 m = session.query(Metabolite).filter(Metabolite.name == metabolite.id.split("_")[0]).first()
-                #m = session.query(Metabolite).filter(Metabolite.name == metabolite.id).first()
+                #m = session.query(Metabolite).filter(Metabolite.kegg_id == metabolite.notes.get("KEGGID")[0]).first()
                 object = Compartmentalized_Component(component_id = m.id, compartment_id = identifier.id)
                 session.add(object)
-        """       
-        for component in session.query(Metabolite):
-            if component.biggid is not None:
-                identifier = session.query(Compartment).filter(Compartment.name == component.biggid[-1:len(component.biggid)]).first()
-                #instance = session.query(Component).filter(Component.biggid == component.biggid[:-2]).first()
-                object = Compartmentalized_Component(component_id = component.id, compartment_id = identifier.id)
-                session.add(object)
-        """
                 
     def loadModelCompartmentalizedComponent(self, modellist, session):
         for model in modellist:
             for metabolite in model.metabolites:
                 componentquery = session.query(Metabolite).filter(Metabolite.name == metabolite.id.split("_")[0]).first()
+                #componentquery = session.query(Metabolite).filter(Metabolite.kegg_id == metabolite.notes.get("KEGGID")[0]).first()
                 compartmentquery = session.query(Compartment).filter(Compartment.name == metabolite.id[-1:len(metabolite.id)]).first()
                 compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).filter(Compartmentalized_Component.compartment_id == compartmentquery.id).first()
                 modelquery = session.query(Model).filter(Model.biggid == model.id).first()
@@ -218,6 +222,7 @@ Mbar_A1502 not found!
             for reaction in model.reactions:
                 for gene in reaction._genes:
                     if gene.id != 's0001':
+                        
                         model_query = session.query(Model).filter(Model.biggid == model.id).first()
                         model_gene_query = session.query(Model_Gene).join(Gene).filter(Gene.locus_id == gene.id).filter(Model_Gene.model_id == model_query.id).first()
                     
@@ -232,8 +237,14 @@ Mbar_A1502 not found!
                                 object = GPR_Matrix(model_gene_id = model_gene_query.id, model_reaction_id = model_reaction_query.id) 
                                 session.add(object)
                             else:
-                                print gene.id, model.id
-        
+                                synonymquery = session.query(Synonyms).filter(Synonyms.synonym == gene.id.split(".")[0]).first()
+                                if synonymquery != None:
+                                    model_gene_query = session.query(Model_Gene).join(Gene).filter(Gene.id == synonymquery.gene_id).filter(Model_Gene.model_id == model_query.id).first()
+                                    model_reaction_query = session.query(Model_Reaction).filter(Model_Reaction.name == reaction.id).filter(Model_Reaction.model_id == model_query.id).first()
+                                    object = GPR_Matrix(model_gene_id = model_gene_query.id, model_reaction_id = model_reaction_query.id) 
+                                    session.add(object)
+                                else:
+                                    print "mistake", gene.id, reaction.id
                 
     def loadReactionMatrix(self, modellist, session):
         for model in modellist:
@@ -241,7 +252,8 @@ Mbar_A1502 not found!
                 reactionquery = session.query(Reaction).filter(Reaction.name == reaction.id).first()
                 for metabolite in reaction._metabolites:
                     
-                    componentquery = session.query(Metabolite).filter(Metabolite.name == metabolite.id.split("_")[0]).first()                    
+                    componentquery = session.query(Metabolite).filter(Metabolite.name == metabolite.id.split("_")[0]).first()
+                    #componentquery = session.query(Metabolite).filter(Metabolite.kegg_id == metabolite.notes.get("KEGGID")[0]).first()                    
                     compartmentquery = session.query(Compartment).filter(Compartment.name == metabolite.id[-1:len(metabolite.id)]).first()
                     compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).filter(Compartmentalized_Component.compartment_id == compartmentquery.id).first()     
                     if not session.query(Reaction_Matrix).filter(Reaction_Matrix.reaction_id == reactionquery.id).filter(Reaction_Matrix.compartmentalized_component_id == compartmentalized_component_query.id).count():
@@ -257,6 +269,37 @@ Mbar_A1502 not found!
             escher = Escher_Map(biggid = reaction.id, category = "reaction", model_name = m.id)
             session.add(escher)                        
 
+def get_or_create(session, class_type, **kwargs):
+    """gets an object using filter_by on the unique kwargs. If no such object
+    is found in the database, a new one will be created which satisfies
+    these constraints. This is why every class that wants to use this
+    method to be instantiated needs to have a UniqueConstraint defined.
+    """
+
+    for constraint in list(class_type.__table_args__):
+        if constraint.__class__.__name__ == 'UniqueConstraint':
+            unique_cols = constraint.columns.keys()
+
+	inherited_result = True
+	if '__mapper_args__' in class_type.__dict__ and 'inherits' in class_type.__mapper_args__:
+		inherited_class_type = class_type.__mapper_args__['inherits']
+		for constraint in list(inherited_class_type.__table_args__):
+			if constraint.__class__.__name__ == 'UniqueConstraint':
+				inherited_unique_cols = constraint.columns.keys()
+
+		try: inherited_result = session.query(inherited_class_type).filter_by(**{k: kwargs[k] for k in inherited_unique_cols}).first()
+		except: None
+
+    try: result = session.query(class_type).filter_by(**kwargs).first()
+    except: result = session.query(class_type).filter_by(**{k: kwargs[k] for k in unique_cols}).first()
+
+    if not result or not inherited_result:
+        result = class_type(**kwargs)
+        session.add(result)
+        session.commit()
+
+    return result
+
 @contextmanager
 def create_Session():
     session = Session()
@@ -271,22 +314,41 @@ def create_Session():
         session.close()
         
 def run_program():
+    dict = {}
+    with open("model-genome.txt") as file:
+        for line in file:
+            modelinfo = line.split(',')
+            templist = []
+            templist.append(modelinfo[1])
+            templist.append(modelinfo[2].strip('\n'))
+            dict[modelinfo[0]] = templist
     modelObjectList = []
+    
+    for m in dict.keys():
+        if m == 'Recon':
+            modelObjectList.append(models.load_model('model'))
+        elif(m=='Ecoli_core_model'):
+            modelObjectList.append(models.load_model('E_coli_core'))
+        else:    
+            modelObjectList.append(models.load_model(m))
     #for m in models.get_model_list():
     #    modelObjectList.append(models.load_model(m))
-    modelObjectList.append(models.load_model('iSF1195'))
+    #modelObjectList.append(models.load_model('Recon1'))
+    #modelObjectList.append(models.load_model('iSF1195'))
     #modelObjectList.append(models.load_model('iAF1260')) #Escherichia coli str. K-12 substr. MG1655
-    modelObjectList.append(models.load_model('iJO1366'))
-    modelObjectList.append(models.load_model('iJN746'))
-    modelObjectList.append(models.load_model('iIT341'))
-    modelObjectList.append(models.load_model('iNJ661'))
+    #modelObjectList.append(models.load_model('iJO1366'))
+    #modelObjectList.append(models.load_model('iJN746'))
+    #modelObjectList.append(models.load_model('iIT341'))
+    #modelObjectList.append(models.load_model('iNJ661'))
     #modelObjectList.append(models.load_model('iAF692')) There are no gene names. It is all locus ids
-    modelObjectList.append(models.load_model('iSB619'))
+    #modelObjectList.append(models.load_model('iSB619'))
     
     with create_Session() as session:
-        load_genomes()
-        component_loading.load_genomes(base, components)
-        IndependentObjects().loadModels(modelObjectList, session)
+        """with open("genbanklist.txt") as file:
+            for line in file:
+                load_genomes(line.strip('\n'))"""
+        #component_loading.load_genomes(base, components)
+        IndependentObjects().loadModels(modelObjectList, session, dict)
         IndependentObjects().loadComponents(modelObjectList,session)
         IndependentObjects().loadCompartments(modelObjectList, session)
         DependentObjects().loadCompartmentalizedComponent(modelObjectList, session)
@@ -296,9 +358,7 @@ def run_program():
         DependentObjects().loadModelReaction(modelObjectList, session)
         DependentObjects().loadGPRMatrix(modelObjectList, session)
         DependentObjects().loadReactionMatrix(modelObjectList, session)
-        
-        
-        DependentObjects().loadEscher(session)
+        #DependentObjects().loadEscher(session)
         
 if __name__ == '__main__':
     run_program()

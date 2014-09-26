@@ -1,14 +1,18 @@
 from ome import base, components
 from ome.loading import component_loading
 
-def load_genomes():
+
+def load_a_genome(name):
+    component_loading.load_genbank(name, base, components)
     
-    component_loading.load_genbank('NC_002745.gbk', base, components) #S. aureus iSB619         Bacteria/Staphylococcus_aureus_N315_uid57837 
-    component_loading.load_genbank('NC_000962.gbk', base, components) #M. tuberculosis iNJ661   Bacteria/Mycobacterium_tuberculosis_H37Rv_uid57777
-    component_loading.load_genbank('NC_000915.gbk', base, components) #H. pylori iIT341         Bacteria/Helicobacter_pylori_26695_uid57787
-    component_loading.load_genbank('NC_007355.gbk', base, components) #M. barkeri iAF692        Bacteria/Methanosarcina_barkeri_Fusaro_uid57715
-    component_loading.load_genbank('NC_002947.gbk', base, components) #P. putida iJN746         Bacteria/Pseudomonas_putida_KT2440_uid57843     Note: the grmit db contains locus ids that are not non existent in ncbi
-    component_loading.load_genbank('hs_alt_HuRef_chr1.gbk', base, components)
+def load_genomes(filename):
+    component_loading.load_genbank(filename, base, components)
+    #component_loading.load_genbank('NC_002745.gbk', base, components) #S. aureus iSB619         Bacteria/Staphylococcus_aureus_N315_uid57837 
+    #component_loading.load_genbank('NC_000962.gbk', base, components) #M. tuberculosis iNJ661   Bacteria/Mycobacterium_tuberculosis_H37Rv_uid57777
+    #component_loading.load_genbank('NC_000915.gbk', base, components) #H. pylori iIT341         Bacteria/Helicobacter_pylori_26695_uid57787
+    #component_loading.load_genbank('NC_007355.gbk', base, components) #M. barkeri iAF692        Bacteria/Methanosarcina_barkeri_Fusaro_uid57715
+    #component_loading.load_genbank('NC_002947.gbk', base, components) #P. putida iJN746         Bacteria/Pseudomonas_putida_KT2440_uid57843     Note: the grmit db contains locus ids that are not non existent in ncbi
+    
     
 """
 missing in ncbi files
@@ -96,4 +100,4 @@ MBd3602 iAF692
 """
 
 if __name__ == '__main__':
-    load_genomes()
+    load_a_genome()

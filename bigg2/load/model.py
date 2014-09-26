@@ -33,7 +33,6 @@ class Model(Base):
     firstcreated = Column(DateTime)
     genome_id = Column(Integer, ForeignKey('genome.id'))
     UniqueConstraint('name', 'firstcreated')
-    
 class Model_Gene(Base):
     __tablename__='model_gene'
     id = Column(Integer, Sequence('wids'), primary_key=True)
@@ -122,7 +121,7 @@ class Comments(Base):
     id= Column(Integer, primary_key=True)
     kegg_id=Column(String)
     cas_number=Column(String)
-    biggid = Column(String)
+    name = Column(String)
     formula = Column(String)
     text = Column(String)
     

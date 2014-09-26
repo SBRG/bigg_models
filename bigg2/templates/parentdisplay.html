@@ -10,6 +10,7 @@
 		<link rel="stylesheet" type="text/css" href="/static/css/style.css">
 		<link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
 		<link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+		<link rel="stylesheet" href="/static/lib/tablesorter/css/theme.default.css">
 		<style>
 		#ui-id-1{
 		    z-index:1000;
@@ -70,8 +71,10 @@
 		<!--<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>-->
 		<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="/static/js/script.js"></script>
+		<script type="text/javascript" src="/static/lib/tablesorter/js/jquery.tablesorter.min.js"></script>
 		        <script>
     $(function() {
+  $(".myTable").tablesorter();
 
     $("#search1").autocomplete({
     source: function (request, response) {

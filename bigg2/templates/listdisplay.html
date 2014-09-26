@@ -20,24 +20,33 @@
     	</ul>
     	
     	<div class="tab-content">
-	    	<div class="tab-pane active" id="tab1">
-	    		
+	    	<div class="tab-pane active" id="tab1" style="padding:40px 40px 60px 40px;">
+	    		    
 	    			{% if modelResults%}
 	    			<h3 style="text-align:center;">{{Models}}:</h3>
-	    			<table class="table table-striped table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;border-width:2px;">
-	    			<tr>
-	    			{% for values in modelResults %}
-	    				{% if loop.index is divisibleby 3 %}
-	    				<td class="col-md-3"><a href="/models/{{values}}">{{values}}</a></td>
-	    				</tr>
-	    				<tr>
-	    				{% else %}
-	    				<td class="col-md-3"><a href="/models/{{values}}">{{values}}</a></td>
-						{% endif %}
-					{% endfor %}
-					
-					</tr>
-					</table>
+
+					    <table class="myTable tablesorter">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Organism</th>
+      <th>Metabolites</th>
+      <th>Reactions</th>
+      <th>Genes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for values in modelResults %}
+    <tr class ='rowlink'>  
+        <td><a href="/models/{{values[0]}}">{{values[0]}}</a></td>
+        <td>{{values[1]}}</td>
+        <td>{{values[2]}}</td>
+        <td>{{values[3]}}</td>
+        <td>{{values[4]}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 					{%endif%}
 					
 					
@@ -97,26 +106,35 @@
 					
 					</tr>
 					</table>
+					
 					{%endif%}
 				</div>	
 	    	
-	    	<div class="tab-pane" id="tab2">
+	    	<div class="tab-pane" id="tab2" style="padding:40px;">
 	    			{% if modelResults%}
 	    			<h3 style="text-align:center;">{{Models}}:</h3>
-	    			<table class="table table-striped table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;border-width:2px;">
-	    			<tr>
-	    			{% for values in modelResults %}
-	    				{% if loop.index is divisibleby 3 %}
-	    				<td class="col-md-3"><a href="/models/{{values}}">{{values}}</a></td>
-	    				</tr>
-	    				<tr>
-	    				{% else %}
-	    				<td class="col-md-3"><a href="/models/{{values}}">{{values}}</a></td>
-						{% endif %}
-					{% endfor %}
-					
-					</tr>
-					</table>
+	    								    <table class="myTable tablesorter">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Organism</th>
+      <th>Metabolites</th>
+      <th>Reactions</th>
+      <th>Genes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for values in modelResults %}
+    <tr class ='rowlink'>  
+        <td><a href="/models/{{values[0]}}">{{values[0]}}</a></td>
+        <td>{{values[1]}}</td>
+        <td>{{values[2]}}</td>
+        <td>{{values[3]}}</td>
+        <td>{{values[4]}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 					{% else %}
 					 <h3 style="text-align:center;">None</h3>
 					{%endif%}			
@@ -184,8 +202,10 @@
 					 <h3 style="text-align:center;">None</h3>   
 					{%endif%}
 	    	</div>
+	    			
     	</div>
+    	
     </div>
-  
+
 {% endblock %}	
 </html>
