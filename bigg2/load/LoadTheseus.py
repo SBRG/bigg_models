@@ -35,7 +35,7 @@ class IndependentObjects:
         for model in modellist:
             genome = session.query(Genome).filter(Genome.ncbi_id == dict[model.id][0]).first()
             if genome != None:
-                modelObject = Model(biggid = model.id, firstcreated = dict[model.id][1], genome_id = genome.id)
+                modelObject = Model(biggid = model.id, firstcreated = dict[model.id][1], genome_id = genome.id, notes = '')
                 session.add(modelObject)
             else:
                 print model.id
@@ -89,7 +89,7 @@ class IndependentObjects:
         for model in modellist:
             for reaction in model.reactions:
                 if not session.query(Reaction).filter(Reaction.name == reaction.id).count():
-                    reactionObject = Reaction(name = reaction.id, long_name = reaction.name)
+                    reactionObject = Reaction(name = reaction.id, long_name = reaction.name, notes = '')
                     session.add(reactionObject)
     
     def loadCompartments(self, modellist, session):
@@ -329,7 +329,7 @@ def run_program():
             modelObjectList.append(models.load_model('model'))
         elif(m=='Ecoli_core_model'):
             modelObjectList.append(models.load_model('E_coli_core'))
-        else:    
+        else:   
             modelObjectList.append(models.load_model(m))
     #for m in models.get_model_list():
     #    modelObjectList.append(models.load_model(m))
@@ -344,9 +344,9 @@ def run_program():
     #modelObjectList.append(models.load_model('iSB619'))
     
     with create_Session() as session:
-        """with open("genbanklist.txt") as file:
+        with open("genbanklist.txt") as file:
             for line in file:
-                load_genomes(line.strip('\n'))"""
+                load_genomes(line.strip('\n'))
         #component_loading.load_genomes(base, components)
         IndependentObjects().loadModels(modelObjectList, session, dict)
         IndependentObjects().loadComponents(modelObjectList,session)

@@ -33,6 +33,7 @@ class Model(Base):
     firstcreated = Column(DateTime)
     genome_id = Column(Integer, ForeignKey('genome.id'))
     UniqueConstraint('name', 'firstcreated')
+    notes = Column(String)
 class Model_Gene(Base):
     __tablename__='model_gene'
     id = Column(Integer, Sequence('wids'), primary_key=True)
