@@ -1,6 +1,6 @@
 from model import (Model, Component, Reaction, Compartment, Metabolite, 
                         Compartmentalized_Component, Model_Reaction, Reaction_Matrix, 
-                        GPR_Matrix, Model_Compartmentalized_Component, Model_Gene, Gene)
+                        GPR_Matrix, Model_Compartmentalized_Component, Model_Gene, Gene, Chromosome)
 class ReactionQuery():
     def get_model_reaction(self, reactionId, modelId, session):
         return (session
@@ -48,16 +48,20 @@ class ReactionQuery():
                         .filter(Model.id == modelquery.id)
                         )]
     def get_gene_list(self , reaction, modelquery, session):
-        return [(x.name,x.locus_id) for x in (session
+        chroms = session.query(Chromosome).filter(Chromosome.genome_id == modelquery.genome_id).all()
+        result = []
+        for chrom in chroms:
+            result.extend([(x.name,x.locus_id) for x in (session
                                 .query(Gene)
                                 .join(Model_Gene)
                                 .join(GPR_Matrix)
                                 .join(Model_Reaction)
                                 .join(Model)
                                 .join(Reaction)
-                                .filter(modelquery.genome_id == Gene.genome_id)
+                                .filter(chrom.id == Gene.chromosome_id)
                                 .filter(reaction.id == Reaction.id)
-                                .all())]
+                                .all())])
+        return result
     def get_reaction_list(self, modelName, session):
         return [(x.name) 
                 for x in (session

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" xmlns:fbc="http://www.sbml.org/sbml/level3/version1/fbc/version1" level="3" version="1" fbc:required="false">
-  <model id="m_257" substanceUnits="substance" timeUnits="dimensionless" volumeUnits="volume" areaUnits="area" lengthUnits="metre" extentUnits="substance">
+  <model id="iAF692" substanceUnits="substance" timeUnits="dimensionless" volumeUnits="volume" areaUnits="area" lengthUnits="metre" extentUnits="substance">
     <annotation>
       <listOfGeneAssociations xmlns="http://www.sbml.org/sbml/level3/version1/fbc/version1">
         <geneAssociation id="ga_1" reaction="R_ABTA">

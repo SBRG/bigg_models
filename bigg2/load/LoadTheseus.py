@@ -33,7 +33,8 @@ class IndependentObjects:
                 
     def loadModels(self, modellist, session, dict):
         for model in modellist:
-            genome = session.query(Genome).filter(Genome.ncbi_id == dict[model.id][0]).first()
+            
+            genome = session.query(Genome).filter(Genome.bioproject_id == dict[model.id][0]).first()
             if genome != None:
                 modelObject = Model(biggid = model.id, firstcreated = dict[model.id][1], genome_id = genome.id, notes = '')
                 session.add(modelObject)
@@ -121,14 +122,20 @@ class DependentObjects:
                     else:
                         #geneObject = Gene(locus_id = gene.id, leftpos=None, rightpos=None, strand=None, name=gene.id)
                         #session.add(geneObject)
-                        genequery = session.query(Synonyms).filter(Synonyms.synonym == gene.id.split(".")[0]).first()
-                        if genequery != None:
+                        synonymquery = session.query(Synonyms).filter(Synonyms.synonym == gene.id.split(".")[0]).filter(Synonyms.type == 'gene').first()
+                        if synonymquery != None:
                             modelquery = session.query(Model).filter(Model.biggid == model.id).first()
-                            object = Model_Gene(model_id = modelquery.id, gene_id = genequery.gene_id)
-                            session.add(object)
-                            if modelquery.biggid == "RECON1":
-                                gene = session.query(Gene).filter(Gene.id == genequery.gene_id).first()
-                                gene.locus_id = gene.id    
+                            
+                            genecheck = session.query(Gene).filter(Gene.id == synonymquery.ome_id).first()
+                            if genecheck:
+                                object = Model_Gene(model_id = modelquery.id, gene_id = synonymquery.ome_id)
+                                session.add(object)
+
+                                if modelquery.biggid == "RECON1":
+                                    gene = session.query(Gene).filter(Gene.id == synonymquery.ome_id).first()
+                                    gene.locus_id = gene.id
+                            else:
+                                print synonymquery.ome_id  
                         else:
                             print gene.id, model.id
                         """
@@ -238,11 +245,14 @@ Mbar_A1502 not found!
                                 session.add(object)
                             else:
                                 synonymquery = session.query(Synonyms).filter(Synonyms.synonym == gene.id.split(".")[0]).first()
-                                if synonymquery != None:
-                                    model_gene_query = session.query(Model_Gene).join(Gene).filter(Gene.id == synonymquery.gene_id).filter(Model_Gene.model_id == model_query.id).first()
-                                    model_reaction_query = session.query(Model_Reaction).filter(Model_Reaction.name == reaction.id).filter(Model_Reaction.model_id == model_query.id).first()
-                                    object = GPR_Matrix(model_gene_id = model_gene_query.id, model_reaction_id = model_reaction_query.id) 
-                                    session.add(object)
+                                if synonymquery != None and synonymquery.ome_id != None:
+                                    if synonymquery.ome_id != None:
+                                        model_gene_query = session.query(Model_Gene).join(Gene).filter(Gene.id == synonymquery.ome_id).filter(Model_Gene.model_id == model_query.id).first()
+                                        model_reaction_query = session.query(Model_Reaction).filter(Model_Reaction.name == reaction.id).filter(Model_Reaction.model_id == model_query.id).first()
+                                        object = GPR_Matrix(model_gene_id = model_gene_query.id, model_reaction_id = model_reaction_query.id) 
+                                        session.add(object)
+                                    else:
+                                        print "ome id is null " + synonymquery.ome_id
                                 else:
                                     print "mistake", gene.id, reaction.id
                 
@@ -314,6 +324,7 @@ def create_Session():
         session.close()
         
 def run_program():
+    
     dict = {}
     with open("model-genome.txt") as file:
         for line in file:
@@ -331,6 +342,7 @@ def run_program():
             modelObjectList.append(models.load_model('E_coli_core'))
         else:   
             modelObjectList.append(models.load_model(m))
+    
     #for m in models.get_model_list():
     #    modelObjectList.append(models.load_model(m))
     #modelObjectList.append(models.load_model('Recon1'))
@@ -346,7 +358,7 @@ def run_program():
     with create_Session() as session:
         with open("genbanklist.txt") as file:
             for line in file:
-                load_genomes(line.strip('\n'))
+                load_genomes(line.strip('\n'))       
         #component_loading.load_genomes(base, components)
         IndependentObjects().loadModels(modelObjectList, session, dict)
         IndependentObjects().loadComponents(modelObjectList,session)
