@@ -132,8 +132,8 @@ class DependentObjects:
                                 session.add(object)
 
                                 if modelquery.biggid == "RECON1":
-                                    gene = session.query(Gene).filter(Gene.id == synonymquery.ome_id).first()
-                                    gene.locus_id = gene.id
+                                    genequery = session.query(Gene).filter(Gene.id == synonymquery.ome_id).first()
+                                    genequery.locus_id = gene.id
                             else:
                                 print synonymquery.ome_id  
                         else:
@@ -211,6 +211,10 @@ Mbar_A1502 not found!
                 compartmentquery = session.query(Compartment).filter(Compartment.name == metabolite.id[-1:len(metabolite.id)]).first()
                 compartmentalized_component_query = session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).filter(Compartmentalized_Component.compartment_id == compartmentquery.id).first()
                 modelquery = session.query(Model).filter(Model.biggid == model.id).first()
+                if modelquery is None:
+                    print "model query is none", model.id
+                if compartmentalized_component_query is None:
+                    print "compartmentalized_component_query is none", metabolite.id
                 object = Model_Compartmentalized_Component(model_id = modelquery.id, compartmentalized_component_id = compartmentalized_component_query.id, compartment_id = compartmentquery.id)
                 session.add(object)
 
@@ -245,7 +249,7 @@ Mbar_A1502 not found!
                                 session.add(object)
                             else:
                                 synonymquery = session.query(Synonyms).filter(Synonyms.synonym == gene.id.split(".")[0]).first()
-                                if synonymquery != None and synonymquery.ome_id != None:
+                                if synonymquery != None:
                                     if synonymquery.ome_id != None:
                                         model_gene_query = session.query(Model_Gene).join(Gene).filter(Gene.id == synonymquery.ome_id).filter(Model_Gene.model_id == model_query.id).first()
                                         model_reaction_query = session.query(Model_Reaction).filter(Model_Reaction.name == reaction.id).filter(Model_Reaction.model_id == model_query.id).first()
