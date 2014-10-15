@@ -130,10 +130,10 @@ class DependentObjects:
                             if genecheck:
                                 object = Model_Gene(model_id = modelquery.id, gene_id = synonymquery.ome_id)
                                 session.add(object)
-
+                                
                                 if modelquery.biggid == "RECON1":
-                                    genequery = session.query(Gene).filter(Gene.id == synonymquery.ome_id).first()
-                                    genequery.locus_id = gene.id
+                                    geneobject = session.query(Gene).filter(Gene.id == synonymquery.ome_id).first()
+                                    geneobject.locus_id = gene.id
                             else:
                                 print synonymquery.ome_id  
                         else:
