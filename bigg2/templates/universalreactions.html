@@ -16,29 +16,25 @@
     				<h1>Reaction: <br><span id ="reactionName">{{name}}</span></h1>
     				<hr>
 					<p class="lead">Long Name: <br>{{long_name}}</p>					
-					<p class="lead">Reaction String:</p>
-					<p class="lead">{{reaction_string}}</p>
 					<br>
 					<br>
 					<br>
 					<div class="panel panel-default">
-  						<a href="#metabolitelist" class="list-group-item active">
+  						<a href="#reactionlist" class="list-group-item active">
     						<div class="panel-heading"><span class="lead">Metabolites:</span></div>
   						</a>
   						<table class="table table-striped">
   						
-  						{% for metabolite in metabolites %}
+  						{% for reaction in reactions %}
   						<tr>
-  						<td><a href="/models/{{model}}/metabolites/{{metabolite[0]}}_{{metabolite[2]}}">{{metabolite[0]}}_{{metabolite[2]}}</a></td>
-  						<td>{{metabolite[1]}}</td>
+  						<td>Model {{reaction[0]}}:<a href="/models/{{reaction[0]}}/reactions/{{reaction[1]}}}}">{{reaction[1]}}</a></td>
+  						
   						</tr>
   						{% endfor %}
   						
   						</table>
 					</div>
-					<p class="lead">Gene Reaction Rule: <br>{{gene_reaction_rule}}</p>
-					<p class="lead">Gene Names: {% for gene in genes %} <br><a href=/models/{{model}}/genes/{{gene[0]}}>{{gene[0]}} </a>({{gene[1]}}){% endfor %}</p>
-					<hr>
+                    <hr>
 					<h2> Escher Map </h2>
                     <div id="map"></div>  
                     <p></p>              
@@ -99,16 +95,6 @@
                     	<h4>View Escher Map</h4>
                     	<button class="btn btn-default" type="button">View Map</button>
                 	</div>
-                    <div class="well">
-                    	<h4 style="text-align: center">{{id}} in other Models:</h4>
-                    	<ul class="list-unstyled">
-                    	{% for altmodel in altModelList %}
-                                <li style="text-align: center"><a href="/models/{{altmodel}}/reactions/{{name}}">{{altmodel}}</a>
-                                </li>
-                                {% endfor %}
-                        </ul>
-                	</div>
-                	   
                     <!-- /input-group -->
                 </div>
 				

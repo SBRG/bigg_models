@@ -33,58 +33,41 @@ class IndependentObjects:
                 
     def loadModels(self, modellist, session, dict):
         for model in modellist:
-            
             genome = session.query(Genome).filter(Genome.bioproject_id == dict[model.id][0]).first()
             if genome != None:
                 modelObject = Model(biggid = model.id, firstcreated = dict[model.id][1], genome_id = genome.id, notes = '')
                 session.add(modelObject)
             else:
                 print model.id
-                print "corresponding genbank file was not uploaded"
-        """
-            if(model.id == 'iSF1195'):
-                modelObject = Model(biggid = model.id, firstcreated = '2014-9-16 14:26:22', genome_id = 7)
-            if(model.id == 'iSB619'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 3)
-            if(model.id == 'iJN746'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 6)
-            if(model.id == 'iIT341'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 4)
-            if(model.id == 'iNJ661'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 3)
-            if(model.id == 'iJO1366'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 15)  
-            if(model.id == 'iAF692'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 5) 
-            if(model.id == 'model'):
-                modelObject = Model(biggid = model.id, firstcreated = '2013-10-21 14:26:22', genome_id = 1)
-            if(model.id == 'iAPECO1_1312 '):
-                
-            session.add(modelObject)
-        """    
+                print "corresponding genbank file was not uploaded"   
     
     def loadComponents(self, modellist, session):
         for model in modellist:
             for component in model.metabolites:
                 metabolite = session.query(Metabolite).filter(Metabolite.name == component.id.split("_")[0])
                 #metabolite = session.query(Metabolite).filter(Metabolite.kegg_id == component.notes.get("KEGGID")[0]) 
+                keggid = str(component.notes.get("KEGGID", 'None')).strip('[]')
+                casnumber = str(component.notes.get("CASNUMBER", 'None')).strip('[]')
+                seed = str(component.notes.get("SEED", 'None')).strip('[]')
+                chebi = str(component.notes.get("CHEBI", 'None')).strip('[]')
+                metacyc = str(component.notes.get("METACYC", 'None')).strip('[]')
+                upa = str(component.notes.get("UPA", 'None')).strip('[]')
+                brenda = str(component.notes.get("BRENDA", 'None')).strip('[]')
                 if not metabolite.count():
-                    if component.notes.get("KEGGID")[0] == '' or component.notes.get("KEGGID")[0]== None:
-                        metaboliteObject = Metabolite(name = component.id.split("_")[0], long_name = component.name, kegg_id = component.notes.get("KEGGID")[0], cas_number = component.notes.get("CASNUMBER")[0], formula = component.notes.get("FORMULA1")[0], flag=False)
+                    if component.notes.get("KEGGID",[''])[0] == '' or component.notes.get("KEGGID",[''])[0]== None:
+                        metaboliteObject = Metabolite(name = component.id.split("_")[0], long_name = component.name, kegg_id = keggid, cas_number = casnumber, seed = seed, chebi = chebi, metacyc = metacyc, upa = upa, brenda = brenda, formula = str(component.formula), flag=False)
                     else:
-                        metaboliteObject = Metabolite(name = component.id.split("_")[0], long_name = component.name, kegg_id = component.notes.get("KEGGID")[0], cas_number = component.notes.get("CASNUMBER")[0], formula = component.notes.get("FORMULA1")[0], flag=True)
+                          metaboliteObject = Metabolite(name = component.id.split("_")[0], long_name = component.name, kegg_id = keggid, cas_number = casnumber, seed = seed, chebi = chebi, metacyc = metacyc, upa = upa, brenda = brenda, formula = str(component.formula), flag=True)
                     session.add(metaboliteObject)
                 else:
                     metaboliteObject = metabolite.first()               
                     if metaboliteObject.kegg_id == None or metaboliteObject.kegg_id == '':
-                        metaboliteObject.kegg_id = component.notes.get("KEGGID")[0]
-                        #metabolite.update({Metabolite.kegg_id: str(component.notes.get("KEGGID"))})
+                        metaboliteObject.kegg_id = keggid
                     if metaboliteObject.cas_number == None or metaboliteObject.cas_number == '':
-                        metaboliteObject.cas_number = component.notes.get("CASNUMBER")[0]
-                        #metabolite.update({Metabolite.cas_number: str(component.notes.get("CASNUMBER"))})
-                    if metaboliteObject.formula == None or metaboliteObject.formula == '':
-                        metaboliteObject.formula = component.notes.get("FORMULA1")[0]
-                        #metabolite.update({Metabolite.formula: str(component.notes.get("FORMULA1"))})
+                        metaboliteObject.cas_number = casnumber
+                    if str(metaboliteObject.formula) == None or str(metaboliteObject.formula) == '':
+                        metaboliteObject.formula = str(metaboliteObject.formula)
+                        
                                 
     def loadReactions(self , modellist, session):
         for model in modellist:
@@ -138,62 +121,7 @@ class DependentObjects:
                                 print synonymquery.ome_id  
                         else:
                             print gene.id, model.id
-                        """
-                        print gene.id +' not found!'
-pWW0_128 not found!
-pWW0_131 not found!
-pWW0_097 not found!
-pWW0_091 not found!
-pWW0_090 not found!
-pWW0_093 not found!
-pWW0_100 not found!
-pWW0_101 not found!
-pWW0_102 not found!
-pWW0_099 not found!
-pWW0_096 not found!
-pWW0_095 not found!
-pWW0_092 not found!
-pWW0_129 not found!
-pWW0_130 not found!
-pWW0_094 not found!
-pWW0_127 not found!
-PP_3739 not found!
-HP0903 not found!
-HP0094 not found!
-HP0093 not found!
-HP0905 not found!
-Rv1755c not found!
-Rv2233 not found!
-Rv0619 not found!
-Rv0618 not found!
-Rv2322c not found!
-Rv2321c not found!
-Mbar_A3662 not found!
-MBd0198 not found!
-Mbar_A0379 not found!
-MBd0274 not found!
-MBd0275 not found!
-MBd3023 not found!
-MBd3024 not found!
-MBd4270 not found!
-Mbar_A0628 not found!
-Mbar_A1948 not found!
-MBd3608 not found!
-Mbar_A1506 not found!
-MBd1413 not found!
-Mbar_A3605 not found!
-MBd3435 not found!
-Mbar_A0991 not found!
-MBd1561 not found!
-MBd4025 not found!
-MBd1438 not found!
-Mbar_A3633 not found!
-MBd4022 not found!
-MBd0933 not found!
-MBd3602 not found!
-Mbar_A1502 not found!
-                        """
-                
+             
     def loadCompartmentalizedComponent(self, modellist, session):
         for model in modellist:
             for metabolite in model.metabolites:
@@ -338,32 +266,21 @@ def run_program():
             templist.append(modelinfo[2].strip('\n'))
             dict[modelinfo[0]] = templist
     modelObjectList = []
-    
+    session = Session()
     for m in dict.keys():
-        if m == 'Recon':
-            modelObjectList.append(models.load_model('model'))
+        if session.query(Model).filter(Model.biggid == m).count()>0:
+            print "model name is already taken and or is already loaded"
         elif(m=='Ecoli_core_model'):
             modelObjectList.append(models.load_model('E_coli_core'))
+        elif  m == 'Recon' :
+            modelObjectList.append(models.load_model('model'))   
         else:   
             modelObjectList.append(models.load_model(m))
-    
-    #for m in models.get_model_list():
-    #    modelObjectList.append(models.load_model(m))
-    #modelObjectList.append(models.load_model('Recon1'))
-    #modelObjectList.append(models.load_model('iSF1195'))
-    #modelObjectList.append(models.load_model('iAF1260')) #Escherichia coli str. K-12 substr. MG1655
-    #modelObjectList.append(models.load_model('iJO1366'))
-    #modelObjectList.append(models.load_model('iJN746'))
-    #modelObjectList.append(models.load_model('iIT341'))
-    #modelObjectList.append(models.load_model('iNJ661'))
-    #modelObjectList.append(models.load_model('iAF692')) There are no gene names. It is all locus ids
-    #modelObjectList.append(models.load_model('iSB619'))
     
     with create_Session() as session:
         with open("genbanklist.txt") as file:
             for line in file:
-                load_genomes(line.strip('\n'))       
-        #component_loading.load_genomes(base, components)
+                load_genomes(line.strip('\n'))
         IndependentObjects().loadModels(modelObjectList, session, dict)
         IndependentObjects().loadComponents(modelObjectList,session)
         IndependentObjects().loadCompartments(modelObjectList, session)
