@@ -268,12 +268,12 @@ def run_program():
     modelObjectList = []
     session = Session()
     for m in dict.keys():
+        if(m == 'Recon'):
+            m = 'model'
         if session.query(Model).filter(Model.biggid == m).count()>0:
             print "model name is already taken and or is already loaded"
         elif(m=='Ecoli_core_model'):
-            modelObjectList.append(models.load_model('E_coli_core'))
-        elif  m == 'Recon' :
-            modelObjectList.append(models.load_model('model'))   
+            modelObjectList.append(models.load_model('E_coli_core'))  
         else:   
             modelObjectList.append(models.load_model(m))
     

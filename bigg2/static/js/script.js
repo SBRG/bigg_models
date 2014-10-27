@@ -31,7 +31,24 @@ $( document ).ready(function() {
 			$( ".btn-group-vertical" ).hide();
 		}
 	});
-	
+	$('#metabolite_c_table').slideUp("slow");
+	$('#metabolite_p_table').slideUp("slow");
+	$('#metabolite_e_table').slideUp("slow");
+	$('#metabolitelist_c').click(function(){
+	    $('#metabolite_c_table').slideToggle("slow", function(){
+	    
+	    });
+	});
+		$('#metabolitelist_p').click(function(){
+	    $('#metabolite_p_table').slideToggle("slow", function(){
+	    
+	    });
+	});
+		$('#metabolitelist_e').click(function(){
+	    $('#metabolite_e_table').slideToggle("slow", function(){
+	    
+	    });
+	});
 });
 
 

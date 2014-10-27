@@ -5,7 +5,7 @@
 				<div class="col-lg-8">
     				<h1>Metabolite: <br><span>{{id}}</span></h1>
     				<hr>
-    				<p class="lead">Universal Metabolite: <br> <a href="/universal/metabolites/{{universalname}}">{{universalname}}</a></p>
+    				<p class="lead">Universal Metabolite: <br> <a href="/models/universal/metabolites/{{universalname}}">{{universalname}}</a></p>
 					<p class="lead">Metabolite name: <br>{{name}}</p>
 					<p class="lead">Model: <br><a href="/models/{{model}}">{{ model }}</a></p>
 					
@@ -76,8 +76,13 @@
 				<div class="col-lg-4">
 					<div class="well">
 					    <h4 style="text-align: center">External IDs</h4>
-                    	<h4>KEGG ID: {{kegg_id}}</h4>
-                    	<h4>CAS NUMBER: {{cas_number}}</h4>
+                    	<h5>KEGG ID: {{kegg_id}}</h5>
+                    	<h5>SEED: {{seed}}</h5>
+                    	<h5>METACYC: {{metacyc}}</h5>
+                    	<h5>CHEBI: {{chebi}}</h5>
+                    	<h5>BRENDA: {{brenda}}</h5>
+                    	<h5>UPA: {{upa}}</h5>
+                    	
                     </div>
                     <div class="well">
                     	<h4 style="text-align: center">{{id}} in other Models:</h4>

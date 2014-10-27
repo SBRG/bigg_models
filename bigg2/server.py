@@ -43,14 +43,14 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
                     (r"/", MainHandler),
+                    (r"/api/models/universal/reactions/(.*)$", UniversalReactionHandler),
+                    (r"/models/universal/reactions/(.*)$", UniversalReactionDisplayHandler),
                     (r"/models/(.*)/reactions/(.*)$",ReactionDisplayHandler),
                     (r"/api/models/(.*)/reactions/(.*)$", ReactionHandler),
                     (r"/api/models/(.*)/reactions$", ReactionListHandler),
-                    (r"/api/universal/reactions/(.*)$", UniversalReactionHandler),
-                    (r"/universal/reactions/(.*)$", UniversalReactionDisplayHandler),
                     (r"/api/models/(.*)/genes/(.*)$", GeneHandler),
-                    (r"/api/universal/metabolites/(.*)$", UniversalMetaboliteHandler),
-                    (r"/universal/metabolites/(.*)$", UniversalMetaboliteDisplayHandler),
+                    (r"/api/models/universal/metabolites/(.*)$", UniversalMetaboliteHandler),
+                    (r"/models/universal/metabolites/(.*)$", UniversalMetaboliteDisplayHandler),
                     (r"/api/models/(.*)/genes$", GeneListHandler),
                     (r"/models/(.*)/genes$", GeneListDisplayHandler),
                     (r"/models/(.*)/reactions$", ReactionListDisplayHandler),
@@ -235,7 +235,7 @@ class FormResultsHandler(BaseHandler):
                     if modelName[1] != "empty":
                         generesult = session.query(Gene.id, Gene.name).join(Model_Gene).join(Model).filter(Model.biggid == modelName[0]).all()
                         for row in generesult:
-                            geneResults.append([modelName[0], gene.name])
+                            geneResults.append([modelName[0], row.name])
             else:
                 generesult = session.query(Gene.id, Gene.name, func.similarity(Gene.name, str(input)).label("sim")).filter(Gene.name % str(input)).filter(func.similarity(Gene.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
                 for modelName in modellist:
@@ -342,10 +342,10 @@ class UniversalReactionHandler(BaseHandler):
 class UniversalReactionDisplayHandler(BaseHandler):
     @asynchronous
     @gen.engine
-    def get(self, metaboliteId):
+    def get(self, reactionId):
         template = env.get_template("universalreactions.html")
         http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/universal/reactions/%s' % (options.port, metaboliteId)
+        url_request = 'http://localhost:%d/api/models/universal/reactions/%s' % (options.port, reactionId)
         response = yield gen.Task(http_client.fetch, url_request)
         results = json.loads(response.body)
         self.write(template.render(results))
@@ -356,13 +356,40 @@ class SearchHandler(BaseHandler):
     def get(self):
         session = Session()
         similarityBoundary = str(.3)
-        template = env.get_template("listdisplay.html")
         input = self.get_argument("query")
         reactionlist = []
         metabolitelist = []
         modellist = []
         genelist = []
         
+        result = session.query(Gene.id, Gene.locus_id, func.similarity(Gene.locus_id, str(input)).label("sim")).filter(Gene.locus_id % str(input)).filter(func.similarity(Gene.locus_id, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        for row in result:
+            gene = session.query(Gene).filter(Gene.id == row.id).first()
+            model_gene = session.query(Model_Gene).filter(Model_Gene.gene_id == row.id).first()
+            if model_gene != None:
+                model = session.query(Model).filter(Model.id == model_gene.model_id).first()
+                genelist.append([model.biggid, gene.name])
+        
+        result = session.query(Reaction.id, Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        for row in result:
+            reactionlist.append(['universal',row.name])
+               
+        result = session.query(Metabolite.id, Metabolite.name, func.similarity(Metabolite.name, str(input)).label("sim")).filter(Metabolite.name % str(input)).filter(func.similarity(Metabolite.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        for row in result:
+            metabolitelist.append(['universal',row.name])
+        """
+        result = session.query(Genome.id, Genome.organism, func.similarity(Genome.organism, str(input)).label("sim")).filter(Genome.organism % str(input)).filter(func.similarity(Genome.organism, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        for row in result:
+            model = session.query(Model).filter(Model.genome_id == row.id).first()
+            templist = []
+            modelquery = ModelQuery().get_model(model.biggid, session)
+            reactionquery = ModelQuery().get_model_reaction_count(modelquery, session)
+            metabolitequery = ModelQuery().get_model_metabolite_count(modelquery, session)
+            genequery = ModelQuery().get_gene_count(modelquery, session)
+            templist.extend([model.biggid, row.organism, metabolitequery, reactionquery, genequery]) 
+            modellist.append(templist)
+        """
+        """
         result = session.query(Reaction.id, Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             for reaction in session.query(Model_Reaction).filter(Model_Reaction.reaction_id == row.id).all():   
@@ -377,7 +404,7 @@ class SearchHandler(BaseHandler):
                     model = session.query(Model).filter(Model.id == mcc.model_id).first()
                     compartment = session.query(Compartment).join(Compartmentalized_Component).filter(Compartmentalized_Component.id == cc.id).first()
                     metabolitelist.append([model.biggid, row.name + "_"+compartment.name]) 
-           
+        """
         result = session.query(Model.id, Model.biggid, func.similarity(Model.biggid, str(input)).label("sim")).filter(Model.biggid % str(input)).filter(func.similarity(Model.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             templist = []
@@ -422,17 +449,27 @@ class AutoCompleteHandler(BaseHandler):
     def get(self):
         session = Session()
         similarityBoundary = str(.2)
-        template = env.get_template("listdisplay2.html")
+        
         input = self.get_argument("query")
         reactionlist = []
         metabolitelist = []
         modellist = []
         genelist = []
+        locuslist = []
+        organismlist = [] 
         
         result = session.query(Reaction.id, Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             reactionlist.append([row.name,row.sim])
-               
+            
+        result = session.query(Gene.id, Gene.locus_id, func.similarity(Gene.locus_id, str(input)).label("sim")).filter(Gene.locus_id % str(input)).filter(func.similarity(Gene.locus_id, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        for row in result:
+            locuslist.append([row.locus_id,row.sim])
+        """  
+        result = session.query(Genome.id, Genome.organism, func.similarity(Genome.organism, str(input)).label("sim")).filter(Genome.organism % str(input)).filter(func.similarity(Genome.organism, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        for row in result:
+            organismlist.append([row.organism,row.sim])
+        """           
         result = session.query(Metabolite.id, Metabolite.name, func.similarity(Metabolite.name, str(input)).label("sim")).filter(Metabolite.name % str(input)).filter(func.similarity(Metabolite.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             metabolitelist.append([row.name,row.sim]) 
@@ -451,7 +488,7 @@ class AutoCompleteHandler(BaseHandler):
         
         x = 0
         dictionary = {}
-        joinedlist = reactionlist + metabolitelist + modellist + genelist
+        joinedlist = reactionlist + metabolitelist + modellist + genelist + organismlist + locuslist
         sortedJoinedList = sorted(joinedlist, key=lambda query: query[1], reverse=True)
         for result in sortedJoinedList:
             dictionary[str(x)] = result[0]
@@ -607,7 +644,7 @@ class UniversalMetaboliteDisplayHandler(BaseHandler):
     def get(self, metaboliteId):
         template = env.get_template("universalmetabolites.html")
         http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/universal/metabolites/%s' % (options.port, metaboliteId)
+        url_request = 'http://localhost:%d/api/models/universal/metabolites/%s' % (options.port, metaboliteId)
         response = yield gen.Task(http_client.fetch, url_request)
         results = json.loads(response.body)
         self.write(template.render(results))

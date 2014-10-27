@@ -20,14 +20,14 @@
 					<br>
 					<br>
 					<div class="panel panel-default">
-  						<a href="#reactionlist" class="list-group-item active">
-    						<div class="panel-heading"><span class="lead">Metabolites:</span></div>
+  						<a href="#" class="list-group-item active">
+    						<div class="panel-heading"><span class="lead">Models containing this Reaction:</span></div>
   						</a>
   						<table class="table table-striped">
   						
   						{% for reaction in reactions %}
   						<tr>
-  						<td>Model {{reaction[0]}}:<a href="/models/{{reaction[0]}}/reactions/{{reaction[1]}}}}">{{reaction[1]}}</a></td>
+  						<td><a href="/models/{{reaction[0]}}/reactions/{{reaction[1]}}">{{reaction[0]}}</a></td>
   						
   						</tr>
   						{% endfor %}

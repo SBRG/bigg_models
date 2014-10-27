@@ -88,7 +88,7 @@ def databasetomodel(modelversion_id, modelname=False):
             newvalue=(Metabolite(reactant, '', officialname, compartment))
     
             newvalue.notes={'CHARGE':charge, 'KEGGID': keggid, 'CASNUMBER':casnumber, 'FORMULA1' : formula} #pm to add charge
-                
+            print "Ehy"
             #exec('%s=%r') % (newvar, newvalue) 
             
             #get S from q        
@@ -110,7 +110,7 @@ def databasetomodel(modelversion_id, modelname=False):
             
             try:
                 query="select reaction_id from reaction where abbreviation='%s' and modelversion_id='%d'"%(reaction,modelversion)
-           
+                print "hey"
                 cursor.execute(query)
                 rid = cursor.fetchone()
                 conn.commit
@@ -280,8 +280,7 @@ def todatabase(file, modelversion_id=False, description=False):
                              
             except psycopg2.DatabaseError, e:
                 print 'Error %s' % e    
-                sys.exit(1)
-           
+                sys.exit(1)     
     for x in cobra_model.reactions:
          
         try:
@@ -297,7 +296,7 @@ def todatabase(file, modelversion_id=False, description=False):
         
         if not reactions: 
             query="insert into reaction (abbreviation, equation, gpr, subsystem, modelversion_id, lower_bound, upper_bound, objective_coefficient) values ('%s', '%s','%s', '%s', '%d', '%f', '%f', '%f') returning reaction_id"%(x, x.reaction, x.gene_reaction_rule, x.subsystem, modelversion, x.lower_bound, x.upper_bound, x.objective_coefficient) 
-
+            
             cursor.execute(query) 
             conn.commit()       
             row = cursor.fetchone(); 
@@ -309,14 +308,15 @@ def todatabase(file, modelversion_id=False, description=False):
                     
                         #genename=key
                         genename=item
-                    
+                        
                         try:
+                            
                             query="select reaction_id from reaction where abbreviation='%s'and modelversion_id='%d'"%(x, modelversion)
                             #query="select reaction_id from reaction where abbreviation='%s'and modelversion_id='%d'"%(x, modelversion) #pm mod oct 25
                             cursor.execute(query)
                             conn.commit()
                             rid = cursor.fetchone()
-                       
+                            
                         except psycopg2.DatabaseError, e:
                             print 'Error %s' % e    
                             sys.exit(1)
@@ -585,6 +585,4 @@ def validateuser(name, email):
     #return T/F on login
     
 #modellist = [408, 260, 257, 258, 162]
-
-databasetomodel(171)
-#databasetomodel(409)
+databasetomodel(410)
