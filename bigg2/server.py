@@ -8,29 +8,29 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 from os.path import abspath, dirname, join
 import simplejson as json
-from load.model import (Model, Component, Reaction,Compartment, Metabolite,
-                        Compartmentalized_Component, Model_Reaction, Reaction_Matrix,
-                        GPR_Matrix, Model_Compartmentalized_Component, Model_Gene, Gene, Comments, GenomeRegion, Genome)
+from ome.models import (Model, Component, Reaction,Compartment, Metabolite,
+                        CompartmentalizedComponent, ModelReaction, ReactionMatrix,
+                        GPRMatrix, ModelCompartmentalizedComponent, ModelGene, Gene, Comments, GenomeRegion, Genome)
 from jinja2 import Environment, FileSystemLoader
 from sqlalchemy.orm import sessionmaker, aliased
 from sqlalchemy import create_engine, desc, func, or_
 from contextlib import contextmanager
 from collections import Counter
-from load.queries import (ReactionQuery, ModelQuery, MetaboliteQuery,
+from queries import (ReactionQuery, ModelQuery, MetaboliteQuery,
                         GeneQuery, StringBuilder)
 
 from download.sbml import sbmlio
 #write_cobra_model_to_sbml_file(cobra_model, sbml_filename)
 
-define("port", default= 8886, help="run on given port", type=int)
+define("port", default= 8887, help="run on given port", type=int)
 
 env = Environment(loader=FileSystemLoader('templates'))
 
 directory = abspath(dirname(__file__))
 
-urlBasePath = "http://localhost:8886/"
+urlBasePath = "http://localhost:8887/"
 
-engine = create_engine("postgresql://dbuser@localhost:5432/ome")
+engine = create_engine("postgresql://dbuser@localhost:5432/ome_stage")
 
 Session = sessionmaker(bind = engine)
 
@@ -114,14 +114,14 @@ class SubmitErrorHandler(BaseHandler):
         session.add(message)
         session.commit()
         session.close()
-        self.write("message sent and saved")
+        
         
 class DownloadPageHandler(BaseHandler):
     def get(self):
         template = env.get_template('download.html')
         input = self.get_argument("query")
         model = sbmlio.createSBML(input)
-        dictionary = {"xml":model.id + ".xml"}
+        dictionary = {"xml":model.id + ".xml"} #currently not implemented. Need script to convert database to coprapy object and then to sbml
         self.write(template.render(dictionary))
         self.set_header('Content-type','text/html')
         self.finish()
@@ -171,7 +171,7 @@ class FormResultsHandler(BaseHandler):
         input = self.get_argument("query", "empty")
         modellist = []
         for m in session.query(Model).all():
-            modellist.append([m.biggid , self.get_argument(m.biggid, "empty")])
+            modellist.append([m.bigg_id , self.get_argument(m.bigg_id, "empty")])
         metaboliteradio = self.get_argument("metabolites", "empty")
         reactionradio = self.get_argument("reactions", "empty")
         generadio = self.get_argument("genes", "empty")
@@ -189,25 +189,25 @@ class FormResultsHandler(BaseHandler):
         
             if input == "":
                 for modelName in modellist:
-                    model = session.query(Model).filter(Model.biggid == modelName[0]).first()
+                    model = session.query(Model).filter(Model.bigg_id == modelName[0]).first()
                     if modelName[1] != "empty":
-                        metresult = session.query(Metabolite.id, Metabolite.name).join(Compartmentalized_Component).join(Model_Compartmentalized_Component).join(Model).filter(Model.biggid == modelName[0]).all()
+                        metresult = session.query(Metabolite.id, Metabolite.name).join(CompartmentalizedComponent).join(Model_CompartmentalizedComponent).join(Model).filter(Model.biggid == modelName[0]).all()
                         for row in metresult:
-                            for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == row.id).distinct(Compartmentalized_Component.component_id).all():
-                                for mcc in session.query(Model_Compartmentalized_Component).filter(Model_Compartmentalized_Component.compartmentalized_component_id ==cc.id).filter(Model_Compartmentalized_Component.model_id == model.id).all():
-                                    compartment = session.query(Compartment).join(Compartmentalized_Component).filter(Compartmentalized_Component.id == cc.id).first()
-                                    metaboliteResults.append([model.biggid, row.name + "_"+compartment.name])
+                            for cc in session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.component_id == row.id).distinct(CompartmentalizedComponent.component_id).all():
+                                for mcc in session.query(Model_CompartmentalizedComponent).filter(Model_CompartmentalizedComponent.CompartmentalizedComponent_id ==cc.id).filter(Model_CompartmentalizedComponent.model_id == model.id).all():
+                                    compartment = session.query(Compartment).join(CompartmentalizedComponent).filter(CompartmentalizedComponent.id == cc.id).first()
+                                    metaboliteResults.append([model.bigg_id, row.name + "_"+compartment.name])
             else:
                 metresult = session.query(Metabolite.id, Metabolite.name, func.similarity(Metabolite.name, str(input)).label("sim")).filter(Metabolite.name % str(input)).filter(func.similarity(Metabolite.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
                 for modelName in modellist:
-                    model = session.query(Model).filter(Model.biggid == modelName[0]).first()
+                    model = session.query(Model).filter(Model.bigg_id == modelName[0]).first()
                     if modelName[1] != "empty":
                     
                         for row in metresult:
-                            for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == row.id).distinct(Compartmentalized_Component.component_id).all():
-                                for mcc in session.query(Model_Compartmentalized_Component).filter(Model_Compartmentalized_Component.compartmentalized_component_id ==cc.id).filter(Model_Compartmentalized_Component.model_id == model.id).all():
-                                    compartment = session.query(Compartment).join(Compartmentalized_Component).filter(Compartmentalized_Component.id == cc.id).first()
-                                    metaboliteResults.append([model.biggid, row.name + "_"+compartment.name]) 
+                            for cc in session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.component_id == row.id).distinct(CompartmentalizedComponent.component_id).all():
+                                for mcc in session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.compartmentalized_component_id ==cc.id).filter(ModelCompartmentalizedComponent.model_id == model.id).all():
+                                    compartment = session.query(Compartment).join(CompartmentalizedComponent).filter(CompartmentalizedComponent.id == cc.id).first()
+                                    metaboliteResults.append([model.bigg_id, row.name + "_"+compartment.name]) 
                     """
                     metaboliteList = MetaboliteQuery().get_metabolite_list(modelName[0], session)
                     for metab in metaboliteList:
@@ -216,16 +216,16 @@ class FormResultsHandler(BaseHandler):
             if input == "":
                 for modelName in modellist:
                     if modelName[1] != "empty":
-                        reacresult = session.query(Reaction.id, Reaction.name).join(Model_Reaction).join(Model).filter(Model.biggid == modelName[0]).all()
+                        reacresult = session.query(Reaction.id, Reaction.name).join(ModelReaction).join(Model).filter(Model.bigg_id == modelName[0]).all()
                         for row in reacresult:
                             reactionResults.append([modelName[0], row.name])
             else:
                 reacresult = session.query(Reaction.id, Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
                 for modelName in modellist:
-                    model = session.query(Model).filter(Model.biggid == modelName[0]).first()
+                    model = session.query(Model).filter(Model.bigg_id == modelName[0]).first()
                     if modelName[1] != "empty":
                         for row in reacresult:
-                            reaction = session.query(Reaction).join(Model_Reaction).join(Model).filter(Reaction.id == row.id).filter(Model.biggid == model.biggid).first()
+                            reaction = session.query(Reaction).join(ModelReaction).join(Model).filter(Reaction.id == row.id).filter(Model.bigg_id == model.bigg_id).first()
                             if reaction != None:
                                 reactionResults.append([modelName[0], reaction.name])
                                 
@@ -233,7 +233,7 @@ class FormResultsHandler(BaseHandler):
             if input == "":
                 for modelName in modellist:
                     if modelName[1] != "empty":
-                        generesult = session.query(Gene.id, Gene.name).join(Model_Gene).join(Model).filter(Model.biggid == modelName[0]).all()
+                        generesult = session.query(Gene.id, Gene.name).join(ModelGene).join(Model).filter(Model.bigg_id == modelName[0]).all()
                         for row in generesult:
                             geneResults.append([modelName[0], row.name])
             else:
@@ -241,7 +241,7 @@ class FormResultsHandler(BaseHandler):
                 for modelName in modellist:
                     if modelName[1] != "empty":   
                         for row in generesult:
-                            gene = session.query(Gene).join(Model_Gene).join(Model).filter(Model.biggid == modelName).filter(Gene.id == row.id)
+                            gene = session.query(Gene).join(ModelGene).join(Model).filter(Model.bigg_id == modelName).filter(Gene.id == row.id)
                             if gene != None:
                                 geneResults.append([modelName[0], gene.name])
            
@@ -264,18 +264,18 @@ class ReactionHandler(BaseHandler):
         altModelList = []
         modelquery = ReactionQuery().get_model(modelName, session)
         reaction = ReactionQuery().get_reaction(reactionName, session)
-        modelreaction = ReactionQuery().get_model_reaction(reaction.id, modelquery.id, session).first()
-        for rxn in session.query(Model_Reaction).filter(Model_Reaction.reaction_id == reaction.id).all():
+        modelreaction = ReactionQuery().get_ModelReaction(reaction.id, modelquery.id, session).first()
+        for rxn in session.query(ModelReaction).filter(ModelReaction.reaction_id == reaction.id).all():
             if rxn.model_id != modelquery.id:
                 altModel = session.query(Model).filter(Model.id == rxn.model_id).first()
-                altModelList.append(altModel.biggid)
+                altModelList.append(altModel.bigg_id)
         metabolitelist = ReactionQuery().get_metabolite_list(modelquery, reaction, session) 
         reaction_string = StringBuilder().build_reaction_string(metabolitelist, modelreaction)
         genelist = ReactionQuery().get_gene_list(reaction, modelquery, session)
         templist = modelreaction.gpr.replace("(","").replace(")","").split()
         genelist2 = [name for name in templist if name !="or" and name !="and"]
         sortedMetaboliteList = sorted(metabolitelist, key=lambda metabolite: metabolite[0])
-        dictionary = {"model":modelquery.biggid, "name": reaction.name, "long_name": reaction.long_name, 
+        dictionary = {"model":modelquery.bigg_id, "name": reaction.name, "long_name": reaction.long_name, 
                         "metabolites": metabolitelist, "gene_reaction_rule": modelreaction.gpr, 
                         "genes": genelist, "reaction_string": reaction_string, "altModelList": altModelList}      
         data = json.dumps(dictionary, use_decimal=True)
@@ -327,11 +327,11 @@ class UniversalReactionHandler(BaseHandler):
         reaction = ReactionQuery().get_reaction(reactionName, session)
         dictionary = {}
         reactionList = []
-        model_reactions = session.query(Model_Reaction).filter(Model_Reaction.reaction_id == reaction.id).all()
-        for mr in model_reactions:
+        ModelReactions = session.query(ModelReaction).filter(ModelReaction.reaction_id == reaction.id).all()
+        for mr in ModelReactions:
             model = session.query(Model).filter(Model.id == mr.model_id).first()
             reaction = session.query(Reaction).filter(Reaction.id == mr.reaction_id).first()
-            reactionList.append([model.biggid, reaction.name])
+            reactionList.append([model.bigg_id, reaction.name])
         dictionary = {"reactions":reactionList, "long_name":reaction.long_name, "name": reaction.name}
         data = json.dumps(dictionary)
         self.write(data)
@@ -356,7 +356,7 @@ class SearchHandler(BaseHandler):
     def get(self):
         session = Session()
         similarityBoundary = str(.3)
-        input = self.get_argument("query")
+        input = str(self.get_argument("query"))
         reactionlist = []
         metabolitelist = []
         modellist = []
@@ -365,10 +365,10 @@ class SearchHandler(BaseHandler):
         result = session.query(Gene.id, Gene.locus_id, func.similarity(Gene.locus_id, str(input)).label("sim")).filter(Gene.locus_id % str(input)).filter(func.similarity(Gene.locus_id, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             gene = session.query(Gene).filter(Gene.id == row.id).first()
-            model_gene = session.query(Model_Gene).filter(Model_Gene.gene_id == row.id).first()
+            model_gene = session.query(ModelGene).filter(ModelGene.gene_id == row.id).first()
             if model_gene != None:
                 model = session.query(Model).filter(Model.id == model_gene.model_id).first()
-                genelist.append([model.biggid, gene.name])
+                genelist.append([model.bigg_id, gene.name])
         
         result = session.query(Reaction.id, Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
@@ -377,50 +377,52 @@ class SearchHandler(BaseHandler):
         result = session.query(Metabolite.id, Metabolite.name, func.similarity(Metabolite.name, str(input)).label("sim")).filter(Metabolite.name % str(input)).filter(func.similarity(Metabolite.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             metabolitelist.append(['universal',row.name])
-        """
+        
         result = session.query(Genome.id, Genome.organism, func.similarity(Genome.organism, str(input)).label("sim")).filter(Genome.organism % str(input)).filter(func.similarity(Genome.organism, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            model = session.query(Model).filter(Model.genome_id == row.id).first()
-            templist = []
-            modelquery = ModelQuery().get_model(model.biggid, session)
-            reactionquery = ModelQuery().get_model_reaction_count(modelquery, session)
-            metabolitequery = ModelQuery().get_model_metabolite_count(modelquery, session)
-            genequery = ModelQuery().get_gene_count(modelquery, session)
-            templist.extend([model.biggid, row.organism, metabolitequery, reactionquery, genequery]) 
-            modellist.append(templist)
-        """
+            
+            modelquery = session.query(Model).filter(Model.genome_id == row.id)
+            if modelquery.count():
+                for model in modelquery.all():
+                    templist = []
+                    modelquery = ModelQuery().get_model(model.bigg_id, session)
+                    reactionquery = ModelQuery().get_ModelReaction_count(modelquery, session)
+                    metabolitequery = ModelQuery().get_model_metabolite_count(modelquery, session)
+                    genequery = ModelQuery().get_gene_count(modelquery, session)
+                    templist.extend([model.bigg_id, row.organism, metabolitequery, reactionquery, genequery]) 
+                    modellist.append(templist)
         """
         result = session.query(Reaction.id, Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            for reaction in session.query(Model_Reaction).filter(Model_Reaction.reaction_id == row.id).all():   
+            for reaction in session.query(ModelReaction).filter(ModelReaction.reaction_id == row.id).all():   
                 model = session.query(Model).filter(Model.id == reaction.model_id).first()
-                reactionlist.append([model.biggid, row.name])
+                reactionlist.append([model.bigg_id, row.name])
         
         result = session.query(Metabolite.id, Metabolite.name, func.similarity(Metabolite.name, str(input)).label("sim")).filter(Metabolite.name % str(input)).filter(func.similarity(Metabolite.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == row.id).distinct(Compartmentalized_Component.component_id).all():
-                for mcc in session.query(Model_Compartmentalized_Component).filter(Model_Compartmentalized_Component.compartmentalized_component_id ==cc.id).all():
+            for cc in session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.component_id == row.id).distinct(CompartmentalizedComponent.component_id).all():
+                for mcc in session.query(Model_CompartmentalizedComponent).filter(Model_CompartmentalizedComponent.CompartmentalizedComponent_id ==cc.id).all():
                     
                     model = session.query(Model).filter(Model.id == mcc.model_id).first()
-                    compartment = session.query(Compartment).join(Compartmentalized_Component).filter(Compartmentalized_Component.id == cc.id).first()
-                    metabolitelist.append([model.biggid, row.name + "_"+compartment.name]) 
+                    compartment = session.query(Compartment).join(CompartmentalizedComponent).filter(CompartmentalizedComponent.id == cc.id).first()
+                    metabolitelist.append([model.bigg_id, row.name + "_"+compartment.name]) 
         """
-        result = session.query(Model.id, Model.biggid, func.similarity(Model.biggid, str(input)).label("sim")).filter(Model.biggid % str(input)).filter(func.similarity(Model.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Model.id, Model.bigg_id, func.similarity(Model.bigg_id, str(input)).label("sim")).filter(Model.bigg_id % str(input)).filter(func.similarity(Model.bigg_id, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             templist = []
-            modelquery = ModelQuery().get_model(row.biggid, session)
-            reactionquery = ModelQuery().get_model_reaction_count(modelquery, session)
+            modelquery = ModelQuery().get_model(row.bigg_id, session)
+            reactionquery = ModelQuery().get_ModelReaction_count(modelquery, session)
             metabolitequery = ModelQuery().get_model_metabolite_count(modelquery, session)
             genequery = ModelQuery().get_gene_count(modelquery, session)
             genomequery = session.query(Genome).filter(Genome.id == modelquery.genome_id).first()
-            templist.extend([row.biggid, genomequery.organism, metabolitequery, reactionquery, genequery]) 
+            templist.extend([row.bigg_id, genomequery.organism, metabolitequery, reactionquery, genequery]) 
             modellist.append(templist)
         result = session.query(Gene.id, Gene.name, func.similarity(Gene.name, str(input)).label("sim")).filter(Gene.name % str(input)).filter(func.similarity(Gene.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
-            model_gene = session.query(Model_Gene).filter(Model_Gene.gene_id == row.id).first()
+            model_gene = session.query(ModelGene).filter(ModelGene.gene_id == row.id).first()
             if model_gene != None:
                 model = session.query(Model).filter(Model.id == model_gene.model_id).first()
-                genelist.append([model.biggid, row.name])
+                genelist.append([model.bigg_id, row.name])
         session.close()
         dictionary = {"reactionResults":reactionlist, "Reactions":"Reactions",
                         "metaboliteResults":metabolitelist,
@@ -438,10 +440,13 @@ class SearchDisplayHandler(BaseHandler):
     def get(self):
         template = env.get_template("listdisplay.html")
         http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/search?query=%s' % (options.port, self.get_argument("query"))
+        
+        print "Edfs"
+        url_request = 'http://localhost:%d/api/search?query=%s' % (options.port, self.get_argument("query").replace (" ", "+"))
         response = yield gen.Task(http_client.fetch, url_request)
         results = json.loads(response.body)
         self.write(template.render(results))
+        
         self.set_header('Content-type','text/html')
         self.finish() 
     
@@ -465,23 +470,23 @@ class AutoCompleteHandler(BaseHandler):
         result = session.query(Gene.id, Gene.locus_id, func.similarity(Gene.locus_id, str(input)).label("sim")).filter(Gene.locus_id % str(input)).filter(func.similarity(Gene.locus_id, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             locuslist.append([row.locus_id,row.sim])
-        """  
+          
         result = session.query(Genome.id, Genome.organism, func.similarity(Genome.organism, str(input)).label("sim")).filter(Genome.organism % str(input)).filter(func.similarity(Genome.organism, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             organismlist.append([row.organism,row.sim])
-        """           
+                   
         result = session.query(Metabolite.id, Metabolite.name, func.similarity(Metabolite.name, str(input)).label("sim")).filter(Metabolite.name % str(input)).filter(func.similarity(Metabolite.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
         for row in result:
             metabolitelist.append([row.name,row.sim]) 
         
-        result = session.query(Model.id, Model.biggid, func.similarity(Model.biggid, str(input)).label("sim")).filter(Model.biggid % str(input)).filter(func.similarity(Model.biggid, str(input))> similarityBoundary).order_by(desc('sim')).all()   
+        result = session.query(Model.id, Model.bigg_id, func.similarity(Model.bigg_id, str(input)).label("sim")).filter(Model.bigg_id % str(input)).filter(func.similarity(Model.bigg_id, str(input))> similarityBoundary).order_by(desc('sim')).all()   
         for row in result:
-            modellist.append([row.biggid,row.sim]) 
+            modellist.append([row.bigg_id,row.sim]) 
         #distinctGene =aliased(Gene, func.distinct(Gene.name))
-        result = session.query(Gene.name, func.similarity(Gene.name, str(input)).label("sim")).join(Model_Gene).filter(Gene.name % str(input)).filter(func.similarity(Gene.name, str(input))> similarityBoundary).order_by(desc('sim')).group_by(Gene.name).all()
+        result = session.query(Gene.name, func.similarity(Gene.name, str(input)).label("sim")).join(ModelGene).filter(Gene.name % str(input)).filter(func.similarity(Gene.name, str(input))> similarityBoundary).order_by(desc('sim')).group_by(Gene.name).all()
         for row in result:
             gene = session.query(Gene).filter(Gene.name == row[0]).first()
-            model_gene = session.query(Model_Gene).filter(Model_Gene.gene_id == gene.id).first()
+            model_gene= session.query(ModelGene).filter(ModelGene.gene_id == gene.id).first()
             if model_gene != None:
                 genelist.append([row[0],row[1]])  
         session.close()
@@ -506,11 +511,11 @@ class ModelHandler(BaseHandler):
             self.finish()
         else:
             modelquery = ModelQuery().get_model(modelName, session)
-            reactionquery = ModelQuery().get_model_reaction_count(modelquery, session)
+            reactionquery = ModelQuery().get_ModelReaction_count(modelquery, session)
             metabolitequery = ModelQuery().get_model_metabolite_count(modelquery, session)
             genequery = ModelQuery().get_gene_count(modelquery, session)
             genomequery = session.query(Genome).filter(Genome.id == modelquery.genome_id).first()
-            dictionary = {"model":modelquery.biggid,"reaction_count":reactionquery,"metabolite_count":metabolitequery,
+            dictionary = {"model":modelquery.bigg_id,"reaction_count":reactionquery,"metabolite_count":metabolitequery,
                    "gene_count": genequery, 'organism':genomequery.organism}
             data = json.dumps(dictionary)
             self.write(data)
@@ -539,11 +544,11 @@ class ModelListHandler(BaseHandler):
         for model in models:
             templist = []
             modelquery = ModelQuery().get_model(model, session)
-            reactionquery = ModelQuery().get_model_reaction_count(modelquery, session)
+            reactionquery = ModelQuery().get_ModelReaction_count(modelquery, session)
             metabolitequery = ModelQuery().get_model_metabolite_count(modelquery, session)
             genequery = ModelQuery().get_gene_count(modelquery, session)
             genomequery = session.query(Genome).filter(Genome.id == modelquery.genome_id).first()
-            templist.extend([modelquery.biggid, genomequery.organism, metabolitequery, reactionquery,  genequery])
+            templist.extend([modelquery.bigg_id, genomequery.organism, metabolitequery, reactionquery,  genequery])
             modellist.append(templist)
         data = json.dumps(sorted(modellist, key=lambda s: s[0].lower()))
         self.write(data)
@@ -570,26 +575,26 @@ class MetaboliteHandler(BaseHandler):
     def get(self, modelName, metaboliteId):
         session = Session()
         
-        modelquery = session.query(Model).filter(Model.biggid == modelName).first()
+        modelquery = session.query(Model).filter(Model.bigg_id == modelName).first()
         componentquery = session.query(Metabolite).filter(Metabolite.name == metaboliteId.split("_")[0]).first()
         compartmentquery = session.query(Compartment).filter(Compartment.name == metaboliteId[-1:len(metaboliteId)]).first()
         metabolitequery = session.query(Metabolite).filter(componentquery.id == Metabolite.id).first()
         compartmentlist = []
         altModelList = []
-        for cc in session.query(Compartmentalized_Component).filter(Compartmentalized_Component.component_id == componentquery.id).filter(Compartmentalized_Component.compartment_id == compartmentquery.id).all():         
-            for mcc in session.query(Model_Compartmentalized_Component).filter(Model_Compartmentalized_Component.compartmentalized_component_id == cc.id).all():
+        for cc in session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.component_id == componentquery.id).filter(CompartmentalizedComponent.compartment_id == compartmentquery.id).all():         
+            for mcc in session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.compartmentalized_component_id == cc.id).all():
                 if mcc.model_id != modelquery.id:
                     altModel = session.query(Model).filter(Model.id == mcc.model_id).first()
-                    altModelList.append(str(altModel.biggid))
+                    altModelList.append(str(altModel.bigg_id))
                     
         reactionlist = []
         
-        for x in MetaboliteQuery().get_model_reactions(componentquery.name, compartmentquery.name, modelquery, session):
+        for x in MetaboliteQuery().get_ModelReactions(componentquery.name, compartmentquery.name, modelquery, session):
             reactionlist.append(str(x.name))
                
         sortedReactionList = sorted(reactionlist)
         dictionary = {'name': str(componentquery.long_name), 'id': metaboliteId, 'universalname':componentquery.name, 'cas_number':str(metabolitequery.cas_number), 'seed':str(metabolitequery.seed),
-        'metacyc':str(metabolitequery.metacyc),'brenda':str(metabolitequery.brenda), 'upa':str(metabolitequery.upa), 'chebi':str(metabolitequery.chebi), 'kegg_id': str(metabolitequery.kegg_id),'reactions':reactionlist, 'model': str(modelquery.biggid), 'formula': str(metabolitequery.formula), "altModelList": altModelList}
+        'metacyc':str(metabolitequery.metacyc),'brenda':str(metabolitequery.brenda), 'upa':str(metabolitequery.upa), 'chebi':str(metabolitequery.chebi), 'kegg_id': str(metabolitequery.kegg_id),'reactions':reactionlist, 'model': str(modelquery.bigg_id), 'formula': str(metabolitequery.formula), "altModelList": altModelList}
         data = json.dumps(dictionary)
         
         self.write(data)
@@ -606,20 +611,20 @@ class UniversalMetaboliteHandler(BaseHandler):
         metaboliteList = []
         for c in compartmentList:
             temp_metaboliteList = []
-            model_components = session.query(Model_Compartmentalized_Component).join(Compartmentalized_Component).join(Compartment).filter(Compartmentalized_Component.compartment_id == Compartment.id).filter(Compartmentalized_Component.component_id == componentquery.id).filter(Compartment.name == c).all()
+            model_components = session.query(Model_CompartmentalizedComponent).join(CompartmentalizedComponent).join(Compartment).filter(CompartmentalizedComponent.compartment_id == Compartment.id).filter(CompartmentalizedComponent.component_id == componentquery.id).filter(Compartment.name == c).all()
             for mc in model_components:
                 model = session.query(Model).filter(Model.id == mc.model_id).first()
                 compartment = session.query(Compartment).filter(Compartment.id == mc.compartment_id).first()
-                temp_metaboliteList.append([model.biggid, componentquery.name, compartment.name])
+                temp_metaboliteList.append([model.bigg_id, componentquery.name, compartment.name])
             metaboliteList.append(temp_metaboliteList)
         reactionList = []
         for c in compartmentList:
-            temp_reactionList = [(x[0].name, x[1].biggid) for x in (session
+            temp_reactionList = [(x[0].name, x[1].bigg_id) for x in (session
                 .query(Reaction, Model)
-                .join(Model_Reaction)
+                .join(ModelReaction)
                 .join(Model)
-                .join(Reaction_Matrix)
-                .join(Compartmentalized_Component)
+                .join(ReactionMatrix)
+                .join(CompartmentalizedComponent)
                 .join(Compartment)
                 .join(Component)
                 .join(Metabolite)
@@ -707,20 +712,20 @@ class GeneHandler(BaseHandler):
         session = Session()
         reactionList = []
         altModelList = []
-        gene = session.query(Gene).join(Model_Gene).join(Model).filter(Gene.name==geneName).filter(Model.biggid == modelName).first()
+        gene = session.query(Gene).join(ModelGene).join(Model).filter(Gene.name==geneName).filter(Model.bigg_id == modelName).first()
         #gene = session.query(Gene).filter(Gene.id == geneRegion.id).first()
-        for gm in session.query(Model_Gene).filter(Model_Gene.gene_id == gene.id).all():
+        for gm in session.query(ModelGene).filter(ModelGene.gene_id == gene.id).all():
             model = session.query(Model).filter(Model.id == gm.model_id).first()
-            if model.biggid != modelName:
-                altModelList.append(model.biggid)
-        for instance in GeneQuery().get_model_reaction(geneName, session):
+            if model.bigg_id != modelName:
+                altModelList.append(model.bigg_id)
+        for instance in GeneQuery().get_ModelReaction(geneName, session):
             model = GeneQuery().get_model(instance, session)
             geneList = []
-            if model.biggid == modelName:
+            if model.bigg_id == modelName:
                 list = []
                 list.append(instance.name)
                 list.append(instance.gpr)
-                for x in session.query(Gene).join(Model_Gene).join(GPR_Matrix).filter(GPR_Matrix.model_reaction_id == instance.id):
+                for x in session.query(Gene).join(ModelGene).join(GPRMatrix).filter(GPRMatrix.model_reaction_id == instance.id):
                     geneList.append([x.name,x.locus_id])
                 list.append(geneList)
                 #geneList = instance.gpr.replace("(","").replace(")","").split()
@@ -732,24 +737,24 @@ class GeneHandler(BaseHandler):
         self.set_header('Content-type','json')
         self.finish()
         session.close()
-        
+"""       
 class UniversalGeneHandler(BaseHandler):
     def get(self, geneId):
         session = Session()
         gene = session.query(Gene).filter(Gene.name == geneId).first()
-        model_genes = session.query(Model_Gene).filter(Model_Gene.gene_id == gene.id).all()
+        ModelGenes = session.query(ModelGene).filter(ModelGene.gene_id == gene.id).all()
         geneList = []
         dictionary = {}
-        for mg in model_genes:
+        for mg in ModelGenes:
             model = session.query(Model).filter(Model.id == mg.model_id).first()
-            geneList.append([model.biggid, gene.name])
-        dictionary = {"biggid":gene.biggid, "genelist":geneList}
+            geneList.append([model.bigg_id, gene.name])
+        dictionary = {"biggid":gene.bigg_id, "genelist":geneList}
         data = json.dumps(dictionary)
         self.write(data)
         self.set_header('Content-type', 'json')
         self.finish()
         session.close()
-
+"""
 class GeneListHandler(BaseHandler):
     def get(self, modelName):
         session = Session()

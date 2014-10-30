@@ -10,7 +10,7 @@
 	<h1 id="bigg">BiGG Database</h1>
 	
 
-	<div class="tabbable"> <!-- Only required for left/right tabs -->
+	<div class="tabbable" style="margin-bottom:50px"> <!-- Only required for left/right tabs -->
     	<ul class="nav nav-tabs">
     		<li class="active"><a href="#tab1" data-toggle="tab">All Results</a></li>
     		<li><a href="#tab2" data-toggle="tab">Model Results</a></li>
@@ -55,12 +55,17 @@
 					<table class="table table-striped table-bordered" style="width:80%;text-align:center;margin-left:auto;margin-right:auto;border-width:2px;">
 	    			<tr>
 	    			{% for values in reactionResults %}
+	    			    {% if values[0] == "universal" %}
+	    				    {% set modelname  = " " %}
+	    				    {% else %}
+	    				    {% set modelname  = values[0] %}
+	    				{% endif%}
 	    				{% if loop.index is divisibleby 3 %}
-                        <td class="col-md-3">model: {{values[0]}}<br><a href="/universal/reactions/{{values[1]}}">{{values[1]}}</a> </td>
+	    				<td class="col-md-3">{{modelname}}<br><a href="/models/{{values[0]}}/reactions/{{values[1]}}">{{values[1]}}</a> </td>
                         </tr>
                         <tr>
 	    				{% else %}
-	    				<td class="col-md-3">model: {{values[0]}}<br><a href="/models/{{values[0]}}/reactions/{{values[1]}}">{{values[1]}}</a> </td>
+	    				<td class="col-md-3">{{modelname}}<br><a href="/models/{{values[0]}}/reactions/{{values[1]}}">{{values[1]}}</a> </td>
 						{% endif %}
 					{% endfor %}
 					
