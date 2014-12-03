@@ -3,11 +3,7 @@ $( document ).ready(function() {
     $.post("/submiterror",
     {
       email: $.trim($("input[name='email']").val()),
-      keggid:$.trim($("input[name='keggid']").val()),
-      casnumber:$.trim($("input[name='casnumber']").val()),
-      biggid:$.trim($("input[name='biggid']").val()),
-      comments:$.trim($("textarea[name='comments']").val()),
-      formula:$.trim($("input[name='theformula']").val())
+      comments:$.trim($("textarea[name='comments']").val())
     },
     function(data,status){
       alert(data);
@@ -31,9 +27,9 @@ $( document ).ready(function() {
 			$( ".btn-group-vertical" ).hide();
 		}
 	});
-	$('#metabolite_c_table').slideUp("slow");
-	$('#metabolite_p_table').slideUp("slow");
-	$('#metabolite_e_table').slideUp("slow");
+	$('#metabolite_c_table').slideUp("fast");
+	$('#metabolite_p_table').slideUp("fast");
+	$('#metabolite_e_table').slideUp("fast");
 	$('#metabolitelist_c').click(function(){
 	    $('#metabolite_c_table').slideToggle("slow", function(){
 	    

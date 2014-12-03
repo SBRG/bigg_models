@@ -58,7 +58,4 @@ class TestLoadGrmit(DatabaseTest):
         transaction2 = connection.begin_nested()
         loadModel(modelTable, grmitsession, bigg2session)
         #transaction.rollback()
-        
-x = TestLoadGrmit()
-x.testLoadModel()
     

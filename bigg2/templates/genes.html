@@ -39,25 +39,10 @@
 				        <label>Email address</label>
                         <input type="email" class="form-control" name="email" placeholder="Enter email">    
 				    </div>
+				    
+				    <label>User Input</label>
 				    <div class="form-inline" role="form">
-				    <div class="form-group">
-                        <label class="sr-only">Correct the Name</label>
-                        <input class="form-control" name="name" placeholder="Correct the Name">
-                    </div>
-                    <div class="form-group">
-                        <label class="sr-only">Correct the Formula</label>
-                        <input class="form-control" name="theformula" placeholder="Correct the Formula">
-                    </div>
-                    <div class="form-group">
-                        <label class="sr-only">Correct the CAS number</label>
-                        <input class="form-control" name="casnumber" placeholder="Correct the CAS number">
-                    </div>
-                    <div class="form-group">
-                        <label class="sr-only" >Correct the Kegg ID</label>
-                        <input  class="form-control" name="keggid" placeholder="Correct the KeggId">
-                    </div>
- 
-                    <br><br>
+                    <br>
                     <textarea class="form-control" name ="comments" rows="3" cols="100" placeholder="Comments"></textarea>
 				    <br><br>
 				            <button id="submit" type="submit" value="Submit">Submit</button>
@@ -66,12 +51,12 @@
 
 
 				</div>
-				<div class="col-lg-4">
+				<!--<div class="col-lg-4">
 					<div class="well">
                     	<h4>Notes:</h4>
                     </div>
                     <div class="well">
-                    	<h4>{{id}} in other Models:</h4>
+                    	<h4>{{name}} in other Models:</h4>
                     	<ul class="list-unstyled">
                             {% for altmodel in altModelList %}
                             <li style="text-align: center"><a href="/models/{{altmodel}}/genes/{{name}}">{{altmodel}}</a></li>
@@ -79,7 +64,7 @@
                         </ul>
                 	</div>
                     <!-- /input-group -->
-                </div>
+                </div>-->
 				
 				<footer>
             		<div class="row">

@@ -1,3 +1,4 @@
+import smtplib
 import tornado.ioloop
 import tornado.web
 import tornado.httpserver
@@ -51,6 +52,7 @@ class Application(tornado.web.Application):
                     (r"/api/models/(.*)/genes/(.*)$", GeneHandler),
                     (r"/api/models/universal/metabolites/(.*)$", UniversalMetaboliteHandler),
                     (r"/models/universal/metabolites/(.*)$", UniversalMetaboliteDisplayHandler),
+                    (r"/api/models/universal/metabolites/(.*)$", UniversalMetaboliteListHandler),
                     (r"/api/models/(.*)/genes$", GeneListHandler),
                     (r"/models/(.*)/genes$", GeneListDisplayHandler),
                     (r"/models/(.*)/reactions$", ReactionListDisplayHandler),
@@ -104,17 +106,29 @@ class DownLoadHandler(tornado.web.StaticFileHandler):
 class SubmitErrorHandler(BaseHandler):
     def post(self):
         session = Session()
-        email = self.get_argument("email", "empty")
-        keggid = self.get_argument("keggid", "empty")
-        casnumber = self.get_argument("casnumber", "empty")
-        name = self.get_argument("name", "empty")
-        formula = self.get_argument("formula", "empty")
+        useremail = self.get_argument("email", "empty")
+        #keggid = self.get_argument("keggid", "empty")
+        #casnumber = self.get_argument("casnumber", "empty")
+        #name = self.get_argument("name", "empty")
+        #formula = self.get_argument("formula", "empty")
         comments = self.get_argument("comments", "empty")
-        message = Comments(kegg_id =keggid, cas_number=casnumber, name = name, formula = formula, text = comments)
-        session.add(message)
+        commentobject = Comments(email = useremail, text = comments)
+        session.add(commentobject)
         session.commit()
         session.close()
-        
+        #to = 'jslu@eng.ucsd.edu'
+        to = email
+        gmail_user = 'justinlu10@gmail.com'
+        gmail_pwd = 'ultimate9'
+        smtpserver = smtplib.SMTP("smtp.gmail.com", 587)
+        smtpserver.ehlo()
+        smtpserver.starttls()
+        smtpserver.login(gmail_user, gmail_pwd)
+        header = 'To:' + gmail_user + '\n' + 'From: ' +gmail_user + '\n' + 'Subject:BiGG comment notification \n'
+        msg = header + comments + '\n ' + to
+        smtpserver.sendmail(gmail_user, to, msg)
+        smtpserver.close()
+                
         
 class DownloadPageHandler(BaseHandler):
     def get(self):
@@ -191,10 +205,10 @@ class FormResultsHandler(BaseHandler):
                 for modelName in modellist:
                     model = session.query(Model).filter(Model.bigg_id == modelName[0]).first()
                     if modelName[1] != "empty":
-                        metresult = session.query(Metabolite.id, Metabolite.name).join(CompartmentalizedComponent).join(Model_CompartmentalizedComponent).join(Model).filter(Model.biggid == modelName[0]).all()
+                        metresult = session.query(Metabolite.id, Metabolite.name).join(CompartmentalizedComponent).join(ModelCompartmentalizedComponent).join(Model).filter(Model.bigg_id == modelName[0]).all()
                         for row in metresult:
                             for cc in session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.component_id == row.id).distinct(CompartmentalizedComponent.component_id).all():
-                                for mcc in session.query(Model_CompartmentalizedComponent).filter(Model_CompartmentalizedComponent.CompartmentalizedComponent_id ==cc.id).filter(Model_CompartmentalizedComponent.model_id == model.id).all():
+                                for mcc in session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.compartmentalized_component_id ==cc.id).filter(ModelCompartmentalizedComponent.model_id == model.id).all():
                                     compartment = session.query(Compartment).join(CompartmentalizedComponent).filter(CompartmentalizedComponent.id == cc.id).first()
                                     metaboliteResults.append([model.bigg_id, row.name + "_"+compartment.name])
             else:
@@ -241,7 +255,7 @@ class FormResultsHandler(BaseHandler):
                 for modelName in modellist:
                     if modelName[1] != "empty":   
                         for row in generesult:
-                            gene = session.query(Gene).join(ModelGene).join(Model).filter(Model.bigg_id == modelName).filter(Gene.id == row.id)
+                            gene = session.query(Gene).join(ModelGene).join(Model).filter(Model.bigg_id == modelName[0]).filter(Gene.id == row.id).first()
                             if gene != None:
                                 geneResults.append([modelName[0], gene.name])
            
@@ -292,7 +306,8 @@ class ReactionDisplayHandler(BaseHandler):
         template = env.get_template("reactions.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/reactions/%s' % (options.port, modelName, reactionName)
-        response = yield gen.Task(http_client.fetch, url_request)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
         results = json.loads(response.body)
         self.write(template.render(results)) 
         self.set_header('Content-type','text/html')
@@ -315,7 +330,8 @@ class ReactionListDisplayHandler(BaseHandler):
         template = env.get_template("listdisplay2.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/reactions' % (options.port, modelName)
-        response = yield gen.Task(http_client.fetch, url_request)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
         dictionary = {"reactionResults":json.loads(response.body),"Reactions":"Reactions","model":modelName}
         self.write(template.render(dictionary)) 
         self.set_header('Content-type','text/html')
@@ -346,7 +362,8 @@ class UniversalReactionDisplayHandler(BaseHandler):
         template = env.get_template("universalreactions.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/universal/reactions/%s' % (options.port, reactionId)
-        response = yield gen.Task(http_client.fetch, url_request)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
         results = json.loads(response.body)
         self.write(template.render(results))
         self.set_header('Content-type','text/html')
@@ -362,7 +379,7 @@ class SearchHandler(BaseHandler):
         modellist = []
         genelist = []
         
-        result = session.query(Gene.id, Gene.locus_id, func.similarity(Gene.locus_id, str(input)).label("sim")).filter(Gene.locus_id % str(input)).filter(func.similarity(Gene.locus_id, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Gene.id, Gene.locus_id, func.similarity(Gene.locus_id, str(input)).label("sim")).filter(Gene.locus_id % str(input)).filter(func.similarity(Gene.locus_id, str(input))>= str(1)).order_by(desc('sim')).all()
         for row in result:
             gene = session.query(Gene).filter(Gene.id == row.id).first()
             model_gene = session.query(ModelGene).filter(ModelGene.gene_id == row.id).first()
@@ -440,13 +457,12 @@ class SearchDisplayHandler(BaseHandler):
     def get(self):
         template = env.get_template("listdisplay.html")
         http_client = AsyncHTTPClient()
-        
-        print "Edfs"
         url_request = 'http://localhost:%d/api/search?query=%s' % (options.port, self.get_argument("query").replace (" ", "+"))
-        response = yield gen.Task(http_client.fetch, url_request)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
+        
         results = json.loads(response.body)
         self.write(template.render(results))
-        
         self.set_header('Content-type','text/html')
         self.finish() 
     
@@ -455,49 +471,44 @@ class AutoCompleteHandler(BaseHandler):
         session = Session()
         similarityBoundary = str(.2)
         
-        input = self.get_argument("query")
-        reactionlist = []
-        metabolitelist = []
-        modellist = []
-        genelist = []
-        locuslist = []
-        organismlist = [] 
+        input = self.get_argument("query") 
+        resultlist = []
         
-        result = session.query(Reaction.id, Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).all()
         for row in result:
-            reactionlist.append([row.name,row.sim])
+            resultlist.append([row.name,row.sim])
             
-        result = session.query(Gene.id, Gene.locus_id, func.similarity(Gene.locus_id, str(input)).label("sim")).filter(Gene.locus_id % str(input)).filter(func.similarity(Gene.locus_id, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Gene.locus_id, func.similarity(Gene.locus_id, str(input)).label("sim")).join(ModelGene).distinct().filter(Gene.locus_id % str(input)).filter(func.similarity(Gene.locus_id, str(input))> str(.5)).all()
         for row in result:
-            locuslist.append([row.locus_id,row.sim])
+            resultlist.append([row.locus_id, row.sim])
           
-        result = session.query(Genome.id, Genome.organism, func.similarity(Genome.organism, str(input)).label("sim")).filter(Genome.organism % str(input)).filter(func.similarity(Genome.organism, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Genome.organism, func.similarity(Genome.organism, str(input)).label("sim")).filter(Genome.organism % str(input)).filter(func.similarity(Genome.organism, str(input))> similarityBoundary).group_by(Genome.organism).all()
         for row in result:
-            organismlist.append([row.organism,row.sim])
+            resultlist.append([row.organism,row.sim])
                    
-        result = session.query(Metabolite.id, Metabolite.name, func.similarity(Metabolite.name, str(input)).label("sim")).filter(Metabolite.name % str(input)).filter(func.similarity(Metabolite.name, str(input))> similarityBoundary).order_by(desc('sim')).all()
+        result = session.query(Metabolite.name, func.similarity(Metabolite.name, str(input)).label("sim")).filter(Metabolite.name % str(input)).filter(func.similarity(Metabolite.name, str(input))> similarityBoundary).all()
         for row in result:
-            metabolitelist.append([row.name,row.sim]) 
+            resultlist.append([row.name,row.sim]) 
         
-        result = session.query(Model.id, Model.bigg_id, func.similarity(Model.bigg_id, str(input)).label("sim")).filter(Model.bigg_id % str(input)).filter(func.similarity(Model.bigg_id, str(input))> similarityBoundary).order_by(desc('sim')).all()   
+        result = session.query(Model.bigg_id, func.similarity(Model.bigg_id, str(input)).label("sim")).filter(Model.bigg_id % str(input)).filter(func.similarity(Model.bigg_id, str(input))> similarityBoundary).all()   
         for row in result:
-            modellist.append([row.bigg_id,row.sim]) 
+            resultlist.append([row.bigg_id,row.sim]) 
         #distinctGene =aliased(Gene, func.distinct(Gene.name))
-        result = session.query(Gene.name, func.similarity(Gene.name, str(input)).label("sim")).join(ModelGene).filter(Gene.name % str(input)).filter(func.similarity(Gene.name, str(input))> similarityBoundary).order_by(desc('sim')).group_by(Gene.name).all()
+        result = session.query(Gene.name, func.similarity(Gene.name, str(input)).label("sim")).join(ModelGene).filter(Gene.name % str(input)).filter(func.similarity(Gene.name, str(input))> similarityBoundary).group_by(Gene.name).all()
         for row in result:
-            gene = session.query(Gene).filter(Gene.name == row[0]).first()
-            model_gene= session.query(ModelGene).filter(ModelGene.gene_id == gene.id).first()
-            if model_gene != None:
-                genelist.append([row[0],row[1]])  
+            
+            #if i join with ModelGene then I should not have to check for model existence in gene
+            resultlist.append([row.name,row.sim])  
         session.close()
-        
         x = 0
         dictionary = {}
-        joinedlist = reactionlist + metabolitelist + modellist + genelist + organismlist + locuslist
-        sortedJoinedList = sorted(joinedlist, key=lambda query: query[1], reverse=True)
-        for result in sortedJoinedList:
+        #joinedlist = reactionlist + metabolitelist + modellist + genelist + organismlist + locuslist
+        sortedResultList = sorted(resultlist, key=lambda query: query[1], reverse=True)
+        for result in sortedResultList:
             dictionary[str(x)] = result[0]
-            x+=1  
+            x+=1
+            
+        
         self.write(json.dumps(dictionary))
         self.set_header('Content-type','json')
         self.finish()
@@ -530,7 +541,8 @@ class ModelDisplayHandler(BaseHandler):
         template = env.get_template("model.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s' % (options.port, modelName)
-        response = yield gen.Task(http_client.fetch, url_request)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
         results = json.loads(response.body)
         self.write(template.render(results))
         self.set_header('Content-type','text/html')
@@ -573,8 +585,7 @@ class ModelsListDisplayHandler(BaseHandler):
 
 class MetaboliteHandler(BaseHandler):
     def get(self, modelName, metaboliteId):
-        session = Session()
-        
+        session = Session()      
         modelquery = session.query(Model).filter(Model.bigg_id == modelName).first()
         componentquery = session.query(Metabolite).filter(Metabolite.name == metaboliteId.split("_")[0]).first()
         compartmentquery = session.query(Compartment).filter(Compartment.name == metaboliteId[-1:len(metaboliteId)]).first()
@@ -585,16 +596,14 @@ class MetaboliteHandler(BaseHandler):
             for mcc in session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.compartmentalized_component_id == cc.id).all():
                 if mcc.model_id != modelquery.id:
                     altModel = session.query(Model).filter(Model.id == mcc.model_id).first()
-                    altModelList.append(str(altModel.bigg_id))
-                    
+                    altModelList.append(str(altModel.bigg_id))                   
         reactionlist = []
-        
         for x in MetaboliteQuery().get_ModelReactions(componentquery.name, compartmentquery.name, modelquery, session):
             reactionlist.append(str(x.name))
                
         sortedReactionList = sorted(reactionlist)
         dictionary = {'name': str(componentquery.long_name), 'id': metaboliteId, 'universalname':componentquery.name, 'cas_number':str(metabolitequery.cas_number), 'seed':str(metabolitequery.seed),
-        'metacyc':str(metabolitequery.metacyc),'brenda':str(metabolitequery.brenda), 'upa':str(metabolitequery.upa), 'chebi':str(metabolitequery.chebi), 'kegg_id': str(metabolitequery.kegg_id),'reactions':reactionlist, 'model': str(modelquery.bigg_id), 'formula': str(metabolitequery.formula), "altModelList": altModelList}
+        'metacyc':str(metabolitequery.metacyc),'brenda':str(metabolitequery.brenda), 'upa':str(metabolitequery.upa), 'chebi':str(metabolitequery.chebi), 'kegg_id': metabolitequery.kegg_id,'reactions':reactionlist, 'model': str(modelquery.bigg_id), 'formula': str(metabolitequery.formula), "altModelList": altModelList}
         data = json.dumps(dictionary)
         
         self.write(data)
@@ -602,6 +611,11 @@ class MetaboliteHandler(BaseHandler):
         self.finish()
         session.close()
         
+class UniversalMetaboliteListHandler(BaseHandler):
+    def get(self):
+        session = Session()
+        [x.name for x in (sessionquery(Metabolite).all())]
+
 class UniversalMetaboliteHandler(BaseHandler):
     def get(self, metaboliteId):
         session = Session()
@@ -611,7 +625,7 @@ class UniversalMetaboliteHandler(BaseHandler):
         metaboliteList = []
         for c in compartmentList:
             temp_metaboliteList = []
-            model_components = session.query(Model_CompartmentalizedComponent).join(CompartmentalizedComponent).join(Compartment).filter(CompartmentalizedComponent.compartment_id == Compartment.id).filter(CompartmentalizedComponent.component_id == componentquery.id).filter(Compartment.name == c).all()
+            model_components = session.query(ModelCompartmentalizedComponent).join(CompartmentalizedComponent).join(Compartment).filter(CompartmentalizedComponent.compartment_id == Compartment.id).filter(CompartmentalizedComponent.component_id == componentquery.id).filter(Compartment.name == c).all()
             for mc in model_components:
                 model = session.query(Model).filter(Model.id == mc.model_id).first()
                 compartment = session.query(Compartment).filter(Compartment.id == mc.compartment_id).first()
@@ -663,7 +677,8 @@ class MetaboliteDisplayHandler(BaseHandler):
         template = env.get_template("metabolites.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/metabolites/%s' % (options.port, modelName, metaboliteId)
-        response = yield gen.Task(http_client.fetch, url_request)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
         results = json.loads(response.body)
         self.write(template.render(results))
         self.set_header('Content-type','text/html')
@@ -688,7 +703,8 @@ class MetabolitesListDisplayHandler(BaseHandler):
         template = env.get_template("listdisplay2.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/metabolites' % (options.port, modelName)
-        response = yield gen.Task(http_client.fetch, url_request)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
         dictionary = {"metaboliteResults":json.loads(response.body),"Metabolites":"Metabolites", "model":modelName}
         self.write(template.render(dictionary)) 
         self.set_header('Content-type','text/html')
@@ -701,7 +717,8 @@ class GeneListDisplayHandler(BaseHandler):
         template = env.get_template("listdisplay2.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/genes' % (options.port, modelName)
-        response = yield gen.Task(http_client.fetch, url_request)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
         dictionary = {"geneResults":json.loads(response.body),"Genes":"Genes", "model":modelName}
         self.write(template.render(dictionary))
         self.set_header('Content-type','text/html') 
@@ -714,10 +731,12 @@ class GeneHandler(BaseHandler):
         altModelList = []
         gene = session.query(Gene).join(ModelGene).join(Model).filter(Gene.name==geneName).filter(Model.bigg_id == modelName).first()
         #gene = session.query(Gene).filter(Gene.id == geneRegion.id).first()
+        """
         for gm in session.query(ModelGene).filter(ModelGene.gene_id == gene.id).all():
             model = session.query(Model).filter(Model.id == gm.model_id).first()
             if model.bigg_id != modelName:
                 altModelList.append(model.bigg_id)
+        """
         for instance in GeneQuery().get_ModelReaction(geneName, session):
             model = GeneQuery().get_model(instance, session)
             geneList = []
@@ -731,7 +750,7 @@ class GeneHandler(BaseHandler):
                 #geneList = instance.gpr.replace("(","").replace(")","").split()
                 #list.append([name for name in geneList if name !="or" and name !="and"])
                 reactionList.append(list)       
-        dictionary = {"name": geneName,"id":gene.locus_id, "model":modelName, "reactions": reactionList, "altModelList": altModelList, "info":gene.info, "leftpos":gene.leftpos,"rightpos":gene.rightpos}
+        dictionary = {"name": geneName,"id":gene.locus_id, "model":modelName, "reactions": reactionList, "info":gene.info, "leftpos":gene.leftpos,"rightpos":gene.rightpos}
         data = json.dumps(dictionary)
         self.write(data)
         self.set_header('Content-type','json')
@@ -772,7 +791,8 @@ class GeneDisplayHandler(BaseHandler):
         template = env.get_template("genes.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models/%s/genes/%s' % (options.port, modelName, geneId)
-        response = yield gen.Task(http_client.fetch, url_request)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
         results = json.loads(response.body)
         self.write(template.render(results))
         self.set_header('Content-type','text/html')

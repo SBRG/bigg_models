@@ -48,17 +48,18 @@ class ReactionQuery():
                         .filter(Model.id == modelquery.id)
                         )]
     def get_gene_list(self , reaction, modelquery, session):
-        chroms = session.query(Chromosome).filter(Chromosome.genome_id == modelquery.genome_id).all()
-        result = []
-        for chrom in chroms:
-            result.extend([(x.name,x.locus_id) for x in (session
+        #chroms = session.query(Chromosome).filter(Chromosome.genome_id == modelquery.genome_id).all()
+        #result = []
+        
+        #for chrom in chroms:
+        result.extend([(x.name,x.locus_id) for x in (session
                                 .query(Gene)
                                 .join(ModelGene)
                                 .join(GPRMatrix)
                                 .join(ModelReaction)
-                                .join(Model)
                                 .join(Reaction)
-                                .filter(chrom.id == Gene.chromosome_id)
+                                .filter(ModelGene.model_id == modelquery.id)
+                                #.filter(chrom.id == Gene.chromosome_id)
                                 .filter(reaction.id == Reaction.id)
                                 .all())])
         return result
@@ -98,9 +99,13 @@ class ModelQuery():
                 .count())
                 
     def get_model_list(self, session):
-        return [x.bigg_id for x in (session
-                                .query(Model).all())]
-                
+        result = session.execute("select bigg_id from model")
+        return [x['bigg_id'] for x in (result)]
+        """modellist = [x.bigg_id for x in (session
+                                .query(Model).order_by(Model.bigg_id).all())]
+        
+        return modellist
+        """        
 class MetaboliteQuery():
     def get_ModelReactions(self, metaboliteId, compartmentName, modelquery, session):
         return (session
@@ -185,6 +190,10 @@ class StringBuilder():
         else:
             reaction_string = pre_reaction_string[:-2] + " &#8652; " + post_reaction_string[:-2]
         return reaction_string
-           
-    
-    
+"""           
+class ModifyModel():
+    def delete_metabolite(model, metabolite):
+    def delete_reaction(model, reaction):
+    def add_metabolite(model, metabolite):
+    def add_reaction(model, reaction):
+""" 
