@@ -49,7 +49,7 @@ class ReactionQuery():
                         )]
     def get_gene_list(self , reaction, modelquery, session):
         #chroms = session.query(Chromosome).filter(Chromosome.genome_id == modelquery.genome_id).all()
-        #result = []
+        result = []
         
         #for chrom in chroms:
         result.extend([(x.name,x.locus_id) for x in (session
@@ -75,22 +75,22 @@ class ReactionQuery():
 
 class ModelQuery():
     def get_model(self, modelName, session):
-        return (session.query(Model)
+        return (session.query(Model.id)
                 .filter(Model.bigg_id == modelName)
                 .first())
     def get_ModelReaction_count(self, modelquery, session):
-        return (session.query(ModelReaction)
+        return (session.query(ModelReaction.id)
         .filter(ModelReaction.model_id == modelquery.id)
         .count())
         
     def get_model_metabolite_count(self, modelquery, session):
         return (session
-                .query(ModelCompartmentalizedComponent)
+                .query(ModelCompartmentalizedComponent.id)
                 .filter(ModelCompartmentalizedComponent.model_id == modelquery.id)
                 .count())
     
     def get_gene_count(self, modelquery, session):
-        return (session.query(ModelGene)
+        return (session.query(ModelGene.id)
                 #.join(Model)
                 #.join(Gene)
                 #.filter(Model.genome_id  == Gene.genome_id)

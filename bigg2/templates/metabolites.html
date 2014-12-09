@@ -59,7 +59,7 @@
 					<div class="well">
 					    <h4 style="text-align: center">External IDs</h4>
                     	<h5>KEGG ID: {%for k in kegg_id%} {{k}} {% endfor %}</h5>
-                    	<h5>SEED: {{seed}}</h5>
+                    	<h5>SEED: {%for k in seed%} {{k}} {% endfor %}</h5>
                     	<h5>METACYC: {{metacyc}}</h5>
                     	<h5>CHEBI: {{chebi}}</h5>
                     	<h5>BRENDA: {{brenda}}</h5>
@@ -82,7 +82,7 @@
             		<div class="row">
                 		<div class="col-lg-12" style="margin:80px 0;">
                 			<hr>
-                    		<p>Copyright &copy; 2007 The Regents of the University of California.</p>
+                    		<p>Copyright &copy; 2015 The Regents of the University of California.</p>
                 		</div>
             		</div>
         		</footer>

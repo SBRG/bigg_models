@@ -27,6 +27,15 @@
 		width:100%;
 		z-index:1000;
 	}
+	#metabolitelist_c:hover{
+	    border-color: #0099FF !important;
+	}
+	#metabolitelist_e:hover{
+	    border-color: #0099FF !important;
+	}
+	#metabolitelist_p:hover{
+	    border-color: #0099FF !important;
+	}
 	.carousel { z-index: -99; } /* keeps this behind all content */
 	.carousel .item {
 		position: fixed;

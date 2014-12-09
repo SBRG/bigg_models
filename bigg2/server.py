@@ -31,7 +31,7 @@ directory = abspath(dirname(__file__))
 
 urlBasePath = "http://localhost:8887/"
 
-engine = create_engine("postgresql://dbuser@localhost:5432/ome_stage")
+engine = create_engine("postgresql://dbuser@localhost:5432/ome_stage", echo=True)
 
 Session = sessionmaker(bind = engine)
 
@@ -46,13 +46,16 @@ class Application(tornado.web.Application):
                     (r"/", MainHandler),
                     (r"/api/models/universal/reactions/(.*)$", UniversalReactionHandler),
                     (r"/models/universal/reactions/(.*)$", UniversalReactionDisplayHandler),
+                    (r"/api/universal/reactions$", UniversalReactionListHandler),
+                    (r"/universal/reactions$", UniversalReactionListDisplayHandler),
                     (r"/models/(.*)/reactions/(.*)$",ReactionDisplayHandler),
                     (r"/api/models/(.*)/reactions/(.*)$", ReactionHandler),
                     (r"/api/models/(.*)/reactions$", ReactionListHandler),
                     (r"/api/models/(.*)/genes/(.*)$", GeneHandler),
                     (r"/api/models/universal/metabolites/(.*)$", UniversalMetaboliteHandler),
                     (r"/models/universal/metabolites/(.*)$", UniversalMetaboliteDisplayHandler),
-                    (r"/api/models/universal/metabolites/(.*)$", UniversalMetaboliteListHandler),
+                    (r"/api/universal/metabolites$", UniversalMetaboliteListHandler),
+                    (r"/universal/metabolites$", UniversalMetaboliteListDisplayHandler),
                     (r"/api/models/(.*)/genes$", GeneListHandler),
                     (r"/models/(.*)/genes$", GeneListDisplayHandler),
                     (r"/models/(.*)/reactions$", ReactionListDisplayHandler),
@@ -602,8 +605,8 @@ class MetaboliteHandler(BaseHandler):
             reactionlist.append(str(x.name))
                
         sortedReactionList = sorted(reactionlist)
-        dictionary = {'name': str(componentquery.long_name), 'id': metaboliteId, 'universalname':componentquery.name, 'cas_number':str(metabolitequery.cas_number), 'seed':str(metabolitequery.seed),
-        'metacyc':str(metabolitequery.metacyc),'brenda':str(metabolitequery.brenda), 'upa':str(metabolitequery.upa), 'chebi':str(metabolitequery.chebi), 'kegg_id': metabolitequery.kegg_id,'reactions':reactionlist, 'model': str(modelquery.bigg_id), 'formula': str(metabolitequery.formula), "altModelList": altModelList}
+        dictionary = {'name': str(componentquery.long_name), 'id': metaboliteId, 'universalname':componentquery.name, 'cas_number':metabolitequery.cas_number, 'seed':metabolitequery.seed,
+        'metacyc':metabolitequery.metacyc,'brenda':metabolitequery.brenda, 'upa':metabolitequery.upa, 'chebi':metabolitequery.chebi, 'kegg_id': metabolitequery.kegg_id,'reactions':reactionlist, 'model': str(modelquery.bigg_id), 'formula': str(metabolitequery.formula), "altModelList": altModelList}
         data = json.dumps(dictionary)
         
         self.write(data)
@@ -614,7 +617,50 @@ class MetaboliteHandler(BaseHandler):
 class UniversalMetaboliteListHandler(BaseHandler):
     def get(self):
         session = Session()
-        [x.name for x in (sessionquery(Metabolite).all())]
+        universalmetabolites = [(x.name) for x in (session.query(Metabolite).all())]
+        data = json.dumps(sorted(universalmetabolites, key=lambda metabolite: metabolite.lower()))
+        self.write(data)
+        self.set_header('Content-type','json')
+        self.finish()
+        session.close()
+        
+class UniversalMetaboliteListDisplayHandler(BaseHandler):
+    @asynchronous
+    @gen.engine
+    def get(self):
+        template = env.get_template("universalmetaboliteslist.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/universal/metabolites' % (options.port)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
+        dictionary = {"metaboliteResults":json.loads(response.body),"Metabolites":"Metabolites", "model":"universal"}
+        self.write(template.render(dictionary)) 
+        self.set_header('Content-type','text/html')
+        self.finish()
+        
+class UniversalReactionListHandler(BaseHandler):
+    def get(self):
+        session = Session()
+        universalreactions = [(x.name) for x in (session.query(Reaction).all())]
+        data = json.dumps(sorted(universalreactions, key=lambda reaction: reaction.lower()))
+        self.write(data)
+        self.set_header('Content-type','json')
+        self.finish()
+        session.close()
+
+class UniversalReactionListDisplayHandler(BaseHandler):
+    @asynchronous
+    @gen.engine
+    def get(self):
+        template = env.get_template("universalreactionslist.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/universal/reactions' % (options.port)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
+        dictionary = {"reactionResults":json.loads(response.body),"Reactions":"Reactions", "model":"universal"}
+        self.write(template.render(dictionary)) 
+        self.set_header('Content-type','text/html')
+        self.finish()
 
 class UniversalMetaboliteHandler(BaseHandler):
     def get(self, metaboliteId):
