@@ -18,21 +18,6 @@ session = Session()
 
 
 def test_addGene():
-    """
-    ome_gene = {}
-    try: chromosome = session.query(Chromosome).filter(Chromosome.ncbi_id == "AE000512.1").one()
-    except: 
-        print "genbank file does not exist in database"
-        raise
-    ome_gene['long_name'] = "test_long_name"
-    ome_gene['locus_id'] = "test_id"
-    ome_gene['name'] = "test_name"
-    ome_gene['strand'] = "+"
-    ome_gene['leftpos'] = 12
-    ome_gene['rightpos'] = 123
-    ome_gene['chromosome_id'] = chromosome.id
-    session.add(Gene(**ome_gene))
-    assert session.query(Gene).filter_by(**ome_gene).count() == 1"""
     longName = "testLongName"
     locusId = "testID"
     name = "test"
@@ -75,7 +60,7 @@ def test_addMetabolite():
     brenda = "test_brenda"
     formula = "test_formula"
     addMetabolite(name, long_name, kegg_id, cas_number, seed, chebi, metacyc, upa, brenda, formula)
-    assert session.query(Metabolite).filter(Metabolite.name = name).filter(Metabolite.long_name == long_name)\
+    assert session.query(Metabolite).filter(Metabolite.name == name).filter(Metabolite.long_name == long_name)\
                 .filter(Metabolite.kegg_id == kegg_id).filter(Metabolite.cas_number == cas_number).filter(Metabolite.seed == seed).filter(Metabolite.chebi == chebi)\
                 .filter(Metabolite.metacyc == metacyc).filter(Metabolite.upa == upa).filter(Metabolite.brenda == brenda).filter(Metabolite.formula == formula).filter(Metabolite.flag == bool(kegg_id)).count() == 1
 
@@ -87,7 +72,7 @@ def test_updateMetabolite():
         assert session.query(Metabolite).filter(Metabolite.id == metaboliteId).first().__dict__[key] == metaboliteDict[key]
 
 def test_deletMetabolite():
-    metaboliteId
+    metaboliteId = 1
     deleteMetabolite(metaboliteId)
     assert session.query(Metabolite).filter(Metabolite.id == metaboliteId).count() == 0
 
@@ -95,7 +80,9 @@ def test_addCompartmentalizedComponent():
     compartmentId = 1
     componentId = 1
     addCompartmentalizedComponent(compartmentId, componentId)
-    assert session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.compartmentId ==compartmentId).filter(CompartmentalizedComponent.componentId == componentId).count() == 1
+    assert session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.compartmentId ==compartmentId)\
+                                                    .filter(CompartmentalizedComponent.componentId == componentId).count() == 1
+
 def test_addReaction():
     name = ""
     long_name = ""
@@ -103,6 +90,18 @@ def test_addReaction():
     notes = ""
     addReaction(name, long_name, type, notes)
     assert session.query(Reaction).filter(Reaction.name == name).filter(Reaction.long_name == long_name).filter(Reaction.type == type).filter(Reaction.notes ==notes).count() == 1
+
+def test_updateReaction():
+    reactionId = 1
+    reactionDict = {'name': 'test_name', 'long_name':'test_long_name', 'type':'test_type', 'notes':'test_notes'}
+    updateReaction(reactionId, reactionDict)
+    for key in reactionDict.keys():
+        assert session.query(Reaction).filter(Reaction.id == reactionId).first().__dict__[key] == reactionDict[key]
+        
+def test_deleteReaction():
+    reactionId = 1
+    deleteReaction(reactionId)
+    assert session.query(Reaction).filter(Reaction.id == reactionId).count() == 0
 
 def test_addModel():
     biggId = 1
@@ -112,11 +111,31 @@ def test_addModel():
     addModel(biggId, firstCreated, genomeId, notes)
     assert session.query(Model).filter(Model.biggId == biggId).filter(Model.firstCreated == firstCreated).filter(Model.genomeId == genomeId).filter(Model.notes == notes).count() == 1
 
+def test_updateModel():
+    modelId = 1
+    genomeId = 1
+    modelDict = {'notes': 'test_notes', 'genome_id': genomeId, 'firstcreated': ''}
+    updateModel(modelId, modelDict)
+    for key in modelDict.keys():
+        assert session.query(Model).filter(Model.id == modelId).first().__dict__[key] == modelDict[key]
+               
+def test_deleteModel():
+    modelId = 1
+    deleteModel(modelId)
+    assert session.query(Model).filter(Model.id == modelId).count() == 0
+
+
 def test_addGPR():
     geneId = 1
     reactionId = 1
     addGPR(geneId, reactionId)
     assert session.query(GPR).filter(GPR.gene_id == geneId).filter(GPR.reaction_id == reactionId).count() == 1
+
+def test_deleteGPR():
+    geneId = 1
+    reactionId = 1
+    deleteGPR(geneId, reactionId)
+    assert session.query(GPR).filter(GPR.gene_id == geneId).filter(GPR.reaction_id == reactionId).count() == 0
 
 def test_addReactionMatrix():
     compartmentalizedComponentId = 1
@@ -124,19 +143,46 @@ def test_addReactionMatrix():
     addReactionMatrix(reactionId, CompartmentalizedComponentId)
     assert session.query(ReactionMatrix).filter(ReactionMatrix.reaction_id == reactionId).filter(ReactionMatrix.compartmentalized_component_id == compartmentalizedComponentId).count() == 1
 
+def test_deleteReactionMatrix():
+    compartmentalizedComponentId = 1
+    reactionId = 1
+    deleteReactionMatrix(reactionId, CompartmentalizedComponentId)
+    assert session.query(ReactionMatrix).filter(ReactionMatrix.reaction_id == reactionId).filter(ReactionMatrix.compartmentalized_component_id == compartmentalizedComponentId).count() == 0
+
 def test_addModelReaction():
     modelId = 1
     reactionId = 1
     addModelReaction(modelId, reactionId)
     assert session.query(ModelReaction).filter(ModelReaction.model_id == modelId).filter(ModelReaction.reaction_id == reactionId).count() == 1
 
+def test_deleteModelReaction():
+    modelId = 1
+    reactionId = 1
+    deleteModelReaction(modelId, reactionId)
+    assert session.query(ModelReaction).filter(ModelReaction.model_id == modelId).filter(ModelReaction.reaction_id == reactionId).count() == 0
+
 def test_addModelGene():
     modelId = 1
     geneId = 1
     addModelGene(modelId, geneId)
     assert session.query(ModelGene).filter(ModelGene.model_id == modelId).filter(ModelGene.gene_id == geneId).count() == 1
+    
+def test_deleteModelGene():
+    modelId = 1
+    geneId = 1
+    deleteModelGene(modelId, geneId)
+    assert session.query(ModelGene).filter(ModelGene.model_id == modelId).filter(ModelGene.gene_id == geneId).count() == 0
 
 def test_addModelCompartmentalizedComponent():
     modelId = 1
     compartmentalizedComponentId = 1
-    assert session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.model_id == modelId).filter(ModelCompartmentalizedComponent.compartmentalized_component_id == compartmentalizedComponentId).count() == 1
+    addModelCompartmentalizedComponent(modelId, compartmentalizedComponentId)
+    assert session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.model_id == modelId)\
+                                                        .filter(ModelCompartmentalizedComponent.compartmentalized_component_id == compartmentalizedComponentId).count() == 1
+
+def test_deleteModelCompartmentalizedComponent():
+    modelId = 1
+    compartmentalizedComponentId = 1
+    deleteModelCompartmentalizedComponent(modelId, compartmentalizedComponentId)
+    assert session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.model_id == modelId)\
+                                                        .filter(ModelCompartmentalizedComponent.compartmentalized_component_id == compartmentalizedComponentId).count() == 0

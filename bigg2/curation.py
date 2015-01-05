@@ -74,11 +74,12 @@ def deleteGene(geneId):
     session.close()
     
 #def deleteGPR(geneId, reactionId):
-
 #def deleteModelGene(modelId, geneId):
+
 """
 METABOLITE
 """
+
 def addMetabolite(name, long_name, kegg_id, cas_number, seed, chebi, metacyc, upa, brenda, formula):
     if not session.query(Metabolite).filter(Metabolite.name == name).filter(Metabolite.formula == formula).filter(Metabolite.kegg_id == kegg_id).count():
         metabolite = Metabolite(name = name,
@@ -95,6 +96,7 @@ def addMetabolite(name, long_name, kegg_id, cas_number, seed, chebi, metacyc, up
         session.add(metabolite)
         session.commit()
         session.close()
+        return metabolite
     else:
         print "metabolite already in database"
     
@@ -129,6 +131,7 @@ def addModel(biggId, firstCreated, genomeId, notes = None):
         session.add(model)
         session.commit()
         session.close()
+        return model
     else:
         print "model already in database"
         
@@ -161,6 +164,7 @@ def addReaction(name, long_name, type, notes):
         session.add(reaction)
         session.commit()
         session.close()
+        return reaction
 
 def updateReaction(reactionId, reactionDict=None):
     try: reaction = session.query(Reaction).filter(Reaction.id == reactionId).one()
@@ -180,6 +184,10 @@ def deleteReaction(reactionId):
     session.delete(reaction)
     session.commit()
     session.close()
+    
+"""
+Model Gene
+"""
        
 def addModelGene(modelId, geneId):
     try: model = session.query(Model).filter(Model.id == modelId).one()
@@ -194,6 +202,7 @@ def addModelGene(modelId, geneId):
     session.add(modelgene)
     session.commit()
     session.close()
+    return modelgene
     
 def deleteModelGene(modelId, geneId):
     try: mg = session.query(ModelGene).filter(ModelGene.model_id == modelId).filter(ModelGene.gene_id == geneId).one()
@@ -203,6 +212,10 @@ def deleteModelGene(modelId, geneId):
     session.delete(mg)
     session.commit()
     session.close()
+    
+"""
+GPR
+"""
     
 def addGPR(geneId, reactionId):
     try: gene = session.query(Gene).filter(Gene.id == geneId).one()
@@ -217,6 +230,7 @@ def addGPR(geneId, reactionId):
     session.add(gpr)
     session.commit()
     session.close()
+    return gpr
     
 def deleteGPR(geneId, reactionId):
     try: gpr = session.query(GPR).filter(GPR.gene_id == geneId).filter(GPR.reaction_id == reactionId).one()
@@ -226,6 +240,10 @@ def deleteGPR(geneId, reactionId):
     session.delete(gpr)
     session.commit()
     session.close()
+    
+"""
+Model Reaction
+"""
 
 def addModelReaction(modelId, reactionId):
     if not session.query(ModelReaction).filter(ModelReaction.model_id == modelId).filter(ModelReaction.reaction_id == reactionId).count():
@@ -242,6 +260,7 @@ def addModelReaction(modelId, reactionId):
         session.add(mr)
         session.commit()
         session.close()
+        return mr
         
 def deleteModelReacton(modelId, reactionId):
     try: mr = session.query(ModelReaction).filter(ModelReaction.reaction_id == reactionId).filter(ModelReaction.model_id == modelId).one()
@@ -251,6 +270,10 @@ def deleteModelReacton(modelId, reactionId):
     session.delete(mr)
     session.commit()
     session.close()
+    
+"""
+Reaction Matrix
+"""
     
 def addReactionMatrix(reactionId, compartmentalizedComponentId):
     if not session.query(ReactionMatrix).filter(ReactionMatrix.reaction_id == reactionId).filter(ReactionMatrix.compartmentalized_component_id == compartmentalizedComponentId).count():
@@ -266,6 +289,7 @@ def addReactionMatrix(reactionId, compartmentalizedComponentId):
         session.add(rm)
         session.commit()
         session.close()
+        return rm
           
 def deleteReactionMatrix(reactionId, compartmentalizedComponentId):
     try: rm = session.query(ReactionMatrix).filter(ReactionMatrix.reaction_id == reactionId).filter(ReactionMatrix.compartmentalizedComponentId == compartmentalizedComponentId).one()
@@ -275,6 +299,10 @@ def deleteReactionMatrix(reactionId, compartmentalizedComponentId):
     session.delete(rm)
     session.commit()
     session.close()
+
+"""
+Compartmentalized Component
+"""
 
 def addCompartmentalizedComponent(componentId, compartmentId):
     if not session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.component_id == componentId).filter(CompartmentalizedComponent.compartment_id == compartmentId).count():
@@ -290,6 +318,7 @@ def addCompartmentalizedComponent(componentId, compartmentId):
         session.add(cc)
         session.commit()
         session.close()
+        return cc
         
 def deleteCompartmentalizedComponent(componentId, compartmentId):
     try: cc = session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.component_id == componentId).filter(CompartmentalizedComponent.compartment_id == compartmentId).one()
@@ -300,6 +329,10 @@ def deleteCompartmentalizedComponent(componentId, compartmentId):
     session.commit()
     session.close()
         
+"""
+Model Compartmentalized Component
+"""
+
 def addModelCompartmentalizedComponent(modelId, compartmentalizedComponentId, compartmentId):
     if not session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.model_id == modelId).filter(ModelCompartmentalizedComponent.compartmentalized_component_id == compartmentalizedComponentId).filter(ModelCompartmentalizedComponent.compartment_id == compartmentId).count():
         try: model = session.query(Model).filter(Model.id == modelId).one()
@@ -318,6 +351,7 @@ def addModelCompartmentalizedComponent(modelId, compartmentalizedComponentId, co
         session.add(mcc)
         session.commit()
         session.close()
+        return mcc
 
 def deleteModelCompartmentalizedComponent(modelId, compartmentId, compartmentalizedComponentId):
     try: mcc = session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.compartmentalized_component_id == compartmentalizedComponentId).filter(ModelCompartmentalizedComponent.model_id == modelId).filter(ModelCompartmentalizedComponent.compartment_id == compartmentId).one()
@@ -328,7 +362,20 @@ def deleteModelCompartmentalizedComponent(modelId, compartmentId, compartmentali
     session.commit()
     session.close()
     
-def deleteCompartmnet(compartmentId)
+"""
+Compartment    
+"""
+
+def addCompartment(name):
+    if session.query(Compartment).filter(Compartment.name == name).count() == 1:
+        print "already exists in database"
+    else:
+        compartment = Compartment(name = name)
+        session.add(compartment)
+        session.commit()
+        session.close()
+               
+def deleteCompartmnet(compartmentId):
     try: c = session.query(Comparmtnet).filter(Compartment.id == compartmentId).one()
     except:
         print "compartment does not exist in database"
@@ -336,7 +383,3 @@ def deleteCompartmnet(compartmentId)
     session.delete(c)
     session.commit()
     session.close()
-
-
-
-
