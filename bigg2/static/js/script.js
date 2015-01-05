@@ -6,7 +6,7 @@ $( document ).ready(function() {
       comments:$.trim($("textarea[name='comments']").val())
     },
     function(data,status){
-      alert(data);
+      alert("email sent");
     });
   });
 	var navPos = $('.navbar').offset().top;
@@ -27,7 +27,14 @@ $( document ).ready(function() {
 			$( ".btn-group-vertical" ).hide();
 		}
 	});
-	$('#metabolite_c_table').slideUp("fast");
+    $('.mlist').slideUp("fast");
+	$('.met_button').click(function(event){
+	    event.preventDefault();
+	    $(this).next().slideToggle("slow", function(){
+	    
+	    });
+	});
+	/*$('#metabolite_c_table').slideUp("fast");
 	$('#metabolite_p_table').slideUp("fast");
 	$('#metabolite_e_table').slideUp("fast");
 	$('#metabolitelist_c').click(function(){
@@ -44,7 +51,7 @@ $( document ).ready(function() {
 	    $('#metabolite_e_table').slideToggle("slow", function(){
 	    
 	    });
-	});
+	});*/
 });
 
 

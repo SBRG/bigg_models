@@ -20,7 +20,7 @@
     <link href="static/css/frontpage.css" rel="stylesheet">
 	<style>
 		.ui-autocomplete-loading{background: #fff url('/static/assets/ajax-loader.gif') no-repeat right center;}
-		.intro-divider{margin-bottom:100px;}
+		.intro-divider{margin-bottom:30px;}
 		.form-control{margin-bottom:20px;}
 	</style>
 </head>
@@ -42,14 +42,11 @@
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse navbar-right navbar-ex1-collapse">
                 <ul class="nav navbar-nav">
-                    <li><a href="#about">About</a>
-                    </li>
-                    <li><a href="advancesearch">Advance Search</a>
-                    </li>
-                    <li><a href="#export">Export SBML</a>
-                    </li>
-                    <li><a href="#help">Help</a>
-                    </li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="advancesearch">Advance Search</a></li>
+                    <li><a href="#export">Export SBML</a></li>
+                    <li><a href="/webapi">Web API</a></li>
+                    <li><a href="#help">Help</a></li>
                 </ul>
             </div>
             <!-- /.navbar-collapse -->
@@ -67,12 +64,13 @@
                         <h1>BiGG Database </h1>
                         <h3>Hosted and Maintained by SBRG</h3>
                         <hr class="intro-divider">
+                        <p id="resultmessage">Search Database by Model, Reaction, Metabolite, and Gene names</p>
                         <form action = "/search" method="get">
                         <div class="input-group">
                         <span class="input-group-btn">
                         <input type="submit" value="Submit" class="btn btn-default" type="button"></input>
                         </span>
-                       <input id ="search" type="text" name="query" class="form-control" placeholder="Search Database by Model, Reaction, Metabolite, and Gene names"></input>
+                       <input id ="search" type="text" name="query" class="form-control" placeholder=""></input>
                        </div>
                        </form>
                     </div>
@@ -210,9 +208,9 @@
             // assuming data is a JavaScript array such as
             // ["one@abc.de", "onf@abc.de","ong@abc.de"]
             // and not a string
-            $('#resultmessage').remove();
+            $('#resultmessage').html(". . .");
             if(Object.keys(data).length === 0){
-                $('.input-group').before('<p id="resultmessage">no results found</p>');
+                $('#resultmessage').html("no results found");
             }
                 response(data)
         });

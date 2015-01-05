@@ -17,7 +17,7 @@
 					</div>
 					Right Click and Save Link As...
 					<br>
-					<a href="http://yersinia.ucsd.edu:8886/download/sbml/{{model}}.xml" download="{{model}}.xml">DOWNLOAD SBML MODEL</a>
+					<a href="http://yersinia.ucsd.edu:8887/download/sbml/{{model}}.xml" download="{{model}}.xml">DOWNLOAD SBML MODEL</a>
 					<hr>
 					<h2> Escher Map </h2>
 					<img src="http://placehold.it/900x300" class="img-responsive">
@@ -29,13 +29,11 @@
 				<h3> Comments/Error Reporting </h3>
 				<form action ="/submiterror" method="post" id="errorform">
 				    <div class="form-group">
-				        <label>Email address</label>
+				        <label>User Email Address</label>
                         <input type="email" class="form-control" name="email" placeholder="Enter email">    
 				    </div>
 				     <label>User Input</label>
 				    <div class="form-inline" role="form">
- 
-                    <br><br>
                     <textarea class="form-control" name ="comments" rows="3" cols="100" placeholder="Comments"></textarea>
 				    <br><br>
 				            <button id="submit" type="submit" value="Submit">Submit</button>

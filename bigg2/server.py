@@ -13,12 +13,17 @@ from ome.models import (Model, Component, Reaction,Compartment, Metabolite,
                         CompartmentalizedComponent, ModelReaction, ReactionMatrix,
                         GPRMatrix, ModelCompartmentalizedComponent, ModelGene, Gene, Comments, GenomeRegion, Genome)
 from jinja2 import Environment, FileSystemLoader
-from sqlalchemy.orm import sessionmaker, aliased
+from sqlalchemy.orm import sessionmaker, aliased, Bundle
 from sqlalchemy import create_engine, desc, func, or_
 from contextlib import contextmanager
 from collections import Counter
 from queries import (ReactionQuery, ModelQuery, MetaboliteQuery,
                         GeneQuery, StringBuilder)
+
+import cProfile
+import StringIO
+import pstats
+import contextlib
 
 from download.sbml import sbmlio
 #write_cobra_model_to_sbml_file(cobra_model, sbml_filename)
@@ -31,9 +36,23 @@ directory = abspath(dirname(__file__))
 
 urlBasePath = "http://localhost:8887/"
 
-engine = create_engine("postgresql://dbuser@localhost:5432/ome_stage", echo=True)
+engine = create_engine("postgresql://dbuser@localhost:5432/ome_stage", echo=False)
 
 Session = sessionmaker(bind = engine)
+
+
+@contextlib.contextmanager
+def profiled():
+    pr = cProfile.Profile()
+    pr.enable()
+    yield
+    pr.disable()
+    s = StringIO.StringIO()
+    ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
+    ps.print_stats()
+    # uncomment this to see who's calling what
+    # ps.print_callers()
+    print s.getvalue()
 
 #make a tutorial on how to make a api request using curl
 #http://www.restapitutorial.com/
@@ -120,7 +139,7 @@ class SubmitErrorHandler(BaseHandler):
         session.commit()
         session.close()
         #to = 'jslu@eng.ucsd.edu'
-        to = email
+        to = useremail
         gmail_user = 'justinlu10@gmail.com'
         gmail_pwd = 'ultimate9'
         smtpserver = smtplib.SMTP("smtp.gmail.com", 587)
@@ -129,7 +148,7 @@ class SubmitErrorHandler(BaseHandler):
         smtpserver.login(gmail_user, gmail_pwd)
         header = 'To:' + gmail_user + '\n' + 'From: ' +gmail_user + '\n' + 'Subject:BiGG comment notification \n'
         msg = header + comments + '\n ' + to
-        smtpserver.sendmail(gmail_user, to, msg)
+        smtpserver.sendmail(gmail_user, gmail_user, msg)
         smtpserver.close()
                 
         
@@ -201,9 +220,8 @@ class FormResultsHandler(BaseHandler):
         reactionResults = []
         geneResults = []
         modelResults = []
-        similarityBoundary = str(.3)
+        similarityBoundary = str(.2)
         if metaboliteradio != "empty" or allradio !="empty":
-        
             if input == "":
                 for modelName in modellist:
                     model = session.query(Model).filter(Model.bigg_id == modelName[0]).first()
@@ -304,7 +322,7 @@ class ReactionHandler(BaseHandler):
         
 class ReactionDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self, modelName, reactionName):
         template = env.get_template("reactions.html")
         http_client = AsyncHTTPClient()
@@ -328,7 +346,7 @@ class ReactionListHandler(BaseHandler):
         
 class ReactionListDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self, modelName):
         template = env.get_template("listdisplay2.html")
         http_client = AsyncHTTPClient()
@@ -360,7 +378,7 @@ class UniversalReactionHandler(BaseHandler):
 
 class UniversalReactionDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self, reactionId):
         template = env.get_template("universalreactions.html")
         http_client = AsyncHTTPClient()
@@ -456,7 +474,7 @@ class SearchHandler(BaseHandler):
 
 class SearchDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self):
         template = env.get_template("listdisplay.html")
         http_client = AsyncHTTPClient()
@@ -528,9 +546,9 @@ class ModelHandler(BaseHandler):
             reactionquery = ModelQuery().get_ModelReaction_count(modelquery, session)
             metabolitequery = ModelQuery().get_model_metabolite_count(modelquery, session)
             genequery = ModelQuery().get_gene_count(modelquery, session)
-            genomequery = session.query(Genome).filter(Genome.id == modelquery.genome_id).first()
+            genomeName = session.query(Genome.organism).filter(Genome.id == modelquery.genome_id).first()
             dictionary = {"model":modelquery.bigg_id,"reaction_count":reactionquery,"metabolite_count":metabolitequery,
-                   "gene_count": genequery, 'organism':genomequery.organism}
+                   "gene_count": genequery, 'organism':genomeName[0], "port": options.port}
             data = json.dumps(dictionary)
             self.write(data)
             self.set_header('Content-type','json')
@@ -539,7 +557,7 @@ class ModelHandler(BaseHandler):
 
 class ModelDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self, modelName):
         template = env.get_template("model.html")
         http_client = AsyncHTTPClient()
@@ -554,18 +572,27 @@ class ModelDisplayHandler(BaseHandler):
 class ModelListHandler(BaseHandler):    
     def get(self):
         session = Session()
+        
         models = ModelQuery().get_model_list(session)
+        """with profiled():
+            temp = session.query(Model.bigg_id, Genome.organism,func.count(Reaction.id).label('Reaction')).join(ModelReaction).join(Reaction).group_by(Model.bigg_id, Genome.organism).all()
+        """
         modellist = []
         for model in models:
             templist = []
             modelquery = ModelQuery().get_model(model, session)
+            
             reactionquery = ModelQuery().get_ModelReaction_count(modelquery, session)
+            
             metabolitequery = ModelQuery().get_model_metabolite_count(modelquery, session)
+            
             genequery = ModelQuery().get_gene_count(modelquery, session)
-            genomequery = session.query(Genome).filter(Genome.id == modelquery.genome_id).first()
-            templist.extend([modelquery.bigg_id, genomequery.organism, metabolitequery, reactionquery,  genequery])
+            
+            organismname = session.query(Genome.organism).filter(Genome.id == modelquery[2]).first()
+            templist = [modelquery[1], organismname[0], metabolitequery, reactionquery,  genequery]
             modellist.append(templist)
-        data = json.dumps(sorted(modellist, key=lambda s: s[0].lower()))
+        #data = json.dumps(sorted(modellist, key=lambda s: s[0].lower()))
+        data = json.dumps(modellist)
         self.write(data)
         self.set_header('Content-type','json')
         self.finish()
@@ -573,12 +600,14 @@ class ModelListHandler(BaseHandler):
 
 class ModelsListDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self):
         template = env.get_template("listdisplay2.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/models' % (options.port)
-        response = yield gen.Task(http_client.fetch, url_request)
+        request = tornado.httpclient.HTTPRequest(url=url_request, connect_timeout=20.0, request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
+        #response = yield gen.Task(http_client.fetch, url_request)
         dictionary = {"modelResults":json.loads(response.body),"Models":"Models"}
         self.write(template.render(dictionary)) 
         self.set_header('Content-type','text/html')
@@ -626,7 +655,7 @@ class UniversalMetaboliteListHandler(BaseHandler):
         
 class UniversalMetaboliteListDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self):
         template = env.get_template("universalmetaboliteslist.html")
         http_client = AsyncHTTPClient()
@@ -650,7 +679,7 @@ class UniversalReactionListHandler(BaseHandler):
 
 class UniversalReactionListDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self):
         template = env.get_template("universalreactionslist.html")
         http_client = AsyncHTTPClient()
@@ -666,8 +695,7 @@ class UniversalMetaboliteHandler(BaseHandler):
     def get(self, metaboliteId):
         session = Session()
         componentquery = session.query(Metabolite).filter(Metabolite.name == metaboliteId).first()
-        compartmentList = ['c', 'e', 'p']
-        
+        compartmentList = ['c', 'e', 'p','x','m','g','v','n','r']
         metaboliteList = []
         for c in compartmentList:
             temp_metaboliteList = []
@@ -693,7 +721,7 @@ class UniversalMetaboliteHandler(BaseHandler):
                 .all())]
             reactionList.append([c, temp_reactionList])
         
-        dictionary = {'long_name':str(componentquery.long_name), 'name': str(componentquery.name), 'kegg_id': str(componentquery.kegg_id), 'cas_number':str(componentquery.cas_number), 'seed':str(componentquery.seed),
+        dictionary = {'long_name':str(componentquery.long_name.split('_')[0]), 'name': str(componentquery.name), 'kegg_id': str(componentquery.kegg_id), 'cas_number':str(componentquery.cas_number), 'seed':str(componentquery.seed),
         'metacyc':str(componentquery.metacyc), 'upa':str(componentquery.upa), 'brenda':str(componentquery.brenda),'chebi':str(componentquery.chebi), 
                     'formula': str(componentquery.formula), 'metaboliteList':metaboliteList, 'reactionList': reactionList}
         #dictionary = {}
@@ -705,7 +733,7 @@ class UniversalMetaboliteHandler(BaseHandler):
 
 class UniversalMetaboliteDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self, metaboliteId):
         template = env.get_template("universalmetabolites.html")
         http_client = AsyncHTTPClient()
@@ -718,7 +746,7 @@ class UniversalMetaboliteDisplayHandler(BaseHandler):
               
 class MetaboliteDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self, modelName, metaboliteId):
         template = env.get_template("metabolites.html")
         http_client = AsyncHTTPClient()
@@ -744,7 +772,7 @@ class MetaboliteListHandler(BaseHandler):
         
 class MetabolitesListDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self, modelName):
         template = env.get_template("listdisplay2.html")
         http_client = AsyncHTTPClient()
@@ -758,7 +786,7 @@ class MetabolitesListDisplayHandler(BaseHandler):
  
 class GeneListDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self, modelName):
         template = env.get_template("listdisplay2.html")
         http_client = AsyncHTTPClient()
@@ -832,7 +860,7 @@ class GeneListHandler(BaseHandler):
 
 class GeneDisplayHandler(BaseHandler):
     @asynchronous
-    @gen.engine
+    @gen.coroutine
     def get(self, modelName, geneId):
         template = env.get_template("genes.html")
         http_client = AsyncHTTPClient()

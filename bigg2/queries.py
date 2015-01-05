@@ -75,18 +75,18 @@ class ReactionQuery():
 
 class ModelQuery():
     def get_model(self, modelName, session):
-        return (session.query(Model.id)
+        return (session.query(Model.id, Model.bigg_id, Model.genome_id)
                 .filter(Model.bigg_id == modelName)
                 .first())
     def get_ModelReaction_count(self, modelquery, session):
         return (session.query(ModelReaction.id)
-        .filter(ModelReaction.model_id == modelquery.id)
+        .filter(ModelReaction.model_id == modelquery[0])
         .count())
         
     def get_model_metabolite_count(self, modelquery, session):
         return (session
                 .query(ModelCompartmentalizedComponent.id)
-                .filter(ModelCompartmentalizedComponent.model_id == modelquery.id)
+                .filter(ModelCompartmentalizedComponent.model_id == modelquery[0])
                 .count())
     
     def get_gene_count(self, modelquery, session):
@@ -94,18 +94,13 @@ class ModelQuery():
                 #.join(Model)
                 #.join(Gene)
                 #.filter(Model.genome_id  == Gene.genome_id)
-                .filter(ModelGene.model_id == modelquery.id)
-                
+                .filter(ModelGene.model_id == modelquery[0])       
                 .count())
                 
     def get_model_list(self, session):
-        result = session.execute("select bigg_id from model")
-        return [x['bigg_id'] for x in (result)]
-        """modellist = [x.bigg_id for x in (session
-                                .query(Model).order_by(Model.bigg_id).all())]
-        
+        modellist = session.query(Model.bigg_id).order_by(Model.bigg_id).all()    
         return modellist
-        """        
+                
 class MetaboliteQuery():
     def get_ModelReactions(self, metaboliteId, compartmentName, modelquery, session):
         return (session

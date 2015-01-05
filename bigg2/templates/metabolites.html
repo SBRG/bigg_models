@@ -43,12 +43,11 @@
 				<h3> Comments/Error Reporting </h3>
 				<form id="errorform">
 				    <div class="form-group">
-				        <label>Email address</label>
+				        <label>User Email Address</label>
                         <input type="email" class="form-control" name="email" placeholder="Enter email">    
 				    </div>
 				     <label>User Input</label>
 				    <div class="form-inline" role="form">
-				    <br>
                     <textarea class="form-control" name ="comments" rows="3" cols="100" placeholder="Comments"></textarea>
 				    <br><br>
 				            <button id="submit" type="submit" value="Submit">Submit</button>
@@ -58,8 +57,9 @@
 				<div class="col-lg-4">
 					<div class="well">
 					    <h4 style="text-align: center">External IDs</h4>
-                    	<h5>KEGG ID: {%for k in kegg_id%} {{k}} {% endfor %}</h5>
-                    	<h5>SEED: {%for k in seed%} {{k}} {% endfor %}</h5>
+                    	<h5>KEGG ID: {{kegg_id}}</h5>
+                    	<h5>CAS NUMBER: {{cas_number}}</h5>
+                    	<h5>SEED: {{seed}}</h5>
                     	<h5>METACYC: {{metacyc}}</h5>
                     	<h5>CHEBI: {{chebi}}</h5>
                     	<h5>BRENDA: {{brenda}}</h5>

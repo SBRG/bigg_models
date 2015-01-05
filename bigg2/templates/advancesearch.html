@@ -16,7 +16,7 @@
                 <div class="form-group">
                 	  <div id ="modelvalues" class="checkbox">
                 	  {% for value in modelResults %}
-                	  	<input id="{{value}}" name = "{{value}}" type="checkbox"> {{ value }} </input>
+                	  	<input id="{{value[0]}}" name = "{{value[0]}}" type="checkbox"> {{ value[0] }} </input>
                 	  	<br>
                 	  	{% endfor %}      
                         </div>

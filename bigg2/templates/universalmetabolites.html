@@ -15,10 +15,10 @@
 					<p class="lead">Click to Toggle ON and OFF List:</p>
 					<br>
 					<div class="list-group">
-  						<li style="cursor:pointer" id = "metabolitelist_c" title="click to toggle on and off list" class="list-group-item active">
+  						<li style="cursor:pointer" id = "metabolitelist_c" title="click to toggle on and off list" class="list-group-item active met_button">
     						<span class="lead">{{name}}_c Reactions ({{reactionList[0][1]|length}}):</span>
   						</li>
-  						<table id="metabolite_c_table" class="table table-striped table-bordered" style="text-align:center;">
+  						<table id="metabolite_c_table" class="table table-striped table-bordered  mlist" style="text-align:center;">
 	    			    <tr>
   						{% for reaction in reactionList[0][1] %}
   						{% if loop.index is divisibleby 1 %}
@@ -33,10 +33,10 @@
 					</table>
 					</div>
 					<div class="list-group">
-  						<li style="cursor:pointer" id = "metabolitelist_e" href="" title="click to toggle on and off list" href="#" class="list-group-item active">
+  						<li style="cursor:pointer" id = "metabolitelist_e" title="click to toggle on and off list" href="#" class="list-group-item active met_button">
     						<span class="lead">{{name}}_e Reactions ({{reactionList[1][1]|length}}):</span>
   						</li>
-  						<table id = "metabolite_e_table" class="table table-striped table-bordered" style="text-align:center;">
+  						<table id = "metabolite_e_table" class="table table-striped table-bordered mlist" style="text-align:center;">
 	    			    <tr>
   						{% for reaction in reactionList[1][1] %}
   						{% if loop.index is divisibleby 1 %}
@@ -51,12 +51,120 @@
 					</table>
 					</div>
 					<div class="list-group">
-  						<li style="cursor:pointer" id = "metabolitelist_p" title="click to toggle on and off list" href="#" class="list-group-item active">
+  						<li style="cursor:pointer" id = "metabolitelist_p" title="click to toggle on and off list" href="#" class="list-group-item active met_button">
     						<span class="lead">{{name}}_p Reactions ({{reactionList[2][1]|length}}):</span>
   						</li>
-  						<table id = "metabolite_p_table" class="table table-striped table-bordered">
+  						<table id = "metabolite_p_table" class="table table-striped table-bordered mlist">
 	    			    <tr>
   						{% for reaction in reactionList[2][1] %}
+  						{% if loop.index is divisibleby 1 %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+	    				    </tr>
+	    				    <tr>
+	    				{% else %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+						{% endif %}
+  						{% endfor %}
+  						</tr>
+					</table>
+					</div>
+					<div class="list-group">
+  						<li style="cursor:pointer" id = "metabolitelist_x" title="click to toggle on and off list" href="#" class="list-group-item active met_button">
+    						<span class="lead">{{name}}_x Reactions ({{reactionList[3][1]|length}}):</span>
+  						</li>
+  						<table id = "metabolite_x_table" class="table table-striped table-bordered mlist">
+	    			    <tr>
+  						{% for reaction in reactionList[3][1] %}
+  						{% if loop.index is divisibleby 1 %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+	    				    </tr>
+	    				    <tr>
+	    				{% else %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+						{% endif %}
+  						{% endfor %}
+  						</tr>
+					</table>
+					</div>
+					<div class="list-group">
+  						<li style="cursor:pointer" id = "metabolitelist_m" title="click to toggle on and off list" href="#" class="list-group-item active met_button">
+    						<span class="lead">{{name}}_m Reactions ({{reactionList[4][1]|length}}):</span>
+  						</li>
+  						<table id = "metabolite_m_table" class="table table-striped table-bordered  mlist">
+	    			    <tr>
+  						{% for reaction in reactionList[4][1] %}
+  						{% if loop.index is divisibleby 1 %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+	    				    </tr>
+	    				    <tr>
+	    				{% else %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+						{% endif %}
+  						{% endfor %}
+  						</tr>
+					</table>
+					</div>
+						<div class="list-group">
+  						<li style="cursor:pointer" id = "metabolitelist_g" title="click to toggle on and off list" href="#" class="list-group-item active met_button">
+    						<span class="lead">{{name}}_g Reactions ({{reactionList[5][1]|length}}):</span>
+  						</li>
+  						<table id = "metabolite_g_table" class="table table-striped table-bordered mlist">
+	    			    <tr>
+  						{% for reaction in reactionList[5][1] %}
+  						{% if loop.index is divisibleby 1 %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+	    				    </tr>
+	    				    <tr>
+	    				{% else %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+						{% endif %}
+  						{% endfor %}
+  						</tr>
+					</table>
+					</div>
+										<div class="list-group">
+  						<li style="cursor:pointer" id = "metabolitelist_v" title="click to toggle on and off list" href="#" class="list-group-item active met_button">
+    						<span class="lead">{{name}}_v Reactions ({{reactionList[6][1]|length}}):</span>
+  						</li>
+  						<table id = "metabolite_v_table" class="table table-striped table-bordered mlist">
+	    			    <tr>
+  						{% for reaction in reactionList[6][1] %}
+  						{% if loop.index is divisibleby 1 %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+	    				    </tr>
+	    				    <tr>
+	    				{% else %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+						{% endif %}
+  						{% endfor %}
+  						</tr>
+					</table>
+					</div>
+										<div class="list-group">
+  						<li style="cursor:pointer" id = "metabolitelist_n" title="click to toggle on and off list" href="#" class="list-group-item active met_button">
+    						<span class="lead">{{name}}_n Reactions ({{reactionList[7][1]|length}}):</span>
+  						</li>
+  						<table id = "metabolite_n_table" class="table table-striped table-bordered mlist">
+	    			    <tr>
+  						{% for reaction in reactionList[7][1] %}
+  						{% if loop.index is divisibleby 1 %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+	    				    </tr>
+	    				    <tr>
+	    				{% else %}
+	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
+						{% endif %}
+  						{% endfor %}
+  						</tr>
+					</table>
+					</div>
+										<div class="list-group">
+  						<li style="cursor:pointer" id = "metabolitelist_r" title="click to toggle on and off list" href="#" class="list-group-item active met_button">
+    						<span class="lead">{{name}}_r Reactions ({{reactionList[8][1]|length}}):</span>
+  						</li>
+  						<table id = "metabolite_r_table" class="table table-striped table-bordered  mlist">
+	    			    <tr>
+  						{% for reaction in reactionList[8][1] %}
   						{% if loop.index is divisibleby 1 %}
 	    				    <td class="col-md-1">{{reaction[1]}}: <a href="/models/{{reaction[1]}}/reactions/{{reaction[0]}}">{{reaction[0]}}</a> </td>
 	    				    </tr>
@@ -96,6 +204,12 @@
 					<div class="well">
                     	<h4>KEGG ID: {{kegg_id}}</h4>
                     	<h4>CAS NUMBER: {{cas_number}}</h4>
+                    	<h4>SEED: {{seed}}</h4>
+                    	<h4>BRENDA: {{brenda}}</h4>
+                    	<h4>UPA: {{upa}}</h4>
+                    	<h4>CHEBI: {{chebi}}</h4>
+                    	<h4>CAS NUMBER: {{cas_number}}</h4>
+                    	<h4>METACYC: {{metacyc}}</h4>
                     </div>
                     <div class="well">
                     	<h4 style="text-align: center">{{name}}_c Models:</h4>
@@ -133,6 +247,96 @@
                     	<ul class="list-unstyled">
                     	        <li style="text-align: center">
                                 {% for metabolite in metaboliteList[2] %}
+                                {% if loop.index is divisibleby 1 %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a>
+                                </li>
+                                <li style="text-align: center">
+                                {% else %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a> 
+                                {% endif %}
+                                {% endfor %}
+                        </ul>
+                	</div>
+                	<div class="well">
+                    	<h4 style="text-align: center">{{name}}_x Models:</h4>
+                    	<ul class="list-unstyled">
+                    	        <li style="text-align: center">
+                                {% for metabolite in metaboliteList[3] %}
+                                {% if loop.index is divisibleby 1 %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a>
+                                </li>
+                                <li style="text-align: center">
+                                {% else %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a> 
+                                {% endif %}
+                                {% endfor %}
+                        </ul>
+                	</div>
+                	<div class="well">
+                    	<h4 style="text-align: center">{{name}}_m Models:</h4>
+                    	<ul class="list-unstyled">
+                    	        <li style="text-align: center">
+                                {% for metabolite in metaboliteList[4] %}
+                                {% if loop.index is divisibleby 1 %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a>
+                                </li>
+                                <li style="text-align: center">
+                                {% else %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a> 
+                                {% endif %}
+                                {% endfor %}
+                        </ul>
+                	</div>
+                	<div class="well">
+                    	<h4 style="text-align: center">{{name}}_g Models:</h4>
+                    	<ul class="list-unstyled">
+                    	        <li style="text-align: center">
+                                {% for metabolite in metaboliteList[5] %}
+                                {% if loop.index is divisibleby 1 %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a>
+                                </li>
+                                <li style="text-align: center">
+                                {% else %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a> 
+                                {% endif %}
+                                {% endfor %}
+                        </ul>
+                	</div>
+                	<div class="well">
+                    	<h4 style="text-align: center">{{name}}_v Models:</h4>
+                    	<ul class="list-unstyled">
+                    	        <li style="text-align: center">
+                                {% for metabolite in metaboliteList[6] %}
+                                {% if loop.index is divisibleby 1 %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a>
+                                </li>
+                                <li style="text-align: center">
+                                {% else %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a> 
+                                {% endif %}
+                                {% endfor %}
+                        </ul>
+                	</div>
+                	<div class="well">
+                    	<h4 style="text-align: center">{{name}}_n Models:</h4>
+                    	<ul class="list-unstyled">
+                    	        <li style="text-align: center">
+                                {% for metabolite in metaboliteList[7] %}
+                                {% if loop.index is divisibleby 1 %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a>
+                                </li>
+                                <li style="text-align: center">
+                                {% else %}
+                                    <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a> 
+                                {% endif %}
+                                {% endfor %}
+                        </ul>
+                	</div>
+                	<div class="well">
+                    	<h4 style="text-align: center">{{name}}_r Models:</h4>
+                    	<ul class="list-unstyled">
+                    	        <li style="text-align: center">
+                                {% for metabolite in metaboliteList[8] %}
                                 {% if loop.index is divisibleby 1 %}
                                     <a href="/models/{{metabolite[0]}}/metabolites/{{metabolite[1]}}_{{metabolite[2]}}"> {{metabolite[0]}} </a>
                                 </li>
