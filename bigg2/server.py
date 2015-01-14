@@ -9,37 +9,44 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 from os.path import abspath, dirname, join
 import simplejson as json
-from ome.models import (Model, Component, Reaction,Compartment, Metabolite,
-                        CompartmentalizedComponent, ModelReaction, ReactionMatrix,
-                        GPRMatrix, ModelCompartmentalizedComponent, ModelGene, Gene, Comments, GenomeRegion, Genome)
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, PackageLoader
 from sqlalchemy.orm import sessionmaker, aliased, Bundle
 from sqlalchemy import create_engine, desc, func, or_
 from contextlib import contextmanager
 from collections import Counter
 from queries import (ReactionQuery, ModelQuery, MetaboliteQuery,
-                        GeneQuery, StringBuilder)
-
+                     GeneQuery, StringBuilder)
 import cProfile
 import StringIO
 import pstats
 import contextlib
+
+from ome.models import (Model, Component, Reaction,Compartment, Metabolite,
+                        CompartmentalizedComponent, ModelReaction, ReactionMatrix,
+                        GPRMatrix, ModelCompartmentalizedComponent, ModelGene,
+                        Gene, Comments, GenomeRegion, Genome)
+from ome.base import Session
+import ome
 
 from download.sbml import sbmlio
 #write_cobra_model_to_sbml_file(cobra_model, sbml_filename)
 
 define("port", default= 8887, help="run on given port", type=int)
 
-env = Environment(loader=FileSystemLoader('templates'))
+# set up jinja2 template location
+env = Environment(loader=PackageLoader('bigg2', 'templates'))
 
+# root directory
 directory = abspath(dirname(__file__))
 
-urlBasePath = "http://localhost:8887/"
-
-engine = create_engine("postgresql://dbuser@localhost:5432/ome_stage", echo=False)
-
-Session = sessionmaker(bind = engine)
-
+# database engine
+# postgres_user = ome.settings.postgres_user
+# hostname = ome.settings.hostname
+# port = ome.settings.port
+# database = ome.settings.postgres_database
+# engine = create_engine("postgresql://%s@%s:%s/%s" % (postgres_user, hostname, port, database),
+#                        echo=False)
+# Session = sessionmaker(bind = engine)
 
 @contextlib.contextmanager
 def profiled():
@@ -54,77 +61,91 @@ def profiled():
     # ps.print_callers()
     print s.getvalue()
 
-#make a tutorial on how to make a api request using curl
-#http://www.restapitutorial.com/
-#in list display, change so that the each result states what model it is from. in other list
-#displays, state the model all the elements are from.
-#For list display, use a dictionary where the n
+# make a tutorial on how to make a api request using curl
+# http://www.restapitutorial.com/
+
+# in list display, change so that the each result states what model it is
+# from. in other list displays, state the model all the elements are from.  For
+# list display, use a dictionary where the n
+
+# -------------------------------------------------------------------------------
+# Application API
+# -------------------------------------------------------------------------------
+
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-                    (r"/", MainHandler),
-                    (r"/api/models/universal/reactions/(.*)$", UniversalReactionHandler),
-                    (r"/models/universal/reactions/(.*)$", UniversalReactionDisplayHandler),
-                    (r"/api/universal/reactions$", UniversalReactionListHandler),
-                    (r"/universal/reactions$", UniversalReactionListDisplayHandler),
-                    (r"/models/(.*)/reactions/(.*)$",ReactionDisplayHandler),
-                    (r"/api/models/(.*)/reactions/(.*)$", ReactionHandler),
-                    (r"/api/models/(.*)/reactions$", ReactionListHandler),
-                    (r"/api/models/(.*)/genes/(.*)$", GeneHandler),
-                    (r"/api/models/universal/metabolites/(.*)$", UniversalMetaboliteHandler),
-                    (r"/models/universal/metabolites/(.*)$", UniversalMetaboliteDisplayHandler),
-                    (r"/api/universal/metabolites$", UniversalMetaboliteListHandler),
-                    (r"/universal/metabolites$", UniversalMetaboliteListDisplayHandler),
-                    (r"/api/models/(.*)/genes$", GeneListHandler),
-                    (r"/models/(.*)/genes$", GeneListDisplayHandler),
-                    (r"/models/(.*)/reactions$", ReactionListDisplayHandler),
-                    (r"/api/models/(.*)/metabolites/(.*)$", MetaboliteHandler),
-                    
-                    
-                    (r"/models/(.*)/metabolites/(.*)$",MetaboliteDisplayHandler),
-                    (r"/api/models/(.*)/metabolites$", MetaboliteListHandler),
-                    (r"/models/(.*)/genes/(.*)$",GeneDisplayHandler),
-                    (r"/models/(.*)/metabolites$",MetabolitesListDisplayHandler),
-                    (r"/api/models/(.*)$", ModelHandler),
-                    (r"/api/models$", ModelListHandler),
-                    (r"/models$", ModelsListDisplayHandler),
-                    (r"/models/(.*)$", ModelDisplayHandler),
-                    
-                    (r"/about$",AboutHandler),
-                    (r"/search$",SearchDisplayHandler),
-                    (r"/api/search$",SearchHandler),
-                    (r"/autocomplete$",AutoCompleteHandler),
-                    (r"/advancesearch$",FormHandler),
-                    (r"/advancesearchresults$",FormResultsHandler),
-                    (r"/sbml$",DownloadPageHandler),
-                    (r"/webapi$",WebApiHandler),
-                    (r"/submiterror$", SubmitErrorHandler),
-                    (r"/download/(.*)$",DownLoadHandler,{'path':join(directory, 'download')}),
-                    (r"/static/(.*)$", StaticFileHandler,{'path':join(directory, 'static')})
+            (r"/", MainHandler),
+            (r"/api/models/universal/reactions/(.*)$", UniversalReactionHandler),
+            (r"/models/universal/reactions/(.*)$", UniversalReactionDisplayHandler),
+            (r"/api/universal/reactions$", UniversalReactionListHandler),
+            (r"/universal/reactions$", UniversalReactionListDisplayHandler),
+            (r"/models/(.*)/reactions/(.*)$",ReactionDisplayHandler),
+            (r"/api/models/(.*)/reactions/(.*)$", ReactionHandler),
+            (r"/api/models/(.*)/reactions$", ReactionListHandler),
+            (r"/api/models/(.*)/genes/(.*)$", GeneHandler),
+            (r"/api/models/universal/metabolites/(.*)$", UniversalMetaboliteHandler),
+            (r"/models/universal/metabolites/(.*)$", UniversalMetaboliteDisplayHandler),
+            (r"/api/universal/metabolites$", UniversalMetaboliteListHandler),
+            (r"/universal/metabolites$", UniversalMetaboliteListDisplayHandler),
+            (r"/api/models/(.*)/genes$", GeneListHandler),
+            (r"/models/(.*)/genes$", GeneListDisplayHandler),
+            (r"/models/(.*)/reactions$", ReactionListDisplayHandler),
+            (r"/api/models/(.*)/metabolites/(.*)$", MetaboliteHandler),
+            #
+            (r"/models/(.*)/metabolites/(.*)$",MetaboliteDisplayHandler),
+            (r"/api/models/(.*)/metabolites$", MetaboliteListHandler),
+            (r"/models/(.*)/genes/(.*)$",GeneDisplayHandler),
+            (r"/models/(.*)/metabolites$",MetabolitesListDisplayHandler),
+            (r"/api/models/(.*)$", ModelHandler),
+            (r"/api/models$", ModelListHandler),
+            (r"/models$", ModelsListDisplayHandler),
+            (r"/models/(.*)$", ModelDisplayHandler),
+            # 
+            (r"/about$",AboutHandler),
+            (r"/search$",SearchDisplayHandler),
+            (r"/api/search$",SearchHandler),
+            (r"/autocomplete$",AutoCompleteHandler),
+            (r"/advancesearch$",FormHandler),
+            (r"/advancesearchresults$",FormResultsHandler),
+            (r"/sbml$",DownloadPageHandler),
+            (r"/webapi$",WebApiHandler),
+            (r"/submiterror$", SubmitErrorHandler),
+            (r"/download/(.*)$",DownLoadHandler,{'path':join(directory, 'download')}),
+            (r"/static/(.*)$", StaticFileHandler,{'path':join(directory, 'static')})
         ]
-        settings = {
-                    "login_url": "/auth/login",
-                    "debug": "true",
-                    "cookie_secret" : "asdflj12390jasdlfkjkjklasdf"
-                    }
+        settings = {"debug": "true"}
         tornado.web.Application.__init__(self, handlers, **settings)
 
-class BaseHandler(RequestHandler):
-    def get_current_user(self):
-        user = self.get_secure_cookie("username")
-        if (user):
-            return user
-        else:
-            return None
-    """def write_error(self, status_code, **kwargs):
-        data = {}
-        data['code'] = status_code
-        #self.write(TEMPLATES.load('error.html').generate(data=data))
-        template = env.get_template("error.html")
-        self.write(template.render(data))
-        self.set_header('Content-type','text/html')
-        self.finish() """
+def run(public=True):
+    """Run the server"""
+    tornado.options.parse_command_line()
+    http_server = tornado.httpserver.HTTPServer(Application())
+    print('serving BiGG 2 on port %d' % options.port)
+    http_server.listen(options.port, None if public else "localhost")
+    try:
+        tornado.ioloop.IOLoop.instance().start()
+    except KeyboardInterrupt:
+        print("bye!")
 
+def stop():
+    """Stop the server"""
+    tornado.ioloop.IOLoop.instance().stop()
+
+# -------------------------------------------------------------------------------
+# Handlers
+# -------------------------------------------------------------------------------
+
+class BaseHandler(RequestHandler):
+    pass
+    
+class MainHandler(BaseHandler):
+    def get(self):
+        template = env.get_template('index.html')
+        self.write(template.render())
+        self.set_header('Content-type','text/html')
+        self.finish()
+    
 class DownLoadHandler(tornado.web.StaticFileHandler):
     def post(self, path, include_body=True):
         # your code from above, or anything else custom you want to do
@@ -155,11 +176,11 @@ class SubmitErrorHandler(BaseHandler):
         smtpserver.ehlo()
         smtpserver.starttls()
         smtpserver.login(gmail_user, gmail_pwd)
-        header = 'To:' + gmail_user + '\n' + 'From: ' +gmail_user + '\n' + 'Subject:BiGG comment notification \n'
+        header = ('To:' + gmail_user + '\n' + 'From: ' + gmail_user + '\n' +
+                  'Subject:BiGG comment notification\n')
         msg = header + comments + '\n ' + to
         smtpserver.sendmail(gmail_user, gmail_user, msg)
         smtpserver.close()
-                
         
 class DownloadPageHandler(BaseHandler):
     def get(self):
@@ -171,13 +192,6 @@ class DownloadPageHandler(BaseHandler):
         self.set_header('Content-type','text/html')
         self.finish()
   
-class MainHandler(BaseHandler):
-    def get(self):
-        template = env.get_template('index.html')
-        self.write(template.render())
-        self.set_header('Content-type','text/html')
-        self.finish()
-        
 class AboutHandler(BaseHandler):
     def get(self):
         template = env.get_template('about.html')
@@ -498,21 +512,42 @@ class SearchDisplayHandler(BaseHandler):
     
 class AutoCompleteHandler(BaseHandler):
     def get(self):
+        # get the session
         session = Session()
+        
+        # set the similarity boundary
         similarityBoundary = str(.2)
         
         input = self.get_argument("query") 
         resultlist = []
-        
-        result = session.query(Reaction.name, func.similarity(Reaction.name, str(input)).label("sim")).filter(Reaction.name % str(input)).filter(func.similarity(Reaction.name, str(input))> similarityBoundary).all()
+
+        # reaction name
+        result = (session
+                  .query(Reaction.name, func.similarity(Reaction.name, str(input)).label("sim"))
+                  .filter(Reaction.name % str(input))
+                  .filter(func.similarity(Reaction.name, str(input)) > similarityBoundary)
+                  .all())
         for row in result:
             resultlist.append([row.name,row.sim])
             
-        result = session.query(Gene.locus_id, func.similarity(Gene.locus_id, str(input)).label("sim")).join(ModelGene).distinct().filter(Gene.locus_id % str(input)).filter(func.similarity(Gene.locus_id, str(input))> str(.5)).all()
+        # gene locus id
+        result = (session
+                  .query(Gene.locus_id, func.similarity(Gene.locus_id, str(input)).label("sim"))
+                  .join(ModelGene)
+                  .distinct()
+                  .filter(Gene.locus_id % str(input))
+                  .filter(func.similarity(Gene.locus_id, str(input)) > str(.5))
+                  .all())
         for row in result:
             resultlist.append([row.locus_id, row.sim])
           
-        result = session.query(Genome.organism, func.similarity(Genome.organism, str(input)).label("sim")).filter(Genome.organism % str(input)).filter(func.similarity(Genome.organism, str(input))> similarityBoundary).group_by(Genome.organism).all()
+        # organism
+        result = (session
+                  .query(Genome.organism, func.similarity(Genome.organism, str(input)).label("sim"))
+                  .filter(Genome.organism % str(input))
+                  .filter(func.similarity(Genome.organism, str(input))> similarityBoundary)
+                  .group_by(Genome.organism)
+                  .all())
         for row in result:
             resultlist.append([row.organism,row.sim])
                    
@@ -523,12 +558,13 @@ class AutoCompleteHandler(BaseHandler):
         result = session.query(Model.bigg_id, func.similarity(Model.bigg_id, str(input)).label("sim")).filter(Model.bigg_id % str(input)).filter(func.similarity(Model.bigg_id, str(input))> similarityBoundary).all()   
         for row in result:
             resultlist.append([row.bigg_id,row.sim]) 
-        #distinctGene =aliased(Gene, func.distinct(Gene.name))
+
+        # distinctGene =aliased(Gene, func.distinct(Gene.name))
         result = session.query(Gene.name, func.similarity(Gene.name, str(input)).label("sim")).join(ModelGene).filter(Gene.name % str(input)).filter(func.similarity(Gene.name, str(input))> similarityBoundary).group_by(Gene.name).all()
         for row in result:
-            
-            #if i join with ModelGene then I should not have to check for model existence in gene
+            # if i join with ModelGene then I should not have to check for model existence in gene
             resultlist.append([row.name,row.sim])  
+
         session.close()
         x = 0
         dictionary = {}
@@ -863,13 +899,6 @@ class GeneDisplayHandler(BaseHandler):
         self.write(template.render(results))
         self.set_header('Content-type','text/html')
         self.finish() 
-    
 
-def main():
-    tornado.options.parse_command_line()
-    http_server = tornado.httpserver.HTTPServer(Application())
-    http_server.listen(options.port)
-    tornado.ioloop.IOLoop.instance().start()
-        
 if __name__ == "__main__":
-    main()   
+    run()   
