@@ -116,6 +116,15 @@ class BaseHandler(RequestHandler):
             return user
         else:
             return None
+    """def write_error(self, status_code, **kwargs):
+        data = {}
+        data['code'] = status_code
+        #self.write(TEMPLATES.load('error.html').generate(data=data))
+        template = env.get_template("error.html")
+        self.write(template.render(data))
+        self.set_header('Content-type','text/html')
+        self.finish() """
+
 class DownLoadHandler(tornado.web.StaticFileHandler):
     def post(self, path, include_body=True):
         # your code from above, or anything else custom you want to do
@@ -721,7 +730,7 @@ class UniversalMetaboliteHandler(BaseHandler):
                 .all())]
             reactionList.append([c, temp_reactionList])
         
-        dictionary = {'long_name':str(componentquery.long_name.split('_')[0]), 'name': str(componentquery.name), 'kegg_id': str(componentquery.kegg_id), 'cas_number':str(componentquery.cas_number), 'seed':str(componentquery.seed),
+        dictionary = {'long_name':str(componentquery.long_name.split('_')[0]), 'name': componentquery.name, 'kegg_id': str(componentquery.kegg_id), 'cas_number':str(componentquery.cas_number), 'seed':str(componentquery.seed),
         'metacyc':str(componentquery.metacyc), 'upa':str(componentquery.upa), 'brenda':str(componentquery.brenda),'chebi':str(componentquery.chebi), 
                     'formula': str(componentquery.formula), 'metaboliteList':metaboliteList, 'reactionList': reactionList}
         #dictionary = {}
@@ -872,6 +881,7 @@ class GeneDisplayHandler(BaseHandler):
         self.set_header('Content-type','text/html')
         self.finish() 
     
+
 def main():
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application())

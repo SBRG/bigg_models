@@ -42,11 +42,11 @@
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse navbar-right navbar-ex1-collapse">
                 <ul class="nav navbar-nav">
-                    <li><a href="#about">About</a></li>
+                    <li><a href="http://www.biomedcentral.com/1471-2105/11/213">About</a></li>
                     <li><a href="advancesearch">Advance Search</a></li>
-                    <li><a href="#export">Export SBML</a></li>
+                    <!--<li><a href="#export">Export SBML</a></li>-->
                     <li><a href="/webapi">Web API</a></li>
-                    <li><a href="#help">Help</a></li>
+                    <!--<li><a href="#help">Help</a></li>-->
                 </ul>
             </div>
             <!-- /.navbar-collapse -->
@@ -76,30 +76,36 @@
                     </div>
                       <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
+     <a href=/models>
       <img src="/static/assets/f21.png" alt="...">
+      </a>
       <div class="caption">
         <a href=/models><h3>View Models</h3></a>
-        <p>Browse through BiGG's knowledge base of models and their components.</p>
+        
         
       </div>
     </div>
   </div>
     <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
+    <a href="/universal/metabolites">
       <img src="/static/assets/f22.png" alt="...">
+      </a>
       <div class="caption">
-        <a href="http://zakandrewking.github.io/escher/"><h3>View Escher Maps</h3></a>
-        <p>web-based tool for building, viewing, and sharing visualizations of metabolic pathways</p>
+        <a href="/universal/metabolites"><h3>View Metabolites</h3></a>
+        
         
       </div>
     </div>
   </div>
     <div class="col-sm-6 col-md-4">
     <div class="thumbnail">
+    <a href="/universal/reactions">
       <img src="/static/assets/f23.png" alt="...">
+      </a>
       <div class="caption">
-        <a href="https://github.com/SBRG/ome"><h3>View OME Framework</h3></a>
-        <p>a bioinformatics framework that helps to enable a broad array of iterative and evolving systems biology workflows</p>
+        <a href="/universal/reactions"><h3>View Reactions</h3></a>
+        
         
       </div>
     </div>
@@ -109,7 +115,7 @@
 
         </div>
         <!-- /.container -->
-
+        
     </div>
     <!-- /.intro-header -->
 
@@ -118,7 +124,38 @@
         <!-- /.container -->
 
     <!-- /.banner -->
+    <div id="ome-section" style="padding:30px;">
+    <div class="container">
 
+            <div class="row">
+                <div class="col-lg-5 col-lg-offset-1 col-sm-push-6  col-sm-6">
+                    <div class="clearfix"></div>
+                    <h2 class="section-heading">Powered by the <a href="http://the-ome-framework.readthedocs.org/en/latest/">OME</a> Framework</h2>
+                    <p class="lead">The OME Framework is a systems biology and bioinformatics framework that helps to enable a broad array of iterative and evolving systems biology workflows.</p>
+                </div>
+                <div class="col-lg-4 col-sm-pull-6  col-sm-6">
+                    <img class="img-responsive" src="/static/assets/om_overview.png" alt="">
+                </div>
+            </div>
+
+    </div>
+    </div>
+    <div id="escher-section" style="background-color: #f8f8f8; padding:30px;">
+    <div class="container">
+
+            <div class="row">
+                <div class="col-lg-5 col-sm-6">
+                    <div class="clearfix"></div>
+                    <h2 class="section-heading">Utilizes <a href="https://escher.github.io/">Escher</a> Maps</h2>
+                    <p class="lead">web-based tool for building, viewing, and sharing visualizations of metabolic pathways</p>
+                </div>
+                <div class="col-lg-4  col-lg-offset-2 col-sm-6">
+                  <img class="img-responsive" src="/static/assets/escher-logo.png" alt="">
+                </div>
+            </div>
+
+    </div>
+    </div>
     <div class="banner">
 
         <div class="container">

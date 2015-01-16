@@ -9,7 +9,7 @@ import sys
 
 from ome.models import (Model, Component, Reaction, Compartment, Metabolite, 
                         CompartmentalizedComponent, ModelReaction, ReactionMatrix, 
-                        GPRMatrix, ModelCompartmentalizedComponent, ModelGene, Gene, Chromosome)
+                        GPRMatrix, ModelCompartmentalizedComponent, ModelGene, Gene, Chromosome, ModelCount)
 from ome.base import GenomeRegion
 
 engine = create_engine("postgresql://dbuser@localhost:5432/ome_stage_2")
@@ -27,8 +27,7 @@ def addGene(long_name, locus_id, gene_name, leftpos, rightpos, ncbi, strand, inf
     ome_gene = {}
     try: chromosome = session.query(Chromosome).filter(Chromosome.ncbi_id == ncbi).one()
     except: 
-        print "genbank file does not exist in database"
-        raise
+        raise Exception("genbank file does not exist in database or there is more than one")
     ome_gene['long_name'] = long_name
     ome_gene['locus_id'] = locus_id
     ome_gene['name'] = gene_name
@@ -52,7 +51,7 @@ def updateGene(geneId, geneDict = None, genomeRegionDict = None):
     try: gene = session.query(Gene).filter(Gene.id == geneId).one()
     except:
         print "gene does not exist in database"
-        raise
+        raise Exception 
     if geneDict is not None and geneDict:
         session.query(Gene).filter(Gene.id == geneId).update(geneDict)
         session.commit()
@@ -73,7 +72,7 @@ def deleteGene(geneId):
     session.commit()
     session.close()
     
-#def deleteGPR(geneId, reactionId):
+#def deleteGPRMatrix(geneId, reactionId):
 #def deleteModelGene(modelId, geneId):
 
 """
@@ -214,10 +213,10 @@ def deleteModelGene(modelId, geneId):
     session.close()
     
 """
-GPR
+GPRMatrix
 """
     
-def addGPR(geneId, reactionId):
+def addGPRMatrix(geneId, reactionId):
     try: gene = session.query(Gene).filter(Gene.id == geneId).one()
     except:
         print "gene does not exist in database"
@@ -226,18 +225,18 @@ def addGPR(geneId, reactionId):
     except: 
         print "reaction does not exist in database"
         raise
-    gpr = GPR(gene_id = gene.id, reaction_id = reaction.id)
-    session.add(gpr)
+    GPRMatrix = GPRMatrix(gene_id = gene.id, reaction_id = reaction.id)
+    session.add(GPRMatrix)
     session.commit()
     session.close()
-    return gpr
+    return GPRMatrix
     
-def deleteGPR(geneId, reactionId):
-    try: gpr = session.query(GPR).filter(GPR.gene_id == geneId).filter(GPR.reaction_id == reactionId).one()
+def deleteGPRMatrix(geneId, reactionId):
+    try: GPRMatrix = session.query(GPRMatrix).filter(GPRMatrix.gene_id == geneId).filter(GPRMatrix.reaction_id == reactionId).one()
     except:
         print "gene product rule does not exist in database"
         raise
-    session.delete(gpr)
+    session.delete(GPRMatrix)
     session.commit()
     session.close()
     
@@ -375,7 +374,7 @@ def addCompartment(name):
         session.commit()
         session.close()
                
-def deleteCompartmnet(compartmentId):
+def deleteCompartment(compartmentId):
     try: c = session.query(Comparmtnet).filter(Compartment.id == compartmentId).one()
     except:
         print "compartment does not exist in database"
@@ -383,3 +382,24 @@ def deleteCompartmnet(compartmentId):
     session.delete(c)
     session.commit()
     session.close()
+    
+def refreshModelCount(modelId):
+    metabolite_count = (session
+            .query(func.count(ModelCompartmentalizedComponent.id))
+            .filter(ModelCompartmentalizedComponent.model_id == modelId)
+            .scalar())
+    
+    reaction_count = (session.query(func.count(ModelReaction.id))
+        .filter(ModelReaction.model_id == modelId)
+        .scalar())
+    
+    gene_count = (session.query(func.count(ModelGene.id))
+                .filter(ModelGene.model_id == modelId)       
+                .scalar())
+    session.query(ModelCount).filter(ModelCount.model_id == modelId).update({ModelCount.gene_count : gene_count, ModelCount.metabolite_count : metabolite_count, ModelCount.reaction_count : reaction_count})
+    session.commit()
+    session.close()
+
+if __name__ == '__main__':
+    for model_id in session.query(Model.id).all():
+        refreshModelCount(model_id)
