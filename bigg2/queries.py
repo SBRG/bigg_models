@@ -3,7 +3,7 @@ from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
                         GPRMatrix, ModelCompartmentalizedComponent, ModelGene, Gene, Chromosome, ModelCount)
 from sqlalchemy import func
 class ReactionQuery():
-    def get_ModelReaction(self, reactionId, modelId, session):
+    def get_model_reaction(self, reactionId, modelId, session):
         return (session
             .query(ModelReaction)
             .filter(ModelReaction.reaction_id == reactionId)
@@ -79,27 +79,24 @@ class ModelQuery():
         return (session.query(Model.id, Model.bigg_id, Model.genome_id)
                 .filter(Model.bigg_id == modelName)
                 .first())
-    def get_ModelReaction_count(self, modelquery, session):
-        #return session.query(ModelCount.reaction_count).filter(ModelCount.model_id == modelquery[0]).first()
-        return (session.query(func.count(ModelReaction.id))
-        .filter(ModelReaction.model_id == modelquery[0])
-        .scalar())
-        
+    def get_model_reaction_count(self, modelquery, session):
+        rCount = session.query(ModelCount).filter(ModelCount.model_id == modelquery[0]).first()
+        if rCount is not None:
+            return rCount.reaction_count
+        else:
+            return None
     def get_model_metabolite_count(self, modelquery, session):
-        #return session.query(ModelCount.metabolite_count).filter(ModelCount.model_id == modelquery[0]).first()
-        return (session
-                .query(func.count(ModelCompartmentalizedComponent.id))
-                .filter(ModelCompartmentalizedComponent.model_id == modelquery[0])
-                .scalar())
-        
+        metCount = session.query(ModelCount).filter(ModelCount.model_id == modelquery[0]).first()
+        if metCount is not None:
+            return metCount.metabolite_count
+        else:
+            return None
     def get_gene_count(self, modelquery, session):
-        #return session.query(ModelCount.gene_count).filter(ModelCount.model_id == modelquery[0]).first() 
-        return (session.query(func.count(ModelGene.id))
-                #.join(Model)
-                #.join(Gene)
-                #.filter(Model.genome_id  == Gene.genome_id)
-                .filter(ModelGene.model_id == modelquery[0])       
-                .scalar())       
+        geneCount = session.query(ModelCount).filter(ModelCount.model_id == modelquery[0]).first()
+        if geneCount is not None:
+            return geneCount.gene_count
+        else:
+            return None      
     def get_model_list(self, session):
         modellist = session.query(Model.bigg_id).order_by(Model.bigg_id).all()    
         return modellist

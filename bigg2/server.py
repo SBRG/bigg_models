@@ -308,7 +308,7 @@ class ReactionHandler(BaseHandler):
         altModelList = []
         modelquery = ReactionQuery().get_model(modelName, session)
         reaction = ReactionQuery().get_reaction(reactionName, session)
-        modelreaction = ReactionQuery().get_ModelReaction(reaction.id, modelquery.id, session).first()
+        modelreaction = ReactionQuery().get_model_reaction(reaction.id, modelquery.id, session).first()
         for rxn in session.query(ModelReaction).filter(ModelReaction.reaction_id == reaction.id).all():
             if rxn.model_id != modelquery.id:
                 altModel = session.query(Model).filter(Model.id == rxn.model_id).first()
@@ -552,7 +552,7 @@ class ModelHandler(BaseHandler):
             self.finish()
         else:
             modelquery = ModelQuery().get_model(modelName, session)
-            reactionquery = ModelQuery().get_ModelReaction_count(modelquery, session)
+            reactionquery = ModelQuery().get_model_reaction_count(modelquery, session)
             metabolitequery = ModelQuery().get_model_metabolite_count(modelquery, session)
             genequery = ModelQuery().get_gene_count(modelquery, session)
             genomeName = session.query(Genome.organism).filter(Genome.id == modelquery.genome_id).first()
@@ -839,24 +839,7 @@ class GeneHandler(BaseHandler):
         self.set_header('Content-type','json')
         self.finish()
         session.close()
-"""       
-class UniversalGeneHandler(BaseHandler):
-    def get(self, geneId):
-        session = Session()
-        gene = session.query(Gene).filter(Gene.name == geneId).first()
-        ModelGenes = session.query(ModelGene).filter(ModelGene.gene_id == gene.id).all()
-        geneList = []
-        dictionary = {}
-        for mg in ModelGenes:
-            model = session.query(Model).filter(Model.id == mg.model_id).first()
-            geneList.append([model.bigg_id, gene.name])
-        dictionary = {"biggid":gene.bigg_id, "genelist":geneList}
-        data = json.dumps(dictionary)
-        self.write(data)
-        self.set_header('Content-type', 'json')
-        self.finish()
-        session.close()
-"""
+
 class GeneListHandler(BaseHandler):
     def get(self, modelName):
         session = Session()
