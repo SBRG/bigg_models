@@ -102,7 +102,7 @@ class Application(tornado.web.Application):
             (r"/models$", ModelsListDisplayHandler),
             (r"/models/(.*)$", ModelDisplayHandler),
             # 
-            (r"/about$",AboutHandler),
+            (r"/about$", AboutHandler),
             (r"/search$",SearchDisplayHandler),
             (r"/api/search$",SearchHandler),
             (r"/autocomplete$",AutoCompleteHandler),

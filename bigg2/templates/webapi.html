@@ -1,61 +1,55 @@
 <html>
-{% extends "parentdisplay.html" %}
-
-{% block content %}
-
-<h1 style="padding-left:7px;text-align:center;">BIGG Website API</h1>
-    				<hr>
-    				
-
-<div class="container">
-	     <div class="col-lg-12" >
-	        Example curl requests: 
-	        <br>
-	        <br>
-            <ul>
-                <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models'
-                    <div class="well">
-                        ["iAF692", "iJO1366", ..]
-                    </div>
-                </li>
-                <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366'</li>
-                    <div class="well">
-                        {"model": "iJO1366", "metabolite_count": 1805, "gene_count": 1367, "reaction_count": 2583}
-                    </div>
-                <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366/reactions'
-                    <div class="well">
-                        ["BSORx", "EX_csn_LPAREN_e_RPAREN_", ..]
-                    </div>
-                </li>
-                <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366/genes'
-                    <div class="well">
-                        ["b1858", "b1859", ..]
-                    </div>
-                </li>
-                <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366/genes/b1779'
-                    <div class="well">
-                        {"reactions": [["E4PD", "(b2927 or b1779)", ["b2927", "b1779"]], ["GAPD", "b1779", ["b1779"]]], "model": "iJO1366", "altModelList": ["Ecoli_core_model", "Ec_iAF1260"], "id": "b1779"}
-                    </div>
-                </li>
-                <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366/metabolites'
-                    <div class="well">
-                        ["10fthf_c", "12dgr120_c", "12dgr140_c", ..]
-                    </div>
-                </li>
-                <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366/metabolites/dhap_c'
-                    <div class="well">
-                        {"reactions": ["DHAPT", "FBA", "FBA3", "FCLPA", "G3PD2", "G3PD5", "G3PD6", "G3PD7", "MGSA", "QULNS", "RMPA", "TGBPA", "TPI"], "name": "dhap_c", "altModelList": ["Ecoli_core_model", "Ec_iAF1260", "example_cobra_model", "model"], "formula": "C3H5O6P", "model": "iJO1366", "id": "dhap_c"}
-                    </div>
-                </li>
-                <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/search?query=3KGK'
-                    <div class="well">
-                        {"Reactions": "Reactions", "Metabolites": "Metabolites", "modelResults": [], "geneResults": [], "metaboliteResults": [], "Models": "Models", "Genes": "Genes", "reactionResults": [["Ec_iAF1260", "3KGK"], ["example_cobra_model", "3KGK"], ["iJO1366", "3KGK"]]}
-                    </div>
-                </li>
-            </ul>
+  {% extends "parentdisplay.html" %}
+  {% block content %}
+    <h1 style="padding-left:7px;text-align:center;">BiGG Website API</h1>
+    <hr>
+    <div class="container">
+      <div class="col-lg-12" >
+	Example curl requests: 
+	<br>
+	<br>
+        <ul>
+          <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models'
+            <div class="well">
+              ["iAF692", "iJO1366", ..]
+            </div>
+          </li>
+          <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366'</li>
+          <div class="well">
+            {"model": "iJO1366", "metabolite_count": 1805, "gene_count": 1367, "reaction_count": 2583}
           </div>
-</div>
-{% endblock %}	
-
-
+          <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366/reactions'
+            <div class="well">
+              ["BSORx", "EX_csn_LPAREN_e_RPAREN_", ..]
+            </div>
+          </li>
+          <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366/genes'
+            <div class="well">
+              ["b1858", "b1859", ..]
+            </div>
+          </li>
+          <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366/genes/b1779'
+            <div class="well">
+              {"reactions": [["E4PD", "(b2927 or b1779)", ["b2927", "b1779"]], ["GAPD", "b1779", ["b1779"]]], "model": "iJO1366", "altModelList": ["Ecoli_core_model", "Ec_iAF1260"], "id": "b1779"}
+            </div>
+          </li>
+          <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366/metabolites'
+            <div class="well">
+              ["10fthf_c", "12dgr120_c", "12dgr140_c", ..]
+            </div>
+          </li>
+          <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/models/iJO1366/metabolites/dhap_c'
+            <div class="well">
+              {"reactions": ["DHAPT", "FBA", "FBA3", "FCLPA", "G3PD2", "G3PD5", "G3PD6", "G3PD7", "MGSA", "QULNS", "RMPA", "TGBPA", "TPI"], "name": "dhap_c", "altModelList": ["Ecoli_core_model", "Ec_iAF1260", "example_cobra_model", "model"], "formula": "C3H5O6P", "model": "iJO1366", "id": "dhap_c"}
+            </div>
+          </li>
+          <li>curl --request GET 'http://yersinia.ucsd.edu:8886/api/search?query=3KGK'
+            <div class="well">
+              {"Reactions": "Reactions", "Metabolites": "Metabolites", "modelResults": [], "geneResults": [], "metaboliteResults": [], "Models": "Models", "Genes": "Genes", "reactionResults": [["Ec_iAF1260", "3KGK"], ["example_cobra_model", "3KGK"], ["iJO1366", "3KGK"]]}
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  {% endblock %}	
 </html>
