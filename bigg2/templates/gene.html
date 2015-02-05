@@ -1,0 +1,88 @@
+{% extends "parent_display.html" %}
+{% block title %}{{bigg_id}}{% endblock %}
+{% block content %}
+  <div class="container">
+    <div class="col-lg-8">
+      <h1><span class="light">Gene: </span>{{bigg_id}}</h1>
+
+      <hr>
+
+      <h4>Descriptive name: </h4>
+      <p>{{name}}</p>
+      
+      <h4>Model: </h4>
+      <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
+      
+      <h4>Position: </h4>
+      <p>Left: {{leftpos}} — Right: {{rightpos}}</p>
+
+      <h4>Description: </h4>
+      <p>{{info}}</p>
+
+      <h4> Associated reactions: </h4>
+      <div class="panel panel-default">
+  	<table class="table table-hover">
+	  <thead>
+  	    <tr>
+	      <th>BiGG ID</th>
+	      <th>Name</th>
+	      <th>Gene reaction rule</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+  	    {% for reaction in reactions %}
+  	      <tr class="clickable-row" href="/models/{{model_bigg_id}}/reactions/{{reaction['bigg_id']}}">
+  		<td>{{reaction['bigg_id']}}</td>
+  		<td>{{reaction['name']}}</td>
+  		<td>{{reaction['gene_reaction_rule']}}</td>
+  	      </tr>
+  	    {% endfor %}
+	  </tbody>
+  	</table>
+      </div>
+      
+      <hr>
+      <h3> Comments/Error Reporting </h3>
+      <form action ="/submiterror" id="errorform">
+	<div class="form-group">
+	  <label>Email address</label>
+          <input type="email" class="form-control" name="email" placeholder="Enter email">    
+	</div>
+	
+	<label>User Input</label>
+	<div class="form-inline" role="form">
+          <br>
+          <textarea class="form-control" name ="comments" rows="3" cols="100" placeholder="Comments"></textarea>
+	  <br><br>
+	  <button id="submit" type="submit" value="Submit">Submit</button>
+        </div>
+      </form>
+
+
+    </div>
+    <!--<div class="col-lg-4">
+      <div class="well">
+      <h4>Notes:</h4>
+      </div>
+      <div class="well">
+      <h4>{{name}} in other Models:</h4>
+      <ul class="list-unstyled">
+      {% for altmodel in altModelList %}
+      <li style="text-align: center"><a href="/models/{{altmodel}}/genes/{{name}}">{{altmodel}}</a></li>
+      {% endfor %}
+      </ul>
+      </div>
+      <!-- /input-group -->
+  </div>-->
+  
+  <footer>
+    <div class="row">
+      <div class="col-lg-12" style="margin:80px 0;">
+        <hr>
+        <p>Copyright &copy; 2015 The Regents of the University of California.</p>
+      </div>
+    </div>
+  </footer>
+  
+  </div>
+{% endblock %}	

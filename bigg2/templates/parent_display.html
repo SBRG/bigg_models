@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{% block title %}BiGG Database{% endblock %}</title>
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Bootstrap and jQuery UI -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" href="/static/lib/tablesorter/css/theme.default.css">
+
+    <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    
+    <!-- Custom Google Web Font -->
+    <link hrel="stylesheet" ref="http://fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic">
+
+    <!-- BiGG styles and js -->
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+    <script src="/static/js/script.js"></script>
+    <script src="/static/lib/tablesorter/js/jquery.tablesorter.min.js"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/assets/favicon.ico">
+
+    <meta charset="utf-8"/>
+  </head>
+  <body>		
+    {% block navbar %}	
+      <div id="nav-title-background">
+	<div class="container">
+	  <div id="nav-title">
+            <h1><a href="/">BiGG Database</a></h1>
+	  </div>
+	</div>
+      </div>
+      
+      <div class="navbar navbar-default" role="navigation">
+	<div class="container">
+	  <div class="navbar-header">
+	    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+	      <span class="sr-only">Toggle navigation</span>
+	      <span class="icon-bar"></span>
+	      <span class="icon-bar"></span>
+	      <span class="icon-bar"></span>
+	    </button>
+	    <!--<a class="navbar-brand" href="http://gcrg.ucsd.edu/"><strong>SBRG</strong></a>-->
+	  </div>
+	  
+	  <div class="navbar-collapse collapse ">
+
+	    <ul class="nav navbar-nav navbar-left">
+	      
+	      <li><a href="/">Home</a></li>
+	      <li><a href="/advanced_search">Advanced Search</a></li>
+	      <li><a href="/web_api">Web API</a></li>
+	      <!--<li><a href="#">Help</a></li>-->
+	      
+	    </ul>
+	    <ul class="nav navbar-nav navbar-right">
+	      
+	      <form class="navbar-form" action = "/search" method="get">
+		<div class="form-group">
+                  <input id ="search1" type="text" name="query"
+                    class="form-control" placeholder="Search Database"
+                    style="width:273px;">
+		  </input>
+                </div>
+		<button type="submit" class="btn btn-default">Search</button>
+	      </form>
+	      
+              
+	    </ul>
+	    
+	  </div>
+	</div>			
+      </div>
+      
+    {% endblock %}	
+    {% block content %}
+      
+    {% endblock %}
+    <script>
+     $(function() {
+	 $(".myTable").tablesorter();
+
+	 $("#search1").autocomplete({
+	     source: function (request, response) {
+		 $.get("/autocomplete", {
+		     query: request.term
+		 }, function (data) {
+		     // assuming data is a JavaScript array such as
+		     // ["one@abc.de", "onf@abc.de","ong@abc.de"]
+		     // and not a string
+		     response(data)
+			 
+			 
+		 });
+	     },
+	     minLength: 3
+	 });
+     });
+    </script>
+    
+  </body>
+</html>

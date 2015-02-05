@@ -1,61 +1,70 @@
-<html>
-	{% extends "parentdisplay.html" %}
-		{% block content %}
-			<div class="container">
-				<div class="col-lg-8">
-    				<h1>Model: <br><span>{{model}}</span></h1>
-    				<hr>
-    				<h4>Organism: <br><span>{{organism}}</span></h4>
-    				<br>
-					<div class="list-group">
-  						<a href="#" class="list-group-item active">
-    						<span class="lead">Count:</span>
-  						</a>
-  						<a href="/models/{{model}}/metabolites" class="list-group-item">Metabolite Count: {{metabolite_count}}</a>
-  						<a href="/models/{{model}}/genes" class="list-group-item">Gene Count: {{gene_count}}</a>
-  						<a href="/models/{{model}}/reactions" class="list-group-item">Reaction Count: {{reaction_count}}</a>
-					</div>
-					Right Click and Save Link As...
-					<br>
-					<a href="http://yersinia.ucsd.edu:8887/download/sbml/{{model}}.xml" download="{{model}}.xml">DOWNLOAD SBML MODEL</a>
-					<hr>
-					<h2> Escher Map </h2>
-					<img src="http://placehold.it/900x300" class="img-responsive">
-					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ac vestibulum ante. In ut pharetra nibh. Quisque sollicitudin felis vel enim viverra fermentum. Nulla sit amet odio gravida, egestas enim eget, lobortis mi. Aliquam diam augue, pellentesque eget orci non, aliquet cursus sapien. Mauris feugiat dignissim mauris, et consequat magna ultricies ac. Cras ut lectus magna. Integer at felis ultrices, ultrices dolor et, dictum lectus. </p>
-                <a class="btn btn-primary" href="#">Read More <span class="glyphicon glyphicon-chevron-right"></span></a>
-				<p></p>
-				<p></p>
-				<hr>
-				<h3> Comments/Error Reporting </h3>
-				<form action ="/submiterror" method="post" id="errorform">
-				    <div class="form-group">
-				        <label>User Email Address</label>
-                        <input type="email" class="form-control" name="email" placeholder="Enter email">    
-				    </div>
-				     <label>User Input</label>
-				    <div class="form-inline" role="form">
-                    <textarea class="form-control" name ="comments" rows="3" cols="100" placeholder="Comments"></textarea>
-				    <br><br>
-				            <button id="submit" type="submit" value="Submit">Submit</button>
-                    </div>
-				</form>
-				</div>
-				<div class="col-lg-4">
-                    <div class="well">
-                    	<h4>Notes:</h4>
-                	</div>
-                    <!-- /input-group -->
-                </div>
-				
-				<footer>
-            		<div class="row">
-                		<div class="col-lg-12" style="margin:80px 0;">
-                			<hr>
-                    		<p>Copyright &copy; 2007 The Regents of the University of California.</p>
-                		</div>
-            		</div>
-        		</footer>
-					
-			</div>
-		{% endblock %}	
-</html>
+{% extends "parent_display.html" %}
+{% block title %}{{bigg_id}}{% endblock %}
+{% block content %}
+
+  <div class="container">
+    <div class="col-lg-8">
+      <h1><span class="light">Model: </span>{{bigg_id}}</h1>
+      <hr>
+      <h4>Organism: </h4>
+      <p>{{organism}}</p>
+
+      <h4>Model metrics: </h4>
+      <div class="panel panel-default">
+  	<table class="table table-hover">
+	  <thead>
+  	    <tr>
+	      <th>Component</th>
+	      <th>Count</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    <tr class="clickable-row" href="/models/{{bigg_id}}/metabolites">
+	      <td>Metabolites</td><td>{{metabolite_count}}</td>
+	    </tr>
+	    <tr class="clickable-row" href="/models/{{bigg_id}}/reactions">
+	      <td>Reactions</td><td>{{reaction_count}}</td>
+	    </tr>
+	    <tr class="clickable-row" href="/models/{{bigg_id}}/genes">
+	      <td>Genes</td><td>{{gene_count}}</td>
+	    </tr>
+	  </tbody>
+  	</table>
+      </div>
+
+      <h4>Download as SBML:</h4>
+      <a href="http://yersinia.ucsd.edu:8887/download/sbml/{{model}}.xml" download="{{model}}.xml">
+	{{bigg_id}}.xml
+      </a>
+
+      <hr class="section-break"/>
+
+      <h3> Comments/Error Reporting </h3>
+      <form action ="/submiterror" method="post" id="errorform">
+	<div class="form-group">
+	  <label>User Email Address</label>
+          <input type="email" class="form-control" name="email" placeholder="Enter email">    
+	</div>
+	<label>User Input</label>
+	<div class="form-inline" role="form">
+          <textarea class="form-control" name ="comments" rows="3" cols="100" placeholder="Comments"></textarea>
+	  <br><br>
+	  <button id="submit" type="submit" value="Submit">Submit</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="col-lg-4">
+    </div>
+    
+    <footer>
+      <div class="row">
+        <div class="col-lg-12" style="margin:80px 0;">
+          <hr>
+          <p>Copyright &copy; 2007 The Regents of the University of California.</p>
+        </div>
+      </div>
+    </footer>
+    
+  </div>
+{% endblock %}	

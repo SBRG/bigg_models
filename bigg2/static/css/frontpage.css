@@ -3,9 +3,14 @@ body, html {
     width: 100%;
 }
 
-body, h1, h2, h3, h4, h5, h6 {
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-weight: 700;
+#bigg1-alert {
+    right: 20px;
+    left: 20px;
+    position: absolute;
+    top: 20px;
+    font-size: 16px;
+    padding: 8px; 
+    z-index: 20;
 }
 
 .lead {
@@ -19,19 +24,22 @@ body, h1, h2, h3, h4, h5, h6 {
     color: #EFF8FF;
     background: url() no-repeat center center;
     background-size: cover;
-    background-color:#0099FF;
+    background-color: #0099FF;
     text-align: center;
 }
 
 .intro-message {
     position: relative;
-    padding-top: 10%;
+    padding-top: 15%;
     padding-bottom: 20%;
 }
 
-.intro-message > h1 {
-    margin: 0;
-    font-size: 5em;
+.thumbnail h3 {
+    margin: 10px 0 10px 0;
+}
+
+h1.title {
+    font-size: 60px;
     text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 10px;
 }
 
@@ -98,49 +106,17 @@ body, h1, h2, h3, h4, h5, h6 {
 }
 
 .banner {
-    padding: 100px 0;
-    color: #0099FF;
-
-    background-size: cover;
-
+    color: #428bca;
 }
-
-.banner h2 {
-    margin: 0;
-
-    font-size: 3em;
-}
-
-.banner ul {
-    margin-bottom: 0;
-}
-
-.banner-social-buttons {
-    float: right;
+ul.banner-social-buttons {
     margin-top: 0;
+    float: right;
 }
 
 @media (max-width: 1199px) {
     ul.banner-social-buttons {
 	float: left;
 	margin-top: 15px;
-    }	
-}
-
-@media (max-width: 767px) {
-    .banner h2 {
-	margin: 0;
-	font-size: 3em;
-    }
-
-    ul.banner-social-buttons > li {
-	display: block;
-	margin-bottom: 20px;
-	padding: 0;
-    }
-
-    ul.banner-social-buttons > li:last-child {
-	margin-bottom: 0;
     }	
 }
 
@@ -152,10 +128,10 @@ p.copyright {
     background: #fff url('/static/assets/ajax-loader.gif') no-repeat right center;
 }
 .intro-divider {
-    margin-bottom:30px;
+    margin-bottom: 30px;
 }
 .form-control {
-    margin-bottom:20px;
+    margin-bottom: 20px;
 }
 .desc-section {
     padding: 30px;

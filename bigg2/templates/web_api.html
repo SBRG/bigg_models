@@ -1,0 +1,252 @@
+{% extends "parent_display.html" %}
+{% block title %}Web API{% endblock %}
+{% block content %}
+  <style>
+   .centered {
+       text-align: center;
+   }
+   samp {
+       padding: 5px 0 20px 0;
+       display: inline-block;
+   } 
+  </style>
+  <h1 class="centered">BiGG Website API</h1>
+  <h3 class="centered">Version 2.0</h3>
+  <hr>
+  <div class="container">
+    <div class="col-lg-12" >
+      Example <a href="http://curl.haxx.se/docs/httpscripting.html" target="#">curl</a> requests: 
+      <br/><br/>
+      <h3>Models, reaction, metabolites, and genes</h3>
+      <pre>curl 'http://{{api_host}}/api/v2/models'</pre>
+      <samp>[{"bigg_id": "iAPECO1_1312",
+ "organism": "Escherichia coli APEC O1",
+ "metabolite_count": 1944,
+ "gene_count": 1313,
+ "reaction_count": 2737},
+
+{"bigg_id": "iND750",
+ "organism": "Saccharomyces cerevisiae S288c",
+ "metabolite_count": 1061,
+ "gene_count": 750,
+ "reaction_count": 1266},
+
+...
+]</samp>
+	
+        <pre>curl 'http://{{api_host}}/api/v2/models/iND750'</pre>
+	<samp>{"organism": "Saccharomyces cerevisiae S288c",
+ "metabolite_count": 1061,
+ "gene_count": 750,
+ "reaction_count": 1266}</samp>
+
+        <pre>curl 'http://{{api_host}}/api/v2/models/iND750/reactions'</pre>
+	<samp>["EX_4abut_e", "EX_ac_e", "EX_acald_e", "EX_ade_e", "EX_adn_e", ... ]</samp>
+
+        <pre>curl 'http://{{api_host}}/api/v2/models/iND750/reactions/GAPD'</pre>
+	<samp>{"bigg_id": "GAPD",
+ "name": "glyceraldehyde-3-phosphate dehydrogenase",
+ "gene_reaction_rule": "(YJL052W) or (YGR192C) or (YJR009C)",
+ "model_bigg_id": "iND750"
+ "lower_bound": -1000,
+ "upper_bound": 999999,
+ "objective_coefficient": 0,
+ "genes": [{"bigg_id": "YGR192C",
+	    "name": "TDH3"},
+	   {"bigg_id": "YJL052W",
+	    "name": "YJL052W"},
+	   {"bigg_id": "YJR009C",
+	    "name": "YJR009C"}],
+ "metabolites": [{"stoichiometry": -1,
+		  "bigg_id": "pi",
+		  "compartment_bigg_id": "c",
+		  "name": "Phosphate"},
+		 {"stoichiometry": 1,
+		  "bigg_id": "nadh",
+		  "compartment_bigg_id": "c",
+		  "name": "Nicotinamide adenine dinucleotide - reduced"},
+		 {"stoichiometry": -1,
+		  "bigg_id": "nad",
+		  "compartment_bigg_id": "c",
+		  "name": "Nicotinamide adenine dinucleotide"},
+		 {"stoichiometry": 1,
+		  "bigg_id": "h",
+		  "compartment_bigg_id": "c",
+		  "name": "H+"},
+		 {"stoichiometry": -1,
+		  "bigg_id": "g3p",
+		  "compartment_bigg_id": "c",
+		  "name": "Glyceraldehyde 3-phosphate"
+		 },
+		 {"stoichiometry": 1,
+		  "bigg_id": "13dpg",
+		  "compartment_bigg_id": "c",
+		  "name": "3-Phospho-D-glyceroyl phosphate"
+		 }],
+ "database_links": {},
+ "other_models_with_reaction": ["iAPECO1_1312", "iSB619", ... ]
+}</samp>
+
+        <pre>curl 'http://{{api_host}}/api/v2/models/iND750/metabolites'</pre>
+	<samp>[{"bigg_id": "10fthf", "model_bigg_id": "iND750", "compartment_bigg_id": "c"},
+ {"bigg_id": "10fthf", "model_bigg_id": "iND750", "compartment_bigg_id": "m"},
+ {"bigg_id": "12dgr_SC", "model_bigg_id": "iND750", "compartment_bigg_id": "c"}
+ ...
+]</samp>
+        <pre>curl 'http://{{api_host}}/api/v2/models/iND750/metabolites/10fthf_c'</pre>
+	<samp>{"formula": "C20H21N7O7",
+ "bigg_id": "10fthf",
+ "compartment_bigg_id": "c",
+ "name": "10-Formyltetrahydrofolate",
+ "model_bigg_id": "iND750",
+ "reactions": [
+   {"model_bigg_id": "iND750",
+     "bigg_id": "AICART",
+     "name": "phosphoribosylaminoimidazolecarboxamide formyltransferase"},
+   {"model_bigg_id": "iND750",
+     "bigg_id": "MTHFC",
+     "name": "methenyltetrahydrofolate cyclohydrolase"},
+
+   ...
+   ],
+ "database_links": {
+   "KEGG": [{"link": "http://www.genome.jp/dbget-bin/www_bget?cpd:C00234",
+	     "id": "C00234"}],
+   "MetaCyc": [{"link": "http://metacyc.org/META/NEW-IMAGE?type=COMPOUND&object=10-FORMYL-THF",
+		"id": "10-FORMYL-THF"}],
+   ...
+   },
+ "other_models_with_metabolite": [
+   {"bigg_id": "iAPECO1_1312",
+    "compartment_bigg_id": "c"}
+
+   ...
+ ]
+}
+</samp>
+
+        <pre>curl 'http://{{api_host}}/api/v2/models/iAPECO1_1312/genes'</pre>
+	<samp> ["APECO1_100", "APECO1_101", "APECO1_102", "APECO1_103", ... ]</samp>
+        <pre>curl 'http://{{api_host}}/api/v2/models/iAPECO1_1312/genes/APECO1_100'</pre>
+	<samp>{"bigg_id": "APECO1_100",
+ "name": "rarA",
+ "leftpos": 1056853,
+ "rightpos": 1057654,
+ "model_bigg_id": "iAPECO1_1312",
+ "info": "",
+ "reactions": [{"bigg_id": "3AMACHYD",
+		"name": "3-aminoacrylate hydrolase",
+		"gene_reaction_rule": "APECO1_100"}]
+}</samp> 
+
+	<h3>Universal database</h3>
+	<pre>curl 'http://{{api_host}}/api/v2/universal/reactions'</pre>
+	<samp>["12DGR120tipp", "12DGR140tipp", ...]</samp>
+
+	<pre>curl 'http://{{api_host}}/api/v2/universal/reactions/ADA'</pre>
+	<samp>{"bigg_id": "ADA",
+ "name": "Adenosine deaminase",
+ "database_links": {},
+ "models_containing_reaction": [
+   {"organism": "Escherichia coli APEC O1",
+    "bigg_id": "iAPECO1_1312"},
+   {"organism": "Saccharomyces cerevisiae S288c",
+    "bigg_id": "iND750"},
+	  
+   ...
+ ]
+}</samp>
+
+	<pre>curl 'http://{{api_host}}/api/v2/universal/metabolites'</pre>
+	<samp>["10fthf", "12dgr120", "12dgr140", "12dgr141", ... ]</samp>
+
+	<pre>curl 'http://{{api_host}}/api/v2/universal/metabolites/g3p'</pre>
+	<samp>{"bigg_id": "g3p",
+ "name": "Glyceraldehyde 3-phosphate",
+ "formula": "C3H5O6P",
+ "database_links": {
+   "KEGG": [
+     {"link": "http://www.genome.jp/dbget-bin/www_bget?cpd:C00661",
+      "id": "C00661"},
+     {"link": "http://www.genome.jp/dbget-bin/www_bget?cpd:C00118",
+      "id": "C00118"}
+   ],
+   "BRENDA": [
+     {"link": null,
+      "id": "BG17970"}
+   ],
+
+   ...
+ },
+ "compartments_in_models": [
+   {"model_bigg_id": "iAPECO1_1312",
+    "bigg_id": "c",
+    "organism": "escherichia coli apec o1"},
+   {"model_bigg_id": "iND750",
+    "bigg_id": "c",
+    "organism": "Saccharomyces cerevisiae S288c"},
+
+   ...
+ ]
+}</samp>
+
+	<h3>Search</h3>
+        <pre>curl 'http://{{api_host}}/api/v2/search?query=g3p'</pre>
+	<samp>{"results": {
+    "models": [],
+    "reactions": [
+      {"model_bigg_id": "universal",
+       "bigg_id": "G3PD"},
+      {"model_bigg_id": "universal",
+       "bigg_id": "G3PT"},
+
+      ...
+    ],
+    "metabolites": [
+      {"model_bigg_id": "universal",
+       "bigg_id": "g3p"},
+      {"model_bigg_id": "universal",
+       "bigg_id": "g3pg"},
+
+      ...
+    ],
+    "genes": []
+  }
+}</samp>
+	
+	<pre>curl 'http://{{api_host}}/api/v2/search?query=gapA'</pre>
+	<samp>{"results": {
+    "models": [],
+    "reactions": [],
+    "metabolites": [],
+    "genes": [
+      {"model_bigg_id": "iSF_1195",
+       "bigg_id": "SF1444"},
+      {"model_bigg_id": "iPC815",
+       "bigg_id": "YPO2157"},
+	  
+      ...
+    ]
+  }
+}</samp>
+
+	<pre>curl 'http://{{api_host}}/api/v2/search?query=iJO1366'</pre>
+	<samp>{"results": {
+    "models": [
+      {"bigg_id": "iJO1366"
+       "organism": "Escherichia coli str. K-12 substr. MG1655",
+       "metabolite_count": 1866,
+       "gene_count": 1367,
+       "reaction_count": 2645}
+    ],
+    "reactions": [],
+    "metabolites": [],
+    "genes": []
+  }
+}</samp>
+
+      </div>
+    </div>
+
+    <hr/>
+{% endblock %}	
