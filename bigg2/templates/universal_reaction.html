@@ -1,0 +1,65 @@
+{% extends "parent_display.html" %}
+{% block title %}{{bigg_id}}{% endblock %}
+{% block content %}
+  <style>
+   #map {
+       width: 100%; 
+       height: 500px; 
+       border: 1px solid #DDD; 
+       border-radius: 4px;
+   }
+  </style>
+  <div class="container">
+    <div class="col-lg-8">
+      <h1>
+	<span class="light">Universal reaction: </span>
+	<span>{{bigg_id}}</span>
+      </h1>
+      <hr/>
+      <h4>Descriptive name:</h4> 
+      <p>{{name}}</p>
+      <br/>
+      <h3>
+	{{bigg_id}} in BiGG models
+      </h3>
+      <div class="panel panel-default">
+  	<table class="table table-hover">
+	  <thead>
+  	    <tr>
+	      <th>Organism</th>
+	      <th>Model</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+  	    {% for model in models_containing_reaction %}
+  	      <tr class="clickable-row" href="/models/{{model['bigg_id']}}/reactions/{{bigg_id}}">
+		<td>{{model['organism']}}</td>
+  		<td>{{model['bigg_id']}}</td>
+  	      </tr>
+  	    {% endfor %}
+	  </tbody>
+  	</table>
+      </div>
+
+      <hr class="section-break"/>
+
+      {% include 'comments.html' %}
+    </div>
+    
+    <div class="col-lg-4">
+
+      {% include 'database_links.html' %}
+
+    </div>    
+
+    <footer>
+      <div class="row">
+        <div class="col-lg-12" style="margin:80px 0;">
+          <hr>
+          <p>Copyright &copy; 2007 The Regents of the University of California.</p>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+{% endblock %}	

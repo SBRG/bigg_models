@@ -1,0 +1,171 @@
+{% extends "parent_display.html" %}
+{% block title %}{{bigg_id}}{% endblock %}
+{% block content %}
+
+  <style>
+   #map {
+       width: 100%; 
+       height: 500px; 
+       border: 1px solid #DDD; 
+       border-radius: 4px;
+   }
+  </style>
+  <div class="container">
+    <div class="col-lg-8">
+      <h1><span class="light">Reaction: </span>{{bigg_id}}</h1>
+
+      <hr>
+
+      <h4>Descriptive name: </h4>
+      <p>{{name}}</p>
+      
+      <h4>Model: </h4>
+      <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
+      
+      <h4>Reaction String:</h4>
+      <p>{{reaction_string}}</p>
+
+      <h4>Default bounds:</h4>
+      <p>({{lower_bound}}, {{upper_bound}})</p>
+
+      <h4>Metabolites:</h4>
+      <div class="panel panel-default">
+  	<table class="table table-hover">
+	  <thead>
+  	    <tr>
+	      <th>Stoichiometry</th>
+	      <th>BiGG ID</th>
+	      <th>Name</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+  	    {% for metabolite in metabolites %}
+  	      <tr class="clickable-row" href="/models/{{model_bigg_id}}/metabolites/{{metabolite['bigg_id']}}_{{metabolite['compartment_bigg_id']}}">
+  		<td align="right" width="50px">{{metabolite['stoichiometry']}}</td>
+  		<td>
+		  {{metabolite['bigg_id']}}_{{metabolite['compartment_bigg_id']}}
+		</td>
+  		<td>{{metabolite['name']}}</td>
+  	      </tr>
+  	    {% endfor %}
+	  </tbody>
+  	</table>
+      </div>
+      
+      <h4>Gene Reaction Rule: </h4>
+      <p>{{gene_reaction_rule}}</p>
+      
+      <h4>Gene IDs and names:</h4>
+      <p>
+	{% for gene in genes %}
+	  <a href="/models/{{model_bigg_id}}/genes/{{gene['bigg_id']}}">{{gene['bigg_id']}}</a> ({{gene['name']}})
+	{% endfor %}
+      </p>
+
+      <hr class="section-break"/>
+
+      {% if escher_map %}
+	<h2> Escher Map </h2>
+        <div id="map"></div>  
+        <p></p>              
+        <a class="btn btn-primary" href="https://escher.github.io">Read More <span class="glyphicon glyphicon-chevron-right"></span></a>
+	<p></p>
+	<p></p>
+	<hr>
+      {% endif %}
+
+      {% include 'comments.html' %}
+    </div>
+    
+    <div class="col-lg-4">
+      <div class="well">
+        <h4>Universal reaction</h4>	
+	<ul class="list-unstyled">
+	  <li>
+	    <a href="/universal/reactions/{{bigg_id}}">{{bigg_id}}</a>
+	  </li>
+	</ul>
+      </div>
+      
+      {% include 'database_links.html' %}
+
+      <div class="well">
+        <h4>Notes</h4>	
+      </div>
+
+      <div class="well">
+        <h4>{{bigg_id}} in other models</h4>
+        <ul class="list-unstyled">
+          {% for model_bigg_id in other_models_with_reaction %}
+            <li>
+	      <a href="/models/{{model_bigg_id}}/reactions/{{bigg_id}}">
+		{{model_bigg_id}}
+	      </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    
+    <footer>
+      <div class="row">
+        <div class="col-lg-12">
+          <hr>
+          <p>Copyright &copy; 2015 The Regents of the University of California.</p>
+        </div>
+      </div>
+    </footer>
+    
+  </div>
+  {% if escher_map %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+    <script src="//zakandrewking.github.io/escher/escher.1.0.0b2.js"></script>
+    <script>
+
+
+     // Set up map and styles
+     // Requires two local files:  iJO1366_central_metabolism.json and builder-embed.css
+     var map_sel = d3.select('#map'),
+         reaction_name = document.getElementById('reactionName').innerHTML,  // replace all 'reaction' with 'metabolite' for metabolite page
+         reaction_data = {};
+     reaction_data[reaction_name] = 1;
+     var b = escher.Builder({ selection: d3.select('#map'),
+			      menu: 'zoom',
+			      scroll_behavior: 'none',
+			      map_path: '/static/lib/iJO1366_central_metabolism.json',
+			      css_path: '/static/css/builder-embed.css',
+			      reaction_data: reaction_data,
+			      reaction_styles: ['color'],
+			      auto_reaction_domain: false,
+			      reaction_domain: [-1, 0, 1],
+			      reaction_color_range: ['unused', 'rgb(200,200,200)', '#106F94'],
+			      enable_editing: false });
+
+     // find the reaction or metabolite, and zoom in on it
+     function go_to() {
+	 var results = b.map.search_index.find(reaction_name);
+	 if (results !== null && results.length > 0) {
+	     var r = results[0];
+	     if (r.type=='reaction') {		
+		 b.map.zoom_to_reaction(r.reaction_id);
+		 b.map.highlight_reaction(r.reaction_id);
+	     } else if (r.type=='metabolite') {
+		 b.map.zoom_to_node(r.node_id);
+		 b.map.highlight_node(r.node_id);
+	     }
+	 }
+     }
+     window.setTimeout(function() { 
+         go_to();
+         map_sel.selectAll('.simple-button').each(function() {
+	     var t = d3.select(this);
+	     if (t.attr('title').indexOf('canvas')!=-1) {
+		 t.on('click', null);
+		 t.on('click', function() { go_to(); });
+	     }
+	 });
+     }, 1000);
+
+    </script>	
+  {% endif %}
+{% endblock %}	

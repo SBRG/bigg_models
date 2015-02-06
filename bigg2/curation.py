@@ -7,14 +7,9 @@ from sqlalchemy.orm import sessionmaker, aliased
 from sqlalchemy import create_engine, desc, func, or_
 import sys
 
-from ome.models import (Model, Component, Reaction, Compartment, Metabolite, 
-                        CompartmentalizedComponent, ModelReaction, ReactionMatrix, 
-                        GPRMatrix, ModelCompartmentalizedComponent, ModelGene, Gene, Chromosome, ModelCount)
-from ome.base import GenomeRegion
+from ome.models import *
+from ome.base import GenomeRegion, Session
 
-engine = create_engine("postgresql://dbuser@localhost:5432/ome_stage_2")
-Session = sessionmaker(bind = engine)
-session = Session()
 
 #delete rows in models
 #TRUNCATE model CASCADE;
@@ -24,6 +19,7 @@ GENE
 """
 
 def addGene(long_name, locus_id, gene_name, leftpos, rightpos, ncbi, strand, info=None, synonyms = None):
+    session = Session()
     ome_gene = {}
     try: chromosome = session.query(Chromosome).filter(Chromosome.ncbi_id == ncbi).one()
     except: 
@@ -48,6 +44,7 @@ def addGene(long_name, locus_id, gene_name, leftpos, rightpos, ncbi, strand, inf
 #addGene("X", "x11", "testing", 12, 123, "AE000512.1", "+") 
 
 def updateGene(geneId, geneDict = None, genomeRegionDict = None):
+    session = Session()
     try: gene = session.query(Gene).filter(Gene.id == geneId).one()
     except:
         print "gene does not exist in database"
@@ -64,6 +61,7 @@ def updateGene(geneId, geneDict = None, genomeRegionDict = None):
 #updateGene(2707975, {'long_name':'nothing'}, {'name': 'testing2'})
 
 def deleteGene(geneId):
+    session = Session()
     try: gene = session.query(Gene).filter(Gene.id == geneId).one()
     except:
         print "gene does not exist in database"
@@ -80,6 +78,7 @@ METABOLITE
 """
 
 def addMetabolite(name, long_name, kegg_id, cas_number, seed, chebi, metacyc, upa, brenda, formula):
+    session = Session()
     if not session.query(Metabolite).filter(Metabolite.name == name).filter(Metabolite.formula == formula).filter(Metabolite.kegg_id == kegg_id).count():
         metabolite = Metabolite(name = name,
                                 long_name = component.name,
@@ -100,6 +99,7 @@ def addMetabolite(name, long_name, kegg_id, cas_number, seed, chebi, metacyc, up
         print "metabolite already in database"
     
 def updateMetabolite(metaboliteId, metaboliteDict = None):
+    session = Session()
     try: metabolite = session.query(Metabolite).filter(Metabolite.id == metaboliteId).one()
     except:
         print "metabolite does not exist in database"
@@ -110,6 +110,7 @@ def updateMetabolite(metaboliteId, metaboliteDict = None):
         session.close()
         
 def deleteMetabolite(metaboliteId):
+    session = Session()
     try: metabolite = session.query(Metabolite).filter(Metabolite.id == metaboliteId).one()
     except:
         print "metabolite does not exist in database"
@@ -125,6 +126,7 @@ MODEL
 """
 
 def addModel(biggId, firstCreated, genomeId, notes = None):
+    session = Session()
     if not session.query(Model).filter(Model.bigg_id == biggId).count():
         model = Model(bigg_id = biggId, first_created = firstCreated, genome_id = genomeId, notes =notes)
         session.add(model)
@@ -135,6 +137,7 @@ def addModel(biggId, firstCreated, genomeId, notes = None):
         print "model already in database"
         
 def updateModel(modelId, modelDict=None):
+    session = Session()
     try: model = session.query(Model).filter(Model.id == modelId).one()
     except:
         print "model does not exist in database"
@@ -145,6 +148,7 @@ def updateModel(modelId, modelDict=None):
         session.close()
 
 def deleteModel(modelId):
+    session = Session()
     try: model = session.query(Model).filter(Model.id == modelId).one()
     except:
         print "model does not exist in database"
@@ -158,6 +162,7 @@ REACTION
 """
     
 def addReaction(name, long_name, type, notes):
+    session = Session()
     if not session.query(Reaction).filter(Reaction.id == reactionId).count():
         reaction = Reaction(name = name, long_name = long_name, type = type, notes = notes)
         session.add(reaction)
@@ -166,6 +171,7 @@ def addReaction(name, long_name, type, notes):
         return reaction
 
 def updateReaction(reactionId, reactionDict=None):
+    session = Session()
     try: reaction = session.query(Reaction).filter(Reaction.id == reactionId).one()
     except:
         print "reaction does not exist in database"
@@ -176,6 +182,7 @@ def updateReaction(reactionId, reactionDict=None):
         session.close()
         
 def deleteReaction(reactionId):
+    session = Session()
     try: reaction = session.query(Reaction).filter(Reaction.id == reactionId).one()
     except:
         print "reaction does not exist in database"
@@ -189,6 +196,7 @@ Model Gene
 """
        
 def addModelGene(modelId, geneId):
+    session = Session()
     try: model = session.query(Model).filter(Model.id == modelId).one()
     except:
         print "model does not exist in database"
@@ -204,6 +212,7 @@ def addModelGene(modelId, geneId):
     return modelgene
     
 def deleteModelGene(modelId, geneId):
+    session = Session()
     try: mg = session.query(ModelGene).filter(ModelGene.model_id == modelId).filter(ModelGene.gene_id == geneId).one()
     except: 
         print "model gene does not exist in database"
@@ -217,6 +226,7 @@ GPRMatrix
 """
     
 def addGPRMatrix(geneId, reactionId):
+    session = Session()
     try: gene = session.query(Gene).filter(Gene.id == geneId).one()
     except:
         print "gene does not exist in database"
@@ -232,6 +242,7 @@ def addGPRMatrix(geneId, reactionId):
     return GPRMatrix
     
 def deleteGPRMatrix(geneId, reactionId):
+    session = Session()
     try: GPRMatrix = session.query(GPRMatrix).filter(GPRMatrix.gene_id == geneId).filter(GPRMatrix.reaction_id == reactionId).one()
     except:
         print "gene product rule does not exist in database"
@@ -245,6 +256,7 @@ Model Reaction
 """
 
 def addModelReaction(modelId, reactionId):
+    session = Session()
     if not session.query(ModelReaction).filter(ModelReaction.model_id == modelId).filter(ModelReaction.reaction_id == reactionId).count():
         try: model = session.query(Model).filter(Model.id == modelId).one()
         except:
@@ -262,6 +274,7 @@ def addModelReaction(modelId, reactionId):
         return mr
         
 def deleteModelReacton(modelId, reactionId):
+    session = Session()
     try: mr = session.query(ModelReaction).filter(ModelReaction.reaction_id == reactionId).filter(ModelReaction.model_id == modelId).one()
     except:
         print "model reaction does not exist in database"
@@ -275,6 +288,7 @@ Reaction Matrix
 """
     
 def addReactionMatrix(reactionId, compartmentalizedComponentId):
+    session = Session()
     if not session.query(ReactionMatrix).filter(ReactionMatrix.reaction_id == reactionId).filter(ReactionMatrix.compartmentalized_component_id == compartmentalizedComponentId).count():
         try: cc = session.query(CompartmentalizedComponent).filter(cc.id == compartmentalizedComponentId).one()
         except:
@@ -291,6 +305,7 @@ def addReactionMatrix(reactionId, compartmentalizedComponentId):
         return rm
           
 def deleteReactionMatrix(reactionId, compartmentalizedComponentId):
+    session = Session()
     try: rm = session.query(ReactionMatrix).filter(ReactionMatrix.reaction_id == reactionId).filter(ReactionMatrix.compartmentalizedComponentId == compartmentalizedComponentId).one()
     except:
         print "reaction matrix does not exist in database"
@@ -304,6 +319,7 @@ Compartmentalized Component
 """
 
 def addCompartmentalizedComponent(componentId, compartmentId):
+    session = Session()
     if not session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.component_id == componentId).filter(CompartmentalizedComponent.compartment_id == compartmentId).count():
         try: component = session.query(Component).filter(Component.id == componentId).one()
         except:
@@ -320,6 +336,7 @@ def addCompartmentalizedComponent(componentId, compartmentId):
         return cc
         
 def deleteCompartmentalizedComponent(componentId, compartmentId):
+    session = Session()
     try: cc = session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.component_id == componentId).filter(CompartmentalizedComponent.compartment_id == compartmentId).one()
     except:
         print "compartmentalized component does not exist in database"
@@ -333,6 +350,7 @@ Model Compartmentalized Component
 """
 
 def addModelCompartmentalizedComponent(modelId, compartmentalizedComponentId, compartmentId):
+    session = Session()
     if not session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.model_id == modelId).filter(ModelCompartmentalizedComponent.compartmentalized_component_id == compartmentalizedComponentId).filter(ModelCompartmentalizedComponent.compartment_id == compartmentId).count():
         try: model = session.query(Model).filter(Model.id == modelId).one()
         except:
@@ -353,6 +371,7 @@ def addModelCompartmentalizedComponent(modelId, compartmentalizedComponentId, co
         return mcc
 
 def deleteModelCompartmentalizedComponent(modelId, compartmentId, compartmentalizedComponentId):
+    session = Session()
     try: mcc = session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.compartmentalized_component_id == compartmentalizedComponentId).filter(ModelCompartmentalizedComponent.model_id == modelId).filter(ModelCompartmentalizedComponent.compartment_id == compartmentId).one()
     except:
         print "model compartmentalized component does not exist in database"
@@ -366,6 +385,7 @@ Compartment
 """
 
 def addCompartment(name):
+    session = Session()
     if session.query(Compartment).filter(Compartment.name == name).count() == 1:
         print "already exists in database"
     else:
@@ -375,6 +395,7 @@ def addCompartment(name):
         session.close()
                
 def deleteCompartment(compartmentId):
+    session = Session()
     try: c = session.query(Comparmtnet).filter(Compartment.id == compartmentId).one()
     except:
         print "compartment does not exist in database"
@@ -384,6 +405,7 @@ def deleteCompartment(compartmentId):
     session.close()
     
 def refreshModelCount(modelId):
+    session = Session()
     metabolite_count = (session
             .query(func.count(ModelCompartmentalizedComponent.id))
             .filter(ModelCompartmentalizedComponent.model_id == modelId)

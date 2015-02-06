@@ -8,16 +8,9 @@ from sqlalchemy import create_engine, desc, func, or_
 import sys
 from bigg2.curation import * 
 from ome import base,models
-from ome.models import (Model, Component, Reaction, Compartment, Metabolite, 
-                        CompartmentalizedComponent, ModelReaction, ReactionMatrix, 
-                        GPRMatrix, ModelCompartmentalizedComponent, ModelGene, Gene, Chromosome)
+from ome.models import *
 from ome.base import GenomeRegion
-"""
-engine = create_engine("postgresql://dbuser@localhost:5432/ome_stage_2")
-Session = sessionmaker(bind = engine)
-session = Session()
 
-"""
 @pytest.fixture(scope='session')
 def connection(request):
     engine = create_engine('postgresql://dbuser@localhost:5432/ome_stage_2')

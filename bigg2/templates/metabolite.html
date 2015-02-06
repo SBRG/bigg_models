@@ -1,0 +1,92 @@
+{% extends "parent_display.html" %}
+{% block title %}{{bigg_id}}_{{compartment_bigg_id}}{% endblock %}
+{% block content %}
+
+  <div class="container">
+    <div class="col-lg-8">
+      <h1><span class="light">Metabolite: </span>{{bigg_id}}_{{compartment_bigg_id}}</h1>
+      <hr>
+      <h4>Descriptive name: </h4>
+      <p>{{name}}</p>
+
+      <h4>Model: </h4>
+      <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
+
+      <h4>Formula: </h4>
+      <p>{{formula}}</p>
+
+      <h4>Reactions: </h4>
+      <div class="panel panel-default">
+  	<table class="table table-hover">
+	  <thead>
+  	    <tr>
+	      <th>BiGG ID</th>
+	      <th>Name</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+  	    {% for reaction in reactions %}
+  	      <tr class="clickable-row" href="/models/{{model_bigg_id}}/reactions/{{reaction['bigg_id']}}">
+  		<td>{{reaction['bigg_id']}}</td>
+  		<td>{{reaction['name']}}</td>
+  	      </tr>
+  	    {% endfor %}
+	  </tbody>
+  	</table>
+      </div>
+
+      <hr class="section-break">
+
+      <h3>Comments/Error Reporting</h3>
+      <form method="POST" id="errorform">
+	<div class="form-group">
+	  <h4>User Email Address</h4>
+          <input type="email" class="form-control" name="email" placeholder="Enter email">    
+	</div>
+	<h4>User Input</h4>
+	<div class="form-inline" role="form">
+	  <textarea class="form-control" name ="comments" rows="3" cols="100" placeholder="Comments"></textarea>
+	  <br><br>
+	  <button id="submit" type="submit" value="Submit">Submit</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="well">
+        <h4>Universal metabolite</h4>	
+	<ul class="list-unstyled">
+	  <li>
+	    <a href="/universal/metabolites/{{bigg_id}}">{{bigg_id}}</a>
+	  </li>
+	</ul>
+      </div>
+      
+      {% include 'database_links.html' %}
+
+      <div class="well">
+        <h4>{{bigg_id}} in other models</h4>
+        <ul class="list-unstyled">
+          {% for other in other_models_with_metabolite %}
+            <li>
+	      <a href="/models/{{other['bigg_id']}}/metabolites/{{bigg_id}}_{{other['compartment_bigg_id']}}">
+		{{other['bigg_id']}} 
+	      </a>
+	      ({{bigg_id}}_{{other['compartment_bigg_id']}})
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    
+    <footer>
+      <div class="row">
+        <div class="col-lg-12" style="margin:80px 0;">
+          <hr>
+          <p>Copyright &copy; 2015 The Regents of the University of California.</p>
+        </div>
+      </div>
+    </footer>
+    
+  </div>
+{% endblock %}	
