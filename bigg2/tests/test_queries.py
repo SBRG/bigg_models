@@ -125,6 +125,29 @@ def get_model_gene():
     assert result['bigg_id'] == 'APECO1_706'
     session.close()
         
+# Escher maps
+def test_escher_maps_for_reaction():
+    session = base.Session()
+    maps = get_escher_maps_for_reaction('GAPD', 'iJO1366', session)
+    assert 'iJO1366.Central metabolism' in [x['map_name'] for x in maps]
+    assert '2075971' in [x['element_id'] for x in maps]
+    session.close()
+
+def test_escher_maps_for_metabolite():
+    session = base.Session()
+    maps = get_escher_maps_for_metabolite('atp', 'c', 'iJO1366', session)
+    assert 'iJO1366.Central metabolism' == maps[0]['map_name']
+    assert '2075454' == maps[0]['element_id']
+    assert 'iJO1366.Fatty acid metabolism' in [x['map_name'] for x in maps]
+    session.close()
+    
+def test_json_for_map():
+    session = base.Session()
+    map_json = json_for_map('iJO1366.Central metabolism')
+    assert isinstance(map_json, unicode)
+    assert map_json[0]['homepage'] == 'https://escher.github.io'
+    session.close()
+
 # search
 def test_search_for_genes():
     session = base.Session()
