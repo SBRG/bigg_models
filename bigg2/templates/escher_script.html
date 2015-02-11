@@ -1,0 +1,47 @@
+<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+<script src="/static/js/escher-git1.js"></script>
+<link rel="stylesheet" href="//escher.github.io/builder-1.0.0.css"/>
+<script>
+
+// Set up map and styles
+var {{escher_script_type}}_data,
+    zoom_element_type,
+    map_sel = d3.select('#map');
+if ('{{escher_script_type}}' == 'reaction') {
+    {{escher_script_type}}_data = {'{{bigg_id}}': 1};
+    zoom_element_type = 'reaction'; 
+} else {
+    {{escher_script_type}}_data = {'{{bigg_id}}_{{compartment_bigg_id}}': 1};
+    zoom_element_type = 'node';
+}
+d3.json('/escher_map_json/{{escher_maps[0]['map_name']}}', function(e, data) {
+     d3.text('/static/css/builder-embed-1.0.0.css', function(e, css) {
+	 if (e) console.warn(e);
+	 var b = escher.Builder(data, null, css, map_sel,
+				{ menu: 'zoom',
+				  scroll_behavior: 'none',
+				  {{escher_script_type}}_data: {{escher_script_type}}_data,
+				  {{escher_script_type}}_styles: ['color'],
+				  enable_editing: false,
+				  zoom_to_element: {type: zoom_element_type,
+						    id: '{{escher_maps[0]['element_id']}}'}
+				});
+	 window.setTimeout(function() { 
+	     /* go_to(); */
+	     map_sel.selectAll('.simple-button').each(function() {
+		 var t = d3.select(this);
+		 if (t.attr('title').indexOf('canvas')!=-1) {
+		     t.on('click', null);
+		     t.on('click', function() {
+			 if ('{{escher_script_type}}' == 'reaction') {
+			     b.map.zoom_to_reaction('{{escher_maps[0]['element_id']}}');
+			 } else {
+			     b.map.zoom_to_node('{{escher_maps[0]['element_id']}}');
+			 }
+		     });
+		 }
+	     });
+	 }, 1000);
+     });
+ });
+</script>	

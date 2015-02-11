@@ -1,14 +1,6 @@
 BiGG 2.0
 --------
 
-Install PostgreSQL.
-
-For autcompletion, install the pg_trgm module with this command:
-
-```shell
-psql -d bigg -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
-```
-
 Generate a schema browser
 -------------------------
 

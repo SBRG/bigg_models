@@ -100,10 +100,17 @@ def get_application():
         (r'/advanced_search$', AdvancedSearchHandler),
         (r'/advanced_search_results$', AdvancedSearchResultsHandler),
         (r'/autocomplete$', AutocompleteHandler),
+        #
+        # Maps
+        (r'/escher_map_json/([^/]+)$', EscherMapJSONHandler),
+        #
+        # Comments
         (r'/submiterror$', SubmitErrorHandler),
+        #
         # Pages
         (r'/sbml$', DownloadPageHandler),
         (r'/web_api$', WebAPIHandler),
+        #
         # Static/Download
         (r'/download/(.*)$', DownloadHandler, {'path': join(directory, 'download')}),
         (r'/static/(.*)$', StaticFileHandler, {'path': join(directory, 'static')})
@@ -650,6 +657,15 @@ class AutocompleteHandler(BaseHandler):
         self.set_header('Content-type', 'application/json')
         self.finish()
 
+class EscherMapJSONHandler(BaseHandler):
+    def get(self, map_name):
+        session = Session()
+        map_json = queries.json_for_map(map_name, session)
+        session.close()       
+        
+        self.write(map_json)
+        self.set_header('Content-type', 'application/json')
+        self.finish()
 
 class SubmitErrorHandler(BaseHandler):
     def post(self):

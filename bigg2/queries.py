@@ -67,6 +67,9 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
     # database_links
     db_link_results = get_db_links_for_reaction(reaction_bigg_id, session)
     
+    # escher maps
+    escher_maps = get_escher_maps_for_reaction(reaction_bigg_id, model_bigg_id, session)
+    
     return {'bigg_id': result_db[0],
             'name': result_db[1],
             'model_bigg_id': result_db[2],
@@ -77,7 +80,8 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
             'metabolites': metabolite_db,
             'genes': gene_db,
             'database_links': db_link_results,
-            'other_models_with_reaction': model_result}
+            'other_models_with_reaction': model_result,
+            'escher_maps': escher_maps}
         
 def get_reaction(reaction_bigg_id, session):
     return (session
@@ -230,6 +234,9 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id,
                     .filter(Model.bigg_id == model_bigg_id)
                     .all())
     model_db = get_model_list_for_metabolite(met_bigg_id, session)
+    escher_maps = get_escher_maps_for_metabolite(met_bigg_id,
+                                                 compartment_bigg_id,
+                                                 model_bigg_id, session)
     model_result = [x for x in model_db if x['bigg_id'] != model_bigg_id]
 
     db_link_results = get_db_links_for_metabolite(met_bigg_id, session)
@@ -242,6 +249,7 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id,
             'database_links': db_link_results,
             'reactions': [{'bigg_id': r[0], 'name': r[1], 'model_bigg_id': r[2]}
                           for r in reactions_db],
+            'escher_maps': escher_maps,
             'other_models_with_metabolite': model_result}
     
 # Genes
@@ -387,6 +395,57 @@ def build_reaction_string(metabolitelist, lower_bound, upper_bound):
         reaction_string = pre_reaction_string[:-2] + " &#8652; " + post_reaction_string[:-2]
 
     return reaction_string
+    
+# Escher maps
+def get_escher_maps_for_reaction(reaction_bigg_id, model_bigg_id, session):
+    result_db = (session
+                 .query(EscherMap.map_name, EscherMapMatrix.escher_map_element_id)
+                 .join(EscherMapMatrix,
+                       EscherMapMatrix.escher_map_id == EscherMap.id)
+                 .join(ModelReaction,
+                       ModelReaction.id == EscherMapMatrix.ome_id)
+                 .join(Model,
+                       Model.id == ModelReaction.model_id)
+                 .join(Reaction,
+                       Reaction.id == ModelReaction.reaction_id)
+                 .filter(Reaction.bigg_id == reaction_bigg_id)
+                 .filter(Model.bigg_id == model_bigg_id)
+                 .order_by(EscherMap.priority.desc())
+                 .all())
+    return [{'map_name': x[0], 'element_id': x[1]} for x in result_db]
+
+def get_escher_maps_for_metabolite(metabolite_bigg_id, compartment_bigg_id,
+                                   model_bigg_id, session):
+    result_db = (session
+                 .query(EscherMap.map_name, EscherMapMatrix.escher_map_element_id)
+                 .join(EscherMapMatrix,
+                       EscherMapMatrix.escher_map_id == EscherMap.id)
+                 .join(ModelCompartmentalizedComponent,
+                       ModelCompartmentalizedComponent.id == EscherMapMatrix.ome_id)
+                 .join(Model,
+                       Model.id == ModelCompartmentalizedComponent.model_id)
+                 .join(CompartmentalizedComponent,
+                       CompartmentalizedComponent.id == ModelCompartmentalizedComponent.compartmentalized_component_id)
+                 .join(Metabolite,
+                       Metabolite.id == CompartmentalizedComponent.component_id)
+                 .join(Compartment,
+                       Compartment.id == CompartmentalizedComponent.compartment_id)
+                 .filter(Metabolite.bigg_id == metabolite_bigg_id)
+                 .filter(Compartment.bigg_id == compartment_bigg_id)
+                 .filter(Model.bigg_id == model_bigg_id)
+                 .order_by(EscherMap.priority.desc())
+                 .all())
+    return [{'map_name': x[0], 'element_id': x[1]} for x in result_db]
+    
+def json_for_map(map_name, session):
+    result_db = (session
+                 .query(EscherMap.map_data)
+                 .filter(EscherMap.map_name == map_name)
+                 .first())
+    if result_db is None:
+        raise NotFoundError('Could not find Escher map %s' % map_name)
+
+    return result_db[0].decode('utf8')
     
 # search
 name_sim_cutoff = 0.3
