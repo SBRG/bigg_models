@@ -49,7 +49,7 @@
       <h4>Gene IDs and names:</h4>
       <p>
 	{% for gene in genes %}
-	  <a href="/models/{{model_bigg_id}}/genes/{{gene['bigg_id']}}">{{gene['bigg_id']}}</a> ({{gene['name']}})
+	  <a href="/models/{{model_bigg_id}}/genes/{{gene['bigg_id']}}">{{gene['bigg_id']}}</a> ({{gene['name']}})<br>
 	{% endfor %}
       </p>
 

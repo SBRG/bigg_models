@@ -33,14 +33,15 @@
       </div>
 
       <h4>Download as SBML:</h4>
-      <a href="http://yersinia.ucsd.edu:8887/download/sbml/{{model}}.xml" download="{{model}}.xml">
+      database models: <a href="/static/model_dumps/{{bigg_id}}.xml" download="{{bigg_id}}.xml">{{bigg_id}}.xml</a><br>
+      published models: <a href="/static/published_models/{{bigg_id}}_published.xml" download="{{bigg_id}}.xml">
 	{{bigg_id}}.xml
       </a>
 
       <hr class="section-break"/>
 
       <h3> Comments/Error Reporting </h3>
-      <form action ="/submiterror" method="post" id="errorform">
+      <form id="errorform">
 	<div class="form-group">
 	  <label>User Email Address</label>
           <input type="email" class="form-control" name="email" placeholder="Enter email">    

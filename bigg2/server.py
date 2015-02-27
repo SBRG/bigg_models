@@ -28,7 +28,8 @@ from ome.base import Session
 from ome.loading.model_loading.parse import split_compartment
 import ome
 
-define("port", default= 8887, help="run on given port", type=int)
+define("port", default= 8888, help="run on given port", type=int)
+define("password", default= "", help="password to email", type=str)
 
 # set up jinja2 template location
 env = Environment(loader=PackageLoader('bigg2', 'templates'))
@@ -120,7 +121,7 @@ def run(public=True):
     """Run the server"""
 
     print('Creating pg_trgm extension and indices')
-    os.system('psql -d bigg -f %s' % join(directory, 'setup.sql'))
+    os.system('psql -d ome_stage -f %s' % join(directory, 'setup.sql'))
 
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(get_application())
@@ -141,6 +142,7 @@ def stop():
 
 class BaseHandler(RequestHandler):
     pass
+    
 
 
 class MainHandler(BaseHandler):
@@ -149,6 +151,7 @@ class MainHandler(BaseHandler):
         self.write(template.render())
         self.set_header('Content-type','text/html')
         self.finish()
+
 
 
 class UniversalReactionListHandler(BaseHandler):
@@ -678,7 +681,7 @@ class SubmitErrorHandler(BaseHandler):
         session.close()
         to = useremail
         gmail_user = 'justinlu10@gmail.com'
-        gmail_pwd = 'ultimate9'
+        gmail_pwd = options.password
         smtpserver = smtplib.SMTP("smtp.gmail.com", 587)
         smtpserver.ehlo()
         smtpserver.starttls()
