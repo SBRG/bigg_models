@@ -122,7 +122,6 @@ def run(public=True):
 
     print('Creating pg_trgm extension and indices')
     os.system('psql -d %s -f %s' % (settings.postgres_database, join( directory, 'setup.sql')))
-
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(get_application())
     print('serving BiGG 2 on port %d' % options.port)
