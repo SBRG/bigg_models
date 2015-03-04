@@ -130,7 +130,7 @@ def get_model_list(session):
                   .query(Model.bigg_id)
                   .order_by(Model.bigg_id)
                   .all())
-    return [x[0] for x in model_list]
+    return [x[0] for x in model_list].sort()
 
 def get_model_and_counts(model_bigg_id, session):
     model_db = (session
