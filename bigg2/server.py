@@ -19,7 +19,7 @@ import os
 
 from bigg2 import queries
 from bigg2.queries import NotFoundError
-
+from ome import settings
 from ome.models import (Model, Component, Reaction,Compartment, Metabolite,
                     CompartmentalizedComponent, ModelReaction, ReactionMatrix,
                     GeneReactionMatrix, ModelCompartmentalizedComponent, ModelGene,
@@ -121,7 +121,7 @@ def run(public=True):
     """Run the server"""
 
     print('Creating pg_trgm extension and indices')
-    os.system('psql -d ome_stage -f %s' % join(directory, 'setup.sql'))
+    os.system('psql -d %s -f %s' % (settings.postgres_database, join( directory, 'setup.sql')))
 
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(get_application())
