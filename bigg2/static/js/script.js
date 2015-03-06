@@ -9,7 +9,8 @@ $( document ).ready(function() {
 	$.post("/submiterror",
 	       {
 		   email: $.trim($("input[name='email']").val()),
-		   comments:$.trim($("textarea[name='comments']").val())
+		   comments:$.trim($("textarea[name='comments']").val()),
+		   type:$.trim($("select[name='type']").val())
 	       },
 	       function(data,status){
 		   alert("email sent");

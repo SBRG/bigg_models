@@ -674,6 +674,7 @@ class SubmitErrorHandler(BaseHandler):
         session = Session()
         useremail = self.get_argument("email", "empty")
         comments = self.get_argument("comments", "empty")
+        type = self.get_argument("type", "empty")
         commentobject = Comments(email = useremail, text = comments)
         session.add(commentobject)
         session.commit()
@@ -685,9 +686,9 @@ class SubmitErrorHandler(BaseHandler):
         smtpserver.ehlo()
         smtpserver.starttls()
         smtpserver.login(gmail_user, gmail_pwd)
-        header = ('To:' + gmail_user + '\n' + 'From: ' + gmail_user + '\n' +
+        header = ('To:' + gmail_user + '\n' + 'From: ' + to + '\n' +
                   'Subject:BiGG comment notification\n')
-        msg = header + comments + '\n ' + to
+        msg = type + '\n' + header + comments + '\n' + to
         smtpserver.sendmail(gmail_user, gmail_user, msg)
         smtpserver.close()
         

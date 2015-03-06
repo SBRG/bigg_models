@@ -40,19 +40,7 @@
 
       <hr class="section-break"/>
 
-      <h3> Comments/Error Reporting </h3>
-      <form id="errorform">
-	<div class="form-group">
-	  <label>User Email Address</label>
-          <input type="email" class="form-control" name="email" placeholder="Enter email">    
-	</div>
-	<label>User Input</label>
-	<div class="form-inline" role="form">
-          <textarea class="form-control" name ="comments" rows="3" cols="100" placeholder="Comments"></textarea>
-	  <br><br>
-	  <button id="submit" type="submit" value="Submit">Submit</button>
-        </div>
-      </form>
+      {% include 'comments.html' %}
     </div>
 
     <div class="col-lg-4">
