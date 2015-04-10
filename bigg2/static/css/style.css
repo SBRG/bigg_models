@@ -71,6 +71,10 @@ samp {
     padding: 8px 18px 8px 18px;
     overflow: auto;
 }
+th {
+    overflow:auto;
+
+}
 .list-inline {
     margin: 30px 0 0 0;
 }
@@ -82,6 +86,9 @@ samp {
 }
 .database-well ul {
     font-size: 17px;
+}
+.light {
+    color: #555;
 }
 .escher-map {
     margin-bottom: 10px;

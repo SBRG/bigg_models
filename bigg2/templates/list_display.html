@@ -65,7 +65,7 @@
 		    </table>
 
 		  {% else %}
-		    
+		    <div class="table-responsive">
 		    <table class="table table-striped table-bordered results-table">
 		      {% for value in results[type] %}
 	    		{% if (loop.index - 1) is divisibleby 3 %}
@@ -76,17 +76,21 @@
 			  {% if value['model_bigg_id'] == 'universal' %}
 			    {{value['model_bigg_id']|capitalize()}}
 			  {% else %}
-			    {{value['model_bigg_id']}}
+                {% if value['organism_name'] is defined %}
+			    <span class="light">{{value['organism_name']}}</span><br>{{value['model_bigg_id']}}
+                {% else %}
+                 {{value['model_bigg_id']}}
+                {% endif %}
 			  {% endif %}
 			  <br/>
 			  {% if type == 'metabolites' and 'compartment_bigg_id' in value %}
-			    <a href="/models/{{value['model_bigg_id']}}/{{type}}/{{value['bigg_id']}}_{{value['compartment_bigg_id']}}">
+			    {{value['name']}}: <a href="/models/{{value['model_bigg_id']}}/{{type}}/{{value['bigg_id']}}_{{value['compartment_bigg_id']}}">
 			      {{value['bigg_id']}}_{{value['compartment_bigg_id']}}
-			    </a>
+			    </a> (<i>{{value['name']}}</i>)
 			  {% else %}
 			    <a href="/models/{{value['model_bigg_id']}}/{{type}}/{{value['bigg_id']}}">
-			      {{value['bigg_id']}}
-			    </a>
+			       {{value['bigg_id']}}
+			    </a> (<i>{{value['name']}}</i>)
 			  {% endif %}
 			</td>
 
@@ -95,7 +99,7 @@
 			{% endif %}
 		      {% endfor %}
 		    </table>
-
+            </div>
 		  {% endif %}
 		{% endif %}
 

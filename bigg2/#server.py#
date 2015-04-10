@@ -58,11 +58,7 @@ def get_application():
         # Universal
         #
         (r'/api/%s/(?:models/)?universal/compartments/?$' % api_v, UniversalCompartmentListHandler),
-        (r'/(?:models/)?universal/compartments/?$', UniversalCompartmentListDisplayHandler),
         # 
-        (r'/api/%s/(?:models/)?universal/compartment/([^/]+)/?$' % api_v, UniversalCompartmentHandler),
-        (r'/(?:models/)?universal/compartment/([^/]+)/?$', UniversalCompartmentDisplayHandler),
-        #
         (r'/api/%s/(?:models/)?universal/reactions/?$' % api_v, UniversalReactionListHandler),
         (r'/(?:models/)?universal/reactions/?$', UniversalReactionListDisplayHandler),
         # 
@@ -114,7 +110,7 @@ def get_application():
         # Comments
         (r'/submiterror$', SubmitErrorHandler),
         #
-        # Pages
+      Pages
         (r'/sbml$', DownloadPageHandler),
         (r'/web_api$', WebAPIHandler),
         #
@@ -161,62 +157,11 @@ class UniversalCompartmentListHandler(BaseHandler):
     def get(self):
         session = Session()
         universal_compartments = [x[0] for x in session.query(Compartment.bigg_id).all()]
-        compartment_list = {}
-        compartment_list['compartments'] = sorted(universal_compartments, key=lambda c: c.lower())
-        data = json.dumps(compartment_list)
+        data = json.dumps(sorted(universal_compartments, key=lambda c: c.lower()))
         self.write(data)
         self.set_header('Content-type', 'application/json')
         self.finish()
         session.close()   
-
-class UniversalCompartmentListDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
-    def get(self):
-        template = env.get_template("compartments.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/universal/compartments' % (options.port, api_v)
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
-        self.write(template.render(results)) 
-        self.set_header('Content-type','text/html')
-        self.finish()
-
-class UniversalCompartmentHandler(BaseHandler):
-    def get(self, compartment_name):
-        session = Session()
-        dictionary = {}
-        dictionary['compartment_name'] = compartment_name
-        data = json.dumps(dictionary)
-        self.write(data)
-        self.set_header('Content-type', 'application/json')
-        self.finish()
-        session.close()
-
-
-class UniversalCompartmentDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
-    def get(self, compartment_name):
-        template = env.get_template("compartment.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/universal/compartment/%s' % (options.port, api_v, compartment_name)
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
-        self.write(template.render(results)) 
-        self.set_header('Content-type','text/html')
-        self.finish()
-
 
 class UniversalReactionListHandler(BaseHandler):
     def get(self):
@@ -350,7 +295,6 @@ class ReactionListHandler(BaseHandler):
     def get(self, model_bigg_id):
         session = Session()
         result = queries.get_reactions_for_model(model_bigg_id, session)
-        sorted(result, key=lambda r: r.lower())
         session.close()
 
         self.write(json.dumps(result))
@@ -582,7 +526,6 @@ class GeneHandler(BaseHandler):
     def get(self, model_bigg_id, gene_bigg_id):
         session = Session()
         result= queries.get_model_gene(gene_bigg_id, model_bigg_id, session)
-        
         session.close()
 
         data = json.dumps(result)
@@ -618,9 +561,7 @@ class SearchHandler(BaseHandler):
         session = Session()
         # genes
         gene_list = queries.search_for_genes(query_string, session)
-        
         # reactions
-         
         reaction_list = queries.search_for_universal_reactions(query_string,
                                                                session)
         # metabolites
@@ -630,7 +571,6 @@ class SearchHandler(BaseHandler):
         metabolite_list += queries.search_for_metabolites(query_string, session,
                                                           strict=True)
         # models
-        
         model_list = queries.search_for_models(query_string, session)
         session.close()
 

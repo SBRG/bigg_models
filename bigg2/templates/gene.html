@@ -60,15 +60,12 @@
 
 
     </div>
-    <!--<div class="col-lg-4">
+    <div class="col-lg-4">
       <div class="well">
-      <h4>Notes:</h4>
-      </div>
-      <div class="well">
-      <h4>{{name}} in other Models:</h4>
+      <h4>Synonyms:</h4>
       <ul class="list-unstyled">
-      {% for altmodel in altModelList %}
-      <li style="text-align: center"><a href="/models/{{altmodel}}/genes/{{name}}">{{altmodel}}</a></li>
+      {% for synonym in synonyms %}
+      <li>{{synonym['name']}} : {{synonym['synonym']}}</li>
       {% endfor %}
       </ul>
       </div>
