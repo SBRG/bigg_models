@@ -1,0 +1,23 @@
+{% extends "parent_display.html" %}
+{% block title %}BiGG: Genomes{% endblock %}
+{% block content %}
+
+  <h1>Genomes</h1>
+  <table class="myTable tablesorter">
+	<thead>
+	  <tr>
+		<th>BioProject ID</th>
+		<th>Organism</th>
+	  </tr>
+	</thead>
+	<tbody>
+      {% for genome in genomes %}
+		<tr class ='rowlink'>  
+	      <td><a href="/genomes/{{genome['bioproject_id']}}">{{genome['bioproject_id']}}</a></td>
+		  <td>{{genome['organism']}}</td>
+		</tr>
+	  {% endfor %}
+	</tbody>
+  </table>
+
+{% endblock %}	

@@ -65,7 +65,7 @@
 	    </div>
 
 	    <div class="intro-message">
-              <h1 class="title">BiGG Database </h1>
+              <h1 class="title">BiGG Database</h1>
               <hr class="intro-divider">
               <p class="lead">Search the database by model, reaction, metabolite, or gene</p>
               <form id="search-form" action="/search" method="get">
@@ -182,30 +182,31 @@
           </div>
 	</div>
       </div>
-    </div>
-    
+
+    </div> 
+
     <footer>
       <div class="container">
+        <div class="row">
+          <div class="col-md-5">
+	    <a href="http://systemsbiology.ucsd.edu/">
+              <img class="img-responsive footer-image" src="/static/assets/sbrg-logo.png">
+	    </a>
+	  </div>
+          <div class="col-md-5">
+           <a href="http://www.ucsd.edu/"><img class="img-responsive footer-image" src="/static/assets/ucsd-logo.png"></a>
+	  </div>
+	  <div class="col-md-2">
+            <a href="http://www.biosustain.dtu.dk/"><img class="img-responsive footer-image" src="/static/assets/cfb-logo.png"></a>
+	  </div>
+	</div>
 	<div class="row">
           <div class="col-lg-12">
-	    <ul class="list-inline">
-              <li><a href="#">Home</a>
-              </li>
-              <li class="footer-menu-divider">&sdot;</li>
-              <li><a href="http://systemsbiology.ucsd.edu">SBRG website</a>
-              </li>
-	      <!-- <li class="footer-menu-divider">&sdot;</li>
-                <li><a href="#contact" data-toggle="modal">Contact</a>
-                </li> -->
-	    </ul>
-	    <p class="copyright text-muted small">
-	      BiGG is hosted and maintained by the Systems Biology
-	      Research Group at the University of California, San
-	      Diego. <br/>
-	      Copyright 2015 The Regents of the University of
-	      California. All Rights Reserved.
+            <p class="copyright text-muted small">
+	       BiGG is hosted and maintained by the Systems Biology Research Group at the University of California, San Diego. <br/>
+	      Copyright &copy; 2015 The Regents of the University of California. All Rights Reserved.
             </p>
-          </div>
+	  </div>
 	</div>
       </div>
     </footer>
@@ -219,36 +220,56 @@
 	  </div>
 	  <div class="modal-body">
 
-	    <p>BiGG is a knowledgebase of Biochemically, Genetically
-	      and Genomically structured genome-scale metabolic network
-	      reconstructions.</p>
+	    <p>BiGG is a knowledgebase of Biochemically, Genetically and Genomically
+	      structured genome-scale metabolic network reconstructions.</p>
 
-	    <p>BIGG integrates several published genome-scale metabolic networks
-	      into one location and uses standard nomenclature, which allows
-	      individual components to be compared across different species.</p>
-
-	    <p>Links to several other databases (KEGG, and NCBI, PubChem) are also contained.</p>
+	    <p>BiGG integrates more than 80 published genome-scale metabolic
+	      networks into a single database with a set of stardized identifiers
+	      called BiGG IDs. Gene in the BiGG models are mapped to NCBI genome
+	      annotations, and metabolites are linked to many external databases
+	      (KEGG, PubChem, and many more).</p>
 
 	    <p>BiGG is hosted and maintained by the <a href="http://systemsbiology.ucsd.edu/">Systems Biology Research
 	      Group</a> at the <a href="http://ucsd.edu"> University of California, San Diego</a>.</p>
 
-	    <ul class="list-inline">
-	      <li>
-		<a href="https://twitter.com/ucsd_sbrg" class="btn btn-default btn-lg">
-		  <i class="fa fa-twitter fa-fw"></i> <span class="network-name"> Twitter</span>
-		</a>
-	      </li>
-	      <li>
-		<a href="https://github.com/SBRG/BIGG2" class="btn btn-default btn-lg">
-		  <i class="fa fa-github fa-fw"></i> <span class="network-name"> Github</span>
-		</a>
-	      </li>
-	      <li>
-		<a href="http://www.biomedcentral.com/1471-2105/11/213" class="btn btn-default btn-lg">
-		  <i class="fa fa-info-circle"></i> <span class="network-name"> Publication</span>
-		</a>
-	      </li>
-	    </ul>
+	  </div>
+
+	  <div class="modal-header">
+            <h4 class="modal-title">License</h4>
+	  </div>
+	  <div class="modal-body">
+
+	    <p> Copyright &copy; 2015 The Regents of the University of California </p>
+
+	    <p> All Rights Reserved </p>
+
+	    <p> Permission to use, copy, modify and distribute any part of this
+	    BiGG Database for educational, research and non-profit purposes,
+	    without fee, and without a written agreement is hereby granted,
+	    provided that the above copyright notice, this paragraph and the
+	    following three paragraphs appear in all copies. </p>
+
+	    <p> Those desiring to incorporate this BiGG Database into commercial
+	    products or use for commercial purposes should contact the
+	    Technology Transfer & Intellectual Property Services, University of
+	    California, San Diego, 9500 Gilman Drive, Mail Code 0910, La Jolla,
+	    CA 92093-0910, Ph: (858) 534-5815, FAX: (858) 534-7345, e-mail:
+	    invent@ucsd.edu. </p>
+
+	    <p> In no event shall the University of California be liable to any
+	    party for direct, indirect, special, incidental, or consequential
+	    damages, including lost profits, arising out of the use of this bigg
+	    database, even if the University of California has been advised of
+	    the possibility of such damage. </p>
+
+	    <p> The BiGG Database provided herein is on an "as is" basis, and
+	    the University of California has no obligation to provide
+	    maintenance, support, updates, enhancements, or modifications. The
+	    University of California makes no representations and extends no
+	    warranties of any kind, either implied or express, including, but
+	    not limited to, the implied warranties of merchantability or fitness
+	    for a particular purpose, or that the use of the BiGG Database will
+	    not infringe any patent, trademark or other rights. </p>
 	    
 	  </div>
 	  <div class="modal-footer">

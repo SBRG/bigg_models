@@ -1,47 +1,60 @@
-from ome import base
-
 from bigg2.queries import *
 
+from ome import base
+
 from decimal import Decimal
+import pytest
 from pytest import raises
 import time
+import json
+
+
+@pytest.fixture(scope='function')
+def session(request):
+    """Make a session"""
+    def teardown():
+        base.Session.close_all()
+    request.addfinalizer(teardown)
+
+    return base.Session()
+
 
 # Reactions
-def test_get_reaction_and_models():
-    session = base.Session()
+def test_get_reaction_and_models(session):
     result = get_reaction_and_models('ADA', session)
     assert result['bigg_id'] == 'ADA'
     assert result['name'] == 'Adenosine deaminase'
+    assert result['pseudoreaction'] is False
     assert {'bigg_id': 'iAPECO1_1312', 'organism': 'Escherichia coli APEC O1'} \
-            in result['models_containing_reaction']
+        in result['models_containing_reaction']
     with raises(Exception):
         result = get_reaction_and_models('not_a_reaction', session)
-    session.close()
     
+
 def test_get_reactions_for_model():
     session = base.Session()
     result = get_reactions_for_model('iAPECO1_1312', session)
     assert len(result) > 5
-    assert 'ADA' in result
+    assert 'ADA' in [x['bigg_id'] for x in result]
     session.close()
     
-def test_get_model_reaction():
-    session = base.Session()
+
+def test_get_model_reaction(session):
     result = get_model_reaction('iAPECO1_1312', 'ADA', session)
     assert result['bigg_id'] == 'ADA'
     assert result['name'] == 'Adenosine deaminase'
-    assert result['gene_reaction_rule'] == 'APECO1_706'
-    assert 'APECO1_706' in [x['bigg_id'] for x in result['genes']]
+    assert result['results'][0]['gene_reaction_rule'] == 'APECO1_706'
+    assert 'APECO1_706' in [x['bigg_id'] for x in result['results'][0]['genes']]
     assert 'nh4' in [x['bigg_id'] for x in result['metabolites']]
     assert 'Ammonium' in [x['name'] for x in result['metabolites']]
     assert 'c' in [x['compartment_bigg_id'] for x in result['metabolites']]
     assert Decimal(1) in [x['stoichiometry'] for x in result['metabolites']]
     assert 'other_models_with_reaction' in result
     assert 'iAPECO1_1312' not in result['other_models_with_reaction']
-    assert 'upper_bound' in result
-    assert 'lower_bound' in result
-    assert 'objective_coefficient' in result
-    session.close()
+    assert 'upper_bound' in result['results'][0]
+    assert 'lower_bound' in result['results'][0]
+    assert 'objective_coefficient' in result['results'][0]
+
     
 # Models
 def test_get_model_list_and_counts():
@@ -91,8 +104,8 @@ def test_get_metabolite():
         in result['database_links']['KEGG']
     session.close()
     
-def test_get_model_comp_metabolite():
-    session = base.Session()
+
+def test_get_model_comp_metabolite(session):
     result = get_model_comp_metabolite('akg', 'c', 'iAPECO1_1312', session)
     assert result['bigg_id'] == 'akg'
     assert result['name'] == '2-Oxoglutarate'
@@ -103,8 +116,8 @@ def test_get_model_comp_metabolite():
     # make sure models are being filtered
     result = get_model_comp_metabolite('h', 'c', 'iAPECO1_1312', session)
     assert all([r['model_bigg_id'] == 'iAPECO1_1312' for r in result['reactions']])
-    session.close()
     
+
 def test_get_metabolites_for_model():
     session = base.Session()
     results = get_metabolites_for_model('iAPECO1_1312', session)
@@ -116,41 +129,66 @@ def test_get_metabolites_for_model():
 def test_get_gene_list_for_model():
     session = base.Session()
     results = get_gene_list_for_model('iAPECO1_1312', session)
-    assert 'APECO1_706' in results
+    assert 'APECO1_706' in [x['bigg_id'] for x in results]
     session.close()
 
-def get_model_gene():
-    session = base.Session()
-    result = get_model_gene('iAPECO1_1312', 'APECO1_706', session)
+def test_get_gene_list_for_model_reaction(session):
+    mr_db = (session
+             .query(ModelReaction)
+             .join(Model)
+             .join(Reaction)
+             .filter(Model.bigg_id == 'iAF1260')
+             .filter(Reaction.bigg_id == 'ATPM')
+             .filter(Reaction.pseudoreaction == True)
+             .first())
+    results = get_gene_list_for_model_reaction(mr_db.id, session)
+    assert len(results) == 0
+
+    mr_db = (session
+             .query(ModelReaction)
+             .join(Model)
+             .join(Reaction)
+             .filter(Model.bigg_id == 'iAF1260')
+             .filter(Reaction.bigg_id == 'NTP1')
+             .filter(Reaction.pseudoreaction == False)
+             .first())
+    results = get_gene_list_for_model_reaction(mr_db.id, session)
+    assert len(results) == 2
+
+
+def test_get_model_gene(session):
+    result = get_model_gene('APECO1_706', 'iAPECO1_1312', session)
     assert result['bigg_id'] == 'APECO1_706'
-    session.close()
+
+
+# database sources
+def test_get_database_sources(session):
+    assert 'KEGGID' in get_database_sources(session)
+    
         
 # Escher maps
-def test_escher_maps_for_reaction():
-    session = base.Session()
-    maps = get_escher_maps_for_reaction('GAPD', 'iJO1366', session)
-    assert 'iJO1366.Central metabolism' in [x['map_name'] for x in maps]
-    assert '2075971' in [x['element_id'] for x in maps]
-    session.close()
+def test_escher_maps_for_reaction(session):
+    maps = get_escher_maps_for_reaction('GAPD', 'iMM904', session)
+    assert 'iMM904.Central carbon metabolism' in [x['map_name'] for x in maps]
+    assert '669341' in maps[0]['element_id']
 
-def test_escher_maps_for_metabolite():
-    session = base.Session()
-    maps = get_escher_maps_for_metabolite('atp', 'c', 'iJO1366', session)
-    assert 'iJO1366.Central metabolism' == maps[0]['map_name']
-    assert '2075454' == maps[0]['element_id']
-    assert 'iJO1366.Fatty acid metabolism' in [x['map_name'] for x in maps]
-    session.close()
+
+def test_escher_maps_for_metabolite(session):
+    maps = get_escher_maps_for_metabolite('atp', 'c', 'iMM904', session)
+    assert 'iMM904.Central carbon metabolism' == maps[0]['map_name']
+    assert '672110' in maps[0]['element_id']
     
+
 def test_json_for_map():
     session = base.Session()
-    map_json = json_for_map('iJO1366.Central metabolism')
+    map_json = json_for_map('iMM904.Central carbon metabolism', session)
     assert isinstance(map_json, unicode)
-    assert map_json[0]['homepage'] == 'https://escher.github.io'
+    assert json.loads(map_json)[0]['homepage'] == 'https://escher.github.io'
     session.close()
 
+
 # search
-def test_search_for_genes():
-    session = base.Session()
+def test_search_for_genes(session):
     results = search_for_genes('APECO1_706', session)
     assert results[0]['bigg_id'] == 'APECO1_706'
     assert results[0]['model_bigg_id'] == 'iAPECO1_1312'
@@ -164,37 +202,34 @@ def test_search_for_genes():
     # test query == ''
     results = search_for_genes('', session)
     assert len(results) == 0
-    session.close()
 
-def test_search_for_universal_reactions():
-    session = base.Session()
+
+def test_search_for_universal_reactions(session):
     results = search_for_universal_reactions('GAPD', session)
     assert results[0]['bigg_id'] == 'GAPD'
     assert results[0]['model_bigg_id'] == 'universal'
-    session.close()
     
-def test_search_for_reactions():
-    session = base.Session()
+
+def test_search_for_reactions(session):
     time1 = time.time()
     results = search_for_reactions('GAPD', session)
     time2 = time.time()
     print 'search_for_reactions took %0.3f ms' % ((time2 - time1) * 1000.0)
 
     assert results[0]['bigg_id'] == 'GAPD'
-    assert results[0]['model_bigg_id'] == 'iAPECO1_1312'
+    assert 'iAPECO1_1312' in [x['model_bigg_id'] for x in results]
     results = search_for_reactions('GAPD-', session)
     assert results[0]['bigg_id'] == 'GAPD'
     # test name search
     results = search_for_reactions('Glyceraldehyde-3-phosphate dehydrogenase', session)
     assert 'GAPD' in [x['bigg_id'] for x in results]
-    session.close()
     
-def test_search_for_universal_metabolites():
-    session = base.Session()
+
+def test_search_for_universal_metabolites(session):
     results = search_for_universal_metabolites('g3p', session)
     assert results[0]['bigg_id'] == 'g3p'
     assert results[0]['model_bigg_id'] == 'universal'
-    session.close()
+
 
 def test_search_for_metabolites():
     session = base.Session()
@@ -241,10 +276,8 @@ def test_search_ids_fast():
     results = search_ids_fast('gapd', session)
     time2 = time.time()
     print 'l = 4, search_ids_fast took %0.3f ms' % ((time2 - time1) * 1000.0)
-
     assert 'GAPD' in results
-    results = search_ids_fast('gapdh', session)
-    assert 'GAPDH' in results
+
     # organism
     results = search_ids_fast('Escherichia coli', session)
     assert 'Escherichia coli APEC O1' in results

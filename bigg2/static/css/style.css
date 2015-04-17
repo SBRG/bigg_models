@@ -9,12 +9,27 @@ h1, h2, h3, h4, h5, h6 {
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-weight: 700;
 }
+
+span.pseudoreaction {
+    font-size: 24px;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.popover-content {
+    font-size: 14px;
+}
+
 .navbar {
     font-size: 15px;
     /* position:relative; */
     top: 0;
     width: 100%;
     z-index: 100;
+}
+.navbar-form {
+    margin-left: 0px;
+    margin-right: 0px;
 }
 #nav-title-background {
     width: 100%;
@@ -87,9 +102,6 @@ th {
 .database-well ul {
     font-size: 17px;
 }
-.light {
-    color: #555;
-}
 .escher-map {
     margin-bottom: 10px;
     width: 100%; 
@@ -107,8 +119,18 @@ th {
     margin-right: auto;
     border-width: 2px;
 }
-.tab-pane {
-    padding: 40px 40px 60px 40px;
+
+/* list display */
+.list-display-tabs {
+    font-size: 16px;
+}
+@media (max-width: 550px) {
+    .list-display-tabs {
+        display: none;
+    }
+}
+.tab-pane .section-label {
+    padding: 30px 0 0 0;
 }
 
 /* ---------------------------------- */
@@ -142,9 +164,6 @@ th {
 	#metabolitelist_p:hover{
 	border-color: #0099FF !important;
 	}*/
-.tab-content{
-    margin-bottom: 100px;
-}
 .met_button:hover{
     border-color: #0099FF !important;
 }

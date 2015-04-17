@@ -1,8 +1,8 @@
 {% extends "parent_display.html" %}
-{% block title %}{{bigg_id}}{% endblock %}
+{% block title %}BiGG: {{bigg_id}}{% endblock %}
 {% block content %}
 
-  <div class="container">
+  <div class="row">
     <div class="col-lg-8">
       <h1>
 	<span class="light">Universal metabolite: </span>
@@ -41,22 +41,12 @@
   	</table>
       </div>
 
-      <hr class="section-break"/>
-
       {% include 'comments.html' %}
+
     </div>
     <div class="col-lg-4">
       {% include 'database_links.html' %}
     </div>
-    
-    <footer>
-      <div class="row">
-        <div class="col-lg-12" style="margin:80px 0;">
-          <hr>
-          <p>Copyright &copy; 2015 The Regents of the University of California.</p>
-        </div>
-      </div>
-    </footer>
     
   </div>
 {% endblock %}	

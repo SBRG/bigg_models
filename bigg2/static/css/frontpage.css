@@ -146,3 +146,7 @@ footer {
     border-top: 1px solid #D4D4D4;
     padding: 50px 0;
 }
+.footer-image {
+    margin-bottom: 20px;
+    max-width: 80%;
+}

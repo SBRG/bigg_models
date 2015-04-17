@@ -1,12 +1,9 @@
 {% extends "parent_display.html" %}
-{% block title %}Compartments{% endblock %}
+{% block title %}BiGG: {{bigg_id}} — {{name}}{% endblock %}
 {% block content %}
 
-<div class="container">
-	<div class="col-lg-12 col-md-12">
-	<h1>{{compartment_name}}</h1>
-
-	</div>
-</div>
+  <h1>
+    <span class="light">Compartment: </span>{{bigg_id}} — {{name}}
+  </h1>
 
 {% endblock %}

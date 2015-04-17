@@ -1,6 +1,6 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
-<script src="/static/js/escher-git1.js"></script>
-<link rel="stylesheet" href="//escher.github.io/builder-1.0.0.css"/>
+<script src="//escher.github.io/escher-1.1.0.js"></script>
+<link rel="stylesheet" href="//escher.github.io/builder-1.1.0.css"/>
 <script>
 
 // Set up map and styles
@@ -15,7 +15,7 @@ if ('{{escher_script_type}}' == 'reaction') {
     zoom_element_type = 'node';
 }
 d3.json('/escher_map_json/{{escher_maps[0]['map_name']}}', function(e, data) {
-     d3.text('/static/css/builder-embed-1.0.0.css', function(e, css) {
+     d3.text('/static/css/builder-embed-1.1.0.css', function(e, css) {
 	 if (e) console.warn(e);
 	 var b = escher.Builder(data, null, css, map_sel,
 				{ menu: 'zoom',

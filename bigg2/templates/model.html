@@ -1,59 +1,49 @@
 {% extends "parent_display.html" %}
-{% block title %}{{bigg_id}}{% endblock %}
+{% block title %}BiGG: {{bigg_id}}{% endblock %}
 {% block content %}
 
-  <div class="container">
+  <div class="row">
     <div class="col-lg-8">
       <h1><span class="light">Model: </span>{{bigg_id}}</h1>
       <hr>
       <h4>Organism: </h4>
       <p>{{organism}}</p>
 
+      <h4>Genome: </h4>
+      <p><a href="/genomes/{{genome}}">{{genome}}</a></p>
+
       <h4>Model metrics: </h4>
       <div class="panel panel-default">
-  	<table class="table table-hover">
-	  <thead>
-  	    <tr>
-	      <th>Component</th>
-	      <th>Count</th>
-	    </tr>
-	  </thead>
-	  <tbody>
-	    <tr class="clickable-row" href="/models/{{bigg_id}}/metabolites">
-	      <td>Metabolites</td><td>{{metabolite_count}}</td>
-	    </tr>
-	    <tr class="clickable-row" href="/models/{{bigg_id}}/reactions">
-	      <td>Reactions</td><td>{{reaction_count}}</td>
-	    </tr>
-	    <tr class="clickable-row" href="/models/{{bigg_id}}/genes">
-	      <td>Genes</td><td>{{gene_count}}</td>
-	    </tr>
-	  </tbody>
-  	</table>
+  	    <table class="table table-hover">
+	      <thead>
+  	        <tr>
+	          <th>Component</th>
+	          <th>Count</th>
+	        </tr>
+	      </thead>
+	      <tbody>
+	        <tr class="clickable-row" href="/models/{{bigg_id}}/metabolites">
+	          <td>Metabolites</td><td>{{metabolite_count}}</td>
+	        </tr>
+	        <tr class="clickable-row" href="/models/{{bigg_id}}/reactions">
+	          <td>Reactions</td><td>{{reaction_count}}</td>
+	        </tr>
+	        <tr class="clickable-row" href="/models/{{bigg_id}}/genes">
+	          <td>Genes</td><td>{{gene_count}}</td>
+	        </tr>
+	      </tbody>
+  	    </table>
       </div>
 
       <h4>Download as SBML:</h4>
       Database model: <a href="/static/model_dumps/{{bigg_id}}.xml" download="{{bigg_id}}.xml">{{bigg_id}}.xml</a><br>
       Published model: <a href="/static/published_models/{{bigg_id}}_published.xml" download="{{bigg_id}}.xml">
-	{{bigg_id}}.xml
+	    {{bigg_id}}.xml
       </a>
 
-      <hr class="section-break"/>
-
       {% include 'comments.html' %}
+
     </div>
 
-    <div class="col-lg-4">
-    </div>
-    
-    <footer>
-      <div class="row">
-        <div class="col-lg-12" style="margin:80px 0;">
-          <hr>
-          <p>Copyright &copy; 2007 The Regents of the University of California.</p>
-        </div>
-      </div>
-    </footer>
-    
   </div>
 {% endblock %}	
