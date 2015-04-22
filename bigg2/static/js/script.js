@@ -13,7 +13,7 @@ $( document ).ready(function() {
 		   type:$.trim($("select[name='type']").val())
 	       },
 	       function(data,status){
-		   alert("email sent");
+		   alert("message stored");
 	       });
     });
     

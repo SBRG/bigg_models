@@ -6,3 +6,4 @@ env/
 gurobi.log
 BiGG_2.egg-info/
 docs/schema/
+crontab.txt

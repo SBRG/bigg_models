@@ -15,7 +15,6 @@ def get_reaction_and_models(reaction_bigg_id, session):
                         Reaction.name,
                         Model.bigg_id,
                         Genome.organism,
-                        ModelReaction.gene_reaction_rule,
                         ModelReaction.lower_bound,
                         ModelReaction.upper_bound)
                  .join(ModelReaction, ModelReaction.reaction_id == Reaction.id)
@@ -27,13 +26,13 @@ def get_reaction_and_models(reaction_bigg_id, session):
         raise NotFoundError('Could not find reaction')
 
     db_link_results = get_db_links_for_reaction(reaction_bigg_id, session)
-
+    metabolite_db = get_metabolite_list_for_reaction(reaction_bigg_id, session)
     return {'bigg_id': result_db[0][0],
             'name': result_db[0][1],
-            'gene_reaction_rule' : result_db[0][4],
-            'lower_bound' : result_db[0][5],
-            'upper_bound' : result_db[0][6],
             'database_links': db_link_results,
+            'metabolites': metabolite_db,
+            'lower_bound': result_db[0][4],
+            'upper_bound': result_db[0][5],
             'models_containing_reaction': [{'bigg_id': x[2], 'organism': x[3]}
                                            for x in result_db]}
     
@@ -472,6 +471,15 @@ def shortenName(name):
         return name[0:20] + '...'
     else:
         return name
+
+def get_universal_reactions_list(session):
+    universal_reactions = [(x[0], shortenName(x[1])) for x in session.query(Reaction.bigg_id, Reaction.name).all()]
+    return sorted(universal_reactions, key=lambda r: r[0].lower())
+
+def get_universal_metabolite_list(session):
+    metabolites = [(x[0], shortenName(x[1])) for x in session.query(Metabolite.bigg_id, Metabolite.name).all()]
+    return sorted(metabolites, key=lambda m: m[0].lower())
+    
 def search_for_genes(query_string, session, limit_models=None):
     # genes by bigg_id
     sim_bigg_id = func.similarity(Gene.bigg_id, query_string)
@@ -534,6 +542,28 @@ def search_for_universal_metabolites(query_string, session):
                  .order_by(sim_bigg_id.desc(), sim_name.desc())
                  .all())
     return [{'bigg_id': x[0], 'model_bigg_id': 'universal', 'name': shortenName(x[1])} for x in result_db]
+
+def search_for_metabolites_by_external_id(query_string, source, session):
+    sim_external_id = func.similarity(LinkOut.external_id, query_string)
+    qu = (session
+          .query(Metabolite.bigg_id, Compartment.bigg_id, Model.bigg_id, Genome.organism, LinkOut.external_id)
+          .join(CompartmentalizedComponent,
+                CompartmentalizedComponent.component_id == Metabolite.id)
+          .join(LinkOut,
+                LinkOut.ome_id == Metabolite.id)
+          .join(Compartment,
+                Compartment.id == CompartmentalizedComponent.compartment_id)
+          .join(ModelCompartmentalizedComponent,
+                ModelCompartmentalizedComponent.compartmentalized_component_id == CompartmentalizedComponent.id)
+          .join(Model, Model.id == ModelCompartmentalizedComponent.model_id)
+          .join(Genome)
+          .filter(LinkOut.type == 'metabolite')
+          .filter(LinkOut.external_source == source)
+          .filter(LinkOut.external_id == query_string))
+          #.filter(or_(sim_external_id >= bigg_id_sim_cutoff)))
+    result_db = qu.all()
+    return [{'bigg_id': x[0], 'compartment_bigg_id': x[1], 'model_bigg_id': x[2], 'organism': x[3]}
+            for x in result_db]
 
 def search_for_metabolites(query_string, session, limit_models=None,
                            strict=False):

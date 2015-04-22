@@ -84,13 +84,19 @@
 			  {% endif %}
 			  <br/>
 			  {% if type == 'metabolites' and 'compartment_bigg_id' in value %}
-			    {{value['name']}}: <a href="/models/{{value['model_bigg_id']}}/{{type}}/{{value['bigg_id']}}_{{value['compartment_bigg_id']}}">
+			    <a href="/models/{{value['model_bigg_id']}}/{{type}}/{{value['bigg_id']}}_{{value['compartment_bigg_id']}}">
 			      {{value['bigg_id']}}_{{value['compartment_bigg_id']}}
-			    </a> (<i>{{value['name']}}</i>)
+			    </a> 
+			    {% if value['name'] is defined %}
+			    [<i>{{value['name']}}</i>]
+			    {% endif %}
 			  {% else %}
 			    <a href="/models/{{value['model_bigg_id']}}/{{type}}/{{value['bigg_id']}}">
 			       {{value['bigg_id']}}
-			    </a> (<i>{{value['name']}}</i>)
+			    </a> 
+			    {% if value['name'] is defined %}
+			    [<i>{{value['name']}}</i>]
+			    {% endif %}
 			  {% endif %}
 			</td>
 

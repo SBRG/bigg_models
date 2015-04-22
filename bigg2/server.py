@@ -27,6 +27,7 @@ from ome.models import (Model, Component, Reaction,Compartment, Metabolite,
 from ome.base import Session
 from ome.loading.model_loading.parse import split_compartment
 import ome
+import datetime
 
 define("port", default= 8888, help="run on given port", type=int)
 define("password", default= "", help="password to email", type=str)
@@ -106,6 +107,7 @@ def get_application():
         (r'/search$', SearchDisplayHandler),
         (r'/advanced_search$', AdvancedSearchHandler),
         (r'/advanced_search_results$', AdvancedSearchResultsHandler),
+        (r'/linkout_advance_search_results$', LinkoutAdvanceSearchResultsHandler),
         (r'/autocomplete$', AutocompleteHandler),
         #
         # Maps
@@ -221,8 +223,8 @@ class UniversalCompartmentDisplayHandler(BaseHandler):
 class UniversalReactionListHandler(BaseHandler):
     def get(self):
         session = Session()
-        universal_reactions = [x[0] for x in session.query(Reaction.bigg_id).all()]
-        data = json.dumps(sorted(universal_reactions, key=lambda r: r.lower()))
+        #universal_reactions = [(x[0], x[1]) for x in session.query(Reaction.bigg_id, Reaction.name).all()]
+        data = json.dumps(queries.get_universal_reactions_list(session))
         self.write(data)
         self.set_header('Content-type', 'application/json')
         self.finish()
@@ -242,7 +244,7 @@ class UniversalReactionListDisplayHandler(BaseHandler):
         response = yield gen.Task(http_client.fetch, request)
         if response.error:
             raise HTTPError(404)
-        dictionary = {'results': {'reactions': [{'bigg_id': r, 'model_bigg_id': 'universal'}
+        dictionary = {'results': {'reactions': [{'bigg_id': r[0], 'name': r[1], 'model_bigg_id': 'universal'}
                                                 for r in json.loads(response.body)]}}
         self.write(template.render(dictionary)) 
         self.set_header('Content-type','text/html')
@@ -279,6 +281,9 @@ class UniversalReactionDisplayHandler(BaseHandler):
         if response.error:
             raise HTTPError(404)
         results = json.loads(response.body)
+        results['reaction_string'] = queries.build_reaction_string(results['metabolites'],
+                                                                   results['lower_bound'],
+                                                                   results['upper_bound'])
         self.write(template.render(results))
         self.set_header('Content-type','text/html')
         self.finish()  
@@ -287,8 +292,7 @@ class UniversalReactionDisplayHandler(BaseHandler):
 class UniversalMetaboliteListHandler(BaseHandler):
     def get(self):
         session = Session()
-        metabolites = [x[0] for x in session.query(Metabolite.bigg_id).all()]
-        data = json.dumps(sorted(metabolites, key=lambda m: m.lower()))
+        data = json.dumps(queries.get_universal_metabolite_list(session))
         session.close()
 
         self.write(data)
@@ -310,7 +314,7 @@ class UniversalMetaboliteListDisplayHandler(BaseHandler):
         response = yield gen.Task(http_client.fetch, request)
         if response.error:
             raise HTTPError(404)
-        template_data = {'results': {'metabolites': [{'bigg_id': r, 'model_bigg_id': 'universal'}
+        template_data = {'results': {'metabolites': [{'bigg_id': r[0], 'name': r[1], 'model_bigg_id': 'universal'}
                                                      for r in json.loads(response.body)]}}
         self.write(template.render(template_data)) 
         self.set_header('Content-type','text/html')
@@ -674,6 +678,24 @@ class AdvancedSearchHandler(BaseHandler):
         self.set_header('Content-type','text/html') 
         self.finish()
 
+class LinkoutAdvanceSearchResultsHandler(BaseHandler):
+    def post(self):
+        template = env.get_template("list_display.html")
+        #query_strings = [x.strip() for x in self.get_argument('query', '').split(',') if x != '']
+        query_string = self.get_argument('query', '')
+        external_id = self.get_argument("linkout_choice", None)
+        reaction_results = []
+        metabolite_results = []
+        gene_results = []
+        session = Session()
+        metabolite_results += queries.search_for_metabolites_by_external_id(query_string, external_id, session)
+        dictionary = {'results': {'reactions': reaction_results, 
+                                  'metabolites': metabolite_results, 
+                                  'genes': gene_results}}
+
+        self.write(template.render(dictionary)) 
+        self.set_header('Content-type','text/html')
+        self.finish()
 
 class AdvancedSearchResultsHandler(BaseHandler):
     def post(self):
@@ -745,24 +767,12 @@ class SubmitErrorHandler(BaseHandler):
         useremail = self.get_argument("email", "empty")
         comments = self.get_argument("comments", "empty")
         type = self.get_argument("type", "empty")
-        commentobject = Comments(email = useremail, text = comments)
+        now = datetime.datetime.now()
+        commentobject = Comments(email = useremail, text = comments, date_created = now, type = type)
         session.add(commentobject)
         session.commit()
         session.close()
-        to = useremail
-        gmail_user = 'justinlu10@gmail.com'
-        gmail_pwd = options.password
-        smtpserver = smtplib.SMTP("smtp.gmail.com", 587)
-        smtpserver.ehlo()
-        smtpserver.starttls()
-        smtpserver.login(gmail_user, gmail_pwd)
-        header = ('To:' + gmail_user + '\n' + 'From: ' + to + '\n' +
-                  'Subject:BiGG comment notification\n')
-        msg = type + '\n' + header + comments + '\n' + to
-        smtpserver.sendmail(gmail_user, gmail_user, msg)
-        smtpserver.close()
-        
-     
+             
 class DownloadPageHandler(BaseHandler):
     def get(self):
         template = env.get_template('download.html')
