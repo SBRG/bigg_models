@@ -20,10 +20,11 @@ import os
 from bigg2 import queries
 from bigg2.queries import NotFoundError
 from ome import settings
-from ome.models import (Model, Component, Reaction,Compartment, Metabolite,
-                    CompartmentalizedComponent, ModelReaction, ReactionMatrix,
-                    GeneReactionMatrix, ModelCompartmentalizedComponent, ModelGene,
-                    Gene, Comments, GenomeRegion, Genome)
+from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
+                        CompartmentalizedComponent, ModelReaction,
+                        ReactionMatrix, GeneReactionMatrix,
+                        ModelCompartmentalizedComponent, ModelGene, Gene,
+                        Comments, GenomeRegion, Genome)
 from ome.base import Session
 from ome.loading.model_loading.parse import split_compartment
 import ome
@@ -33,7 +34,8 @@ define("port", default= 8888, help="run on given port", type=int)
 define("password", default= "", help="password to email", type=str)
 
 # set up jinja2 template location
-env = Environment(loader=PackageLoader('bigg2', 'templates'))
+env = Environment(loader=PackageLoader('bigg2', 'templates'),
+                  extensions=['jinja2.ext.with_'])
 
 # root directory
 directory = abspath(dirname(__file__))
@@ -45,10 +47,6 @@ api_host = 'bigg.ucsd.edu'
 # make a tutorial on how to make a api request using curl
 # http://www.restapitutorial.com/
 
-# in list display, change so that the each result states what model it is
-# from. in other list displays, state the model all the elements are from.  For
-# list display, use a dictionary where the n
-
 # -------------------------------------------------------------------------------
 # Application API
 # -------------------------------------------------------------------------------
@@ -57,12 +55,6 @@ def get_application():
         (r'/', MainHandler),
         # 
         # Universal
-        #
-        (r'/api/%s/(?:models/)?universal/compartments/?$' % api_v, UniversalCompartmentListHandler),
-        (r'/(?:models/)?universal/compartments/?$', UniversalCompartmentListDisplayHandler),
-        # 
-        (r'/api/%s/(?:models/)?universal/compartment/([^/]+)/?$' % api_v, UniversalCompartmentHandler),
-        (r'/(?:models/)?universal/compartment/([^/]+)/?$', UniversalCompartmentDisplayHandler),
         #
         (r'/api/%s/(?:models/)?universal/reactions/?$' % api_v, UniversalReactionListHandler),
         (r'/(?:models/)?universal/reactions/?$', UniversalReactionListDisplayHandler),
@@ -76,6 +68,18 @@ def get_application():
         (r'/api/%s/(?:models/)?universal/metabolites/([^/]+)/?$' % api_v, UniversalMetaboliteHandler),
         (r'/(?:models/)?universal/metabolites/([^/]+)/?$', UniversalMetaboliteDisplayHandler),
         # 
+        (r'/api/%s/compartments/?$' % api_v, CompartmentListHandler),
+        (r'/compartments/?$', CompartmentListDisplayHandler),
+        # 
+        (r'/api/%s/compartments/([^/]+)/?$' % api_v, CompartmentHandler),
+        (r'/compartments/([^/]+)/?$', CompartmentDisplayHandler),
+        #
+        (r'/api/%s/genomes/?$' % api_v, GenomeListHandler),
+        (r'/genomes/?$', GenomeListDisplayHandler),
+        # 
+        (r'/api/%s/genomes/([^/]+)/?$' % api_v, GenomeHandler),
+        (r'/genomes/([^/]+)/?$', GenomeDisplayHandler),
+        #
         # By model
         #
         (r'/api/%s/models/?$' % api_v, ModelListHandler),
@@ -106,6 +110,7 @@ def get_application():
         (r'/api/%s/search$' % api_v, SearchHandler),
         (r'/search$', SearchDisplayHandler),
         (r'/advanced_search$', AdvancedSearchHandler),
+        (r'/advanced_search_external_id_results$', AdvancedSearchExternalIDHandler),
         (r'/advanced_search_results$', AdvancedSearchResultsHandler),
         (r'/linkout_advance_search_results$', LinkoutAdvanceSearchResultsHandler),
         (r'/autocomplete$', AutocompleteHandler),
@@ -149,7 +154,6 @@ def stop():
 
 class BaseHandler(RequestHandler):
     pass
-    
 
 
 class MainHandler(BaseHandler):
@@ -159,72 +163,14 @@ class MainHandler(BaseHandler):
         self.set_header('Content-type','text/html')
         self.finish()
 
-class UniversalCompartmentListHandler(BaseHandler):
-    def get(self):
-        session = Session()
-        universal_compartments = [x[0] for x in session.query(Compartment.bigg_id).all()]
-        compartment_list = {}
-        compartment_list['compartments'] = sorted(universal_compartments, key=lambda c: c.lower())
-        data = json.dumps(compartment_list)
-        self.write(data)
-        self.set_header('Content-type', 'application/json')
-        self.finish()
-        session.close()   
 
-class UniversalCompartmentListDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
-    def get(self):
-        template = env.get_template("compartments.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/universal/compartments' % (options.port, api_v)
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
-        self.write(template.render(results)) 
-        self.set_header('Content-type','text/html')
-        self.finish()
-
-class UniversalCompartmentHandler(BaseHandler):
-    def get(self, compartment_name):
-        session = Session()
-        dictionary = {}
-        dictionary['compartment_name'] = compartment_name
-        data = json.dumps(dictionary)
-        self.write(data)
-        self.set_header('Content-type', 'application/json')
-        self.finish()
-        session.close()
-
-
-class UniversalCompartmentDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
-    def get(self, compartment_name):
-        template = env.get_template("compartment.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/universal/compartment/%s' % (options.port, api_v, compartment_name)
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
-        self.write(template.render(results)) 
-        self.set_header('Content-type','text/html')
-        self.finish()
-
-
+# reactions
 class UniversalReactionListHandler(BaseHandler):
     def get(self):
         session = Session()
-        #universal_reactions = [(x[0], x[1]) for x in session.query(Reaction.bigg_id, Reaction.name).all()]
-        data = json.dumps(queries.get_universal_reactions_list(session))
+        universal_reactions = [{'bigg_id': x[0], 'name': x[1]}
+                               for x in session.query(Reaction.bigg_id, Reaction.name).all()]
+        data = json.dumps(sorted(universal_reactions, key=lambda r: r['bigg_id'].lower()))
         self.write(data)
         self.set_header('Content-type', 'application/json')
         self.finish()
@@ -244,7 +190,9 @@ class UniversalReactionListDisplayHandler(BaseHandler):
         response = yield gen.Task(http_client.fetch, request)
         if response.error:
             raise HTTPError(404)
-        dictionary = {'results': {'reactions': [{'bigg_id': r[0], 'name': r[1], 'model_bigg_id': 'universal'}
+        dictionary = {'results': {'reactions': [{'bigg_id': r['bigg_id'],
+                                                 'name': r['name'],
+                                                 'model_bigg_id': 'universal'}
                                                 for r in json.loads(response.body)]}}
         self.write(template.render(dictionary)) 
         self.set_header('Content-type','text/html')
@@ -269,7 +217,6 @@ class UniversalReactionDisplayHandler(BaseHandler):
     @asynchronous
     @gen.coroutine
     def get(self, reaction_bigg_id):
-        print 'UniversalReactionDisplayHandler'
         template = env.get_template("universal_reaction.html")
         http_client = AsyncHTTPClient()
         url_request = ('http://localhost:%d/api/%s/models/universal/reactions/%s' %
@@ -281,9 +228,6 @@ class UniversalReactionDisplayHandler(BaseHandler):
         if response.error:
             raise HTTPError(404)
         results = json.loads(response.body)
-        results['reaction_string'] = queries.build_reaction_string(results['metabolites'],
-                                                                   results['lower_bound'],
-                                                                   results['upper_bound'])
         self.write(template.render(results))
         self.set_header('Content-type','text/html')
         self.finish()  
@@ -292,7 +236,9 @@ class UniversalReactionDisplayHandler(BaseHandler):
 class UniversalMetaboliteListHandler(BaseHandler):
     def get(self):
         session = Session()
-        data = json.dumps(queries.get_universal_metabolite_list(session))
+        metabolites = [{'bigg_id': x[0], 'name': x[1]}
+                       for x in session.query(Metabolite.bigg_id, Metabolite.name).all()]
+        data = json.dumps(sorted(metabolites, key=lambda m: m['bigg_id'].lower()))
         session.close()
 
         self.write(data)
@@ -314,7 +260,9 @@ class UniversalMetaboliteListDisplayHandler(BaseHandler):
         response = yield gen.Task(http_client.fetch, request)
         if response.error:
             raise HTTPError(404)
-        template_data = {'results': {'metabolites': [{'bigg_id': r[0], 'name': r[1], 'model_bigg_id': 'universal'}
+        template_data = {'results': {'metabolites': [{'bigg_id': r['bigg_id'],
+                                                      'name': r['name'],
+                                                      'model_bigg_id': 'universal'}
                                                      for r in json.loads(response.body)]}}
         self.write(template.render(template_data)) 
         self.set_header('Content-type','text/html')
@@ -354,7 +302,7 @@ class ReactionListHandler(BaseHandler):
     def get(self, model_bigg_id):
         session = Session()
         result = queries.get_reactions_for_model(model_bigg_id, session)
-        sorted(result, key=lambda r: r.lower())
+        sorted(result, key=lambda r: r['bigg_id'].lower())
         session.close()
 
         self.write(json.dumps(result))
@@ -377,7 +325,10 @@ class ReactionListDisplayHandler(BaseHandler):
         if response.error:
             raise HTTPError(404)
         response_data = json.loads(response.body)
-        template_data = {'results': {'reactions': [{'model_bigg_id': model_bigg_id, 'bigg_id': x}
+        template_data = {'results': {'reactions': [{'model_bigg_id': model_bigg_id,
+                                                    'bigg_id': x['bigg_id'],
+                                                    'name': x['name'],
+                                                    'organism': x['organism']}
                                                    for x in response_data]}}
         self.write(template.render(template_data)) 
         self.set_header('Content-type','text/html')
@@ -411,15 +362,145 @@ class ReactionDisplayHandler(BaseHandler):
         response = yield gen.Task(http_client.fetch, request)
         if response.error:
             raise HTTPError(404)
-        results = json.loads(response.body)
-        results['reaction_string'] = queries.build_reaction_string(results['metabolites'],
-                                                                   results['lower_bound'],
-                                                                   results['upper_bound'])
-        self.write(template.render(results)) 
+        data = json.loads(response.body)
+        for result in data['results']:
+            result['reaction_string'] = queries.build_reaction_string(data['metabolites'],
+                                                                      result['lower_bound'],
+                                                                      result['upper_bound'])
+        self.write(template.render(data)) 
         self.set_header('Content-type','text/html')
         self.finish() 
 
+
+# Compartments
+class CompartmentListHandler(BaseHandler):
+    def get(self):
+        session = Session()
+        results = [{'bigg_id': x[0], 'name': x[1]}
+                   for x in session.query(Compartment.bigg_id, Compartment.name).all()]
+        data = json.dumps(results)
+        self.write(data)
+        self.set_header('Content-type', 'application/json')
+        self.finish()
+        session.close()   
+
+
+class CompartmentListDisplayHandler(BaseHandler):
+    @asynchronous
+    @gen.coroutine
+    def get(self):
+        template = env.get_template("compartments.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/%s/compartments' % (options.port, api_v)
+        request = tornado.httpclient.HTTPRequest(url=url_request,
+                                                 connect_timeout=20.0,
+                                                 request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
+        if response.error:
+            raise HTTPError(404)
+        results = json.loads(response.body)
+        self.write(template.render({'compartments': results})) 
+        self.set_header('Content-type','text/html')
+        self.finish()
+
+
+class CompartmentHandler(BaseHandler):
+    def get(self, compartment_bigg_id):
+        session = Session()
+        result_db = (session
+                     .query(Compartment)
+                     .filter(Compartment.bigg_id == compartment_bigg_id)
+                     .first())
+        result = {'bigg_id': result_db.bigg_id, 'name': result_db.name}
+        data = json.dumps(result)
+        self.write(data)
+        self.set_header('Content-type', 'application/json')
+        self.finish()
+        session.close()
+
+
+class CompartmentDisplayHandler(BaseHandler):
+    @asynchronous
+    @gen.coroutine
+    def get(self, compartment_bigg_id):
+        template = env.get_template("compartment.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/%s/compartments/%s' % (options.port, api_v, compartment_bigg_id)
+        request = tornado.httpclient.HTTPRequest(url=url_request,
+                                                 connect_timeout=20.0,
+                                                 request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
+        if response.error:
+            raise HTTPError(404)
+        results = json.loads(response.body)
+        self.write(template.render(results)) 
+        self.set_header('Content-type','text/html')
+        self.finish()
         
+
+# Genomes
+class GenomeListHandler(BaseHandler):
+    def get(self):
+        session = Session()
+        results = [{'bioproject_id': x[0], 'organism': x[1]}
+                   for x in session.query(Genome.bioproject_id, Genome.organism).all()]
+        data = json.dumps(results)
+        self.write(data)
+        self.set_header('Content-type', 'application/json')
+        self.finish()
+        session.close()   
+
+
+class GenomeListDisplayHandler(BaseHandler):
+    @asynchronous
+    @gen.coroutine
+    def get(self):
+        template = env.get_template("genomes.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/%s/genomes' % (options.port, api_v)
+        request = tornado.httpclient.HTTPRequest(url=url_request,
+                                                 connect_timeout=20.0,
+                                                 request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
+        if response.error:
+            raise HTTPError(404)
+        results = json.loads(response.body)
+        self.write(template.render({'genomes': results})) 
+        self.set_header('Content-type','text/html')
+        self.finish()
+
+
+class GenomeHandler(BaseHandler):
+    def get(self, bioproject_id):
+        session = Session()
+        result = queries.get_genome_and_models(session, bioproject_id)
+        data = json.dumps(result)
+        self.write(data)
+        self.set_header('Content-type', 'application/json')
+        self.finish()
+        session.close()
+
+
+class GenomeDisplayHandler(BaseHandler):
+    @asynchronous
+    @gen.coroutine
+    def get(self, bioproject_id):
+        template = env.get_template("genome.html")
+        http_client = AsyncHTTPClient()
+        url_request = 'http://localhost:%d/api/%s/genomes/%s' % (options.port, api_v, bioproject_id)
+        request = tornado.httpclient.HTTPRequest(url=url_request,
+                                                 connect_timeout=20.0,
+                                                 request_timeout=20.0)
+        response = yield gen.Task(http_client.fetch, request)
+        if response.error:
+            raise HTTPError(404)
+        results = json.loads(response.body)
+        self.write(template.render(results)) 
+        self.set_header('Content-type','text/html')
+        self.finish()
+
+
+# Models
 class ModelListHandler(BaseHandler):    
     def get(self):
         session = Session()
@@ -555,7 +636,7 @@ class GeneListHandler(BaseHandler):
         results = queries.get_gene_list_for_model(model_bigg_id, session)
         session.close()
 
-        data = json.dumps(sorted(results, key=lambda s: s.lower()))
+        data = json.dumps(sorted(results, key=lambda s: s['bigg_id'].lower()))
         self.write(data)
         self.set_header('Content-type', 'application/json')
         self.finish()
@@ -575,8 +656,7 @@ class GeneListDisplayHandler(BaseHandler):
         response = yield gen.Task(http_client.fetch, request)
         if response.error:
             raise HTTPError(404)
-        template_data = {'results': {'genes': [{'bigg_id': r, 'model_bigg_id': model_bigg_id}
-                                                for r in json.loads(response.body)]}}
+        template_data = {'results': {'genes': json.loads(response.body)}}
         self.write(template.render(template_data))
         self.set_header('Content-type','text/html') 
         self.finish()
@@ -672,9 +752,11 @@ class AdvancedSearchHandler(BaseHandler):
         template = env.get_template('advanced_search.html')
         session = Session()
         model_list = queries.get_model_list(session)
+        database_sources = queries.get_database_sources(session)
         session.close()
 
-        self.write(template.render({'models': model_list}))
+        self.write(template.render({'models': model_list,
+                                    'database_sources': database_sources}))
         self.set_header('Content-type','text/html') 
         self.finish()
 
@@ -697,10 +779,27 @@ class LinkoutAdvanceSearchResultsHandler(BaseHandler):
         self.set_header('Content-type','text/html')
         self.finish()
 
+class AdvancedSearchExternalIDHandler(BaseHandler):
+    def post(self):
+        query_string = self.get_argument('query', '')
+        database_source = self.get_argument('database_source', '')
+        session = Session()
+        metabolites = queries.get_metabolites_for_database_id(session,
+                                                              query_string,
+                                                              database_source)
+        session.close()
+        dictionary = {'results': {'metabolites': metabolites}}
+        
+        template = env.get_template("list_display.html")
+        self.write(template.render(dictionary)) 
+        self.set_header('Content-type','text/html')
+        self.finish() 
+
 class AdvancedSearchResultsHandler(BaseHandler):
     def post(self):
-        template = env.get_template("list_display.html")
-        query_strings = [x.strip() for x in self.get_argument('query', '').split(',') if x != '']
+        query_strings = [x.strip() for x in
+                         self.get_argument('query', '').split(',')
+                         if x != '']
 
         def checkbox_arg(name):
             return self.get_argument(name, None) == 'on'
@@ -733,6 +832,7 @@ class AdvancedSearchResultsHandler(BaseHandler):
                                   'metabolites': metabolite_results, 
                                   'genes': gene_results}}
 
+        template = env.get_template("list_display.html")
         self.write(template.render(dictionary)) 
         self.set_header('Content-type','text/html')
         self.finish() 
