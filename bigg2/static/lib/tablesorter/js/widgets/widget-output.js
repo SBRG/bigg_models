@@ -1,4 +1,4 @@
-/* Output widget (beta) for TableSorter 7/17/2014 (v2.17.5)
+/*! Widget: output - updated 3/26/2015 (v2.21.3) *//*
  * Requires tablesorter v2.8+ and jQuery 1.7+
  * Modified from:
  * HTML Table to CSV: http://www.kunalbabre.com/projects/table2CSV.php (License unknown?)
@@ -16,13 +16,13 @@ output = ts.output = {
 	event      : 'outputTable',
 
 	// wrap line breaks & tabs in quotes
-	regexQuote : /([\n\t]|<[^<]+>)/,    // test
+	regexQuote : /([\n\t\x09\x0d\x0a]|<[^<]+>)/, // test if cell needs wrapping quotes
 	regexBR    : /(<br([\s\/])?>|\n)/g, // replace
 	regexIMG   : /<img[^>]+alt\s*=\s*['"]([^'"]+)['"][^>]*>/i, // match
 	regexHTML  : /<[^<]+>/g, // replace
-	
-	replaceCR  : '\\n',
-	replaceTab : '\\t',
+
+	replaceCR  : '\x0d\x0a',
+	replaceTab : '\x09',
 
 	popupTitle : 'Output',
 	popupStyle : 'width:100%;height:100%;', // for textarea
@@ -79,8 +79,8 @@ output = ts.output = {
 					}
 				}
 
-				// don't include hidden columns
-				if ( $this.css('display') !== 'none' ) {
+				// don't include hidden columns, unless option is set
+				if ( !wo.output_hiddenColumns && $this.css('display') !== 'none' ) {
 					// skip column if already defined
 					while (typeof tmpRow[rowIndex][cellIndex] !== 'undefined') { cellIndex++; }
 					tmpRow[rowIndex][cellIndex] = tmpRow[rowIndex][cellIndex] ||
@@ -120,6 +120,13 @@ output = ts.output = {
 
 		// all tbody rows
 		$rows = $el.children('tbody').children('tr');
+
+		if (wo.output_includeFooter) {
+			// clone, to force the tfoot rows to the end of this selection of rows
+			// otherwise they appear after the thead (the order in the HTML)
+			$rows = $rows.add( $el.children('tfoot').children('tr').clone() );
+		}
+
 		// get (f)iltered, (v)isible or all rows (look for the first letter only)
 		$rows = /f/.test(wo.output_saveRows) ? $rows.not('.' + (wo.filter_filteredRow || 'filtered') ) :
 			/v/.test(wo.output_saveRows) ? $rows.filter(':visible') : $rows;
@@ -153,7 +160,7 @@ output = ts.output = {
 		// callback; if true returned, continue processing
 		if ($.isFunction(wo.output_callback) && !wo.output_callback(c, mydata)) { return; }
 
-		if ( /p/.test( (wo.output_delivery || '').toLowerCase() ) ) {
+		if ( /p/i.test( wo.output_delivery || '' ) ) {
 			output.popup(mydata, wo.output_popupStyle, outputJSON || outputArray);
 		} else {
 			output.download(wo, mydata);
@@ -192,7 +199,11 @@ output = ts.output = {
 			// replace " with “ if undefined
 			result = input.replace(/\"/g, wo.output_replaceQuote || '\u201c');
 		// replace line breaks with \\n & tabs with \\t
-		result = result.replace(output.regexBR, output.replaceCR).replace(/\t/g, output.replaceTab);
+		if (!wo.output_trimSpaces) {
+			result = result.replace(output.regexBR, output.replaceCR).replace(/\t/g, output.replaceTab);
+		} else {
+			result = result.replace(output.regexBR, '');
+		}
 		// extract img alt text
 		txt = result.match(output.regexIMG);
 		if (!wo.output_includeHTML && txt !== null) {
@@ -244,8 +255,9 @@ output = ts.output = {
 		// Use HTML5 Blob if browser supports it
 		if ( gotBlob ) {
 
-			window.URL = window.webkitURL || window.URL;
-			blob = new Blob([data], {type: wo.output_encoding});
+			window.URL = window.URL || window.webkitURL;
+			// prepend BOM for utf-8 encoding - see https://github.com/eligrey/FileSaver.js/blob/master/FileSaver.js#L140
+			blob = new Blob( [ '\ufeff', data ], { type: wo.output_encoding } );
 
 			if (nav.msSaveBlob) {
 				// IE 10+
@@ -283,6 +295,8 @@ ts.addWidget({
 	options: {
 		output_separator     : ',',         // set to "json", "array" or any separator
 		output_ignoreColumns : [],          // columns to ignore [0, 1,... ] (zero-based index)
+		output_hiddenColumns : false,       // include hidden columns in the output
+		output_includeFooter : false,       // include footer rows in the output
 		output_dataAttrib    : 'data-name', // header attrib containing modified header name
 		output_headerRows    : false,       // if true, include multiple header rows (JSON only)
 		output_delivery      : 'popup',     // popup, download
@@ -302,7 +316,6 @@ ts.addWidget({
 		output_callbackJSON  : function($cell, txt, cellIndex) { return txt + '(' + (cellIndex) + ')'; },
 		// the need to modify this for Excel no longer exists
 		output_encoding      : 'data:application/octet-stream;charset=utf8,'
-
 	},
 	init: function(table, thisWidget, c) {
 		output.init(c);

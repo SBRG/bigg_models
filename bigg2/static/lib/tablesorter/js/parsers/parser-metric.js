@@ -1,4 +1,4 @@
-/*! Metric parser
+/*! Parser: metric *//*
  * Demo: http://jsfiddle.net/Mottie/abkNM/382/
  * Set the metric name in the header (defaults to "m|meter"), e.g.
  *   <th data-metric-name="b|byte">HDD Size</th>
@@ -47,7 +47,7 @@
 			b, t,
 			// process number here to get a numerical format (us or eu)
 			n = $.tablesorter.formatFloat(s.replace(/[^\w,. \-()]/g, ""), table),
-			$t = table.config.$headers.filter('[data-column="' + cellIndex + '"]'),
+			$t = table.config.$headerIndexed[cellIndex],
 			m = $t.data('metric');
 			if (!m) {
 				// stored values

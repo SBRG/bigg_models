@@ -1,4 +1,4 @@
-﻿/*! File Type parser
+﻿/*! Parser: filetype *//*
  * When a file type extension is found, the equivalent name is
  * prefixed into the parsed data, so sorting occurs in groups
  */
@@ -49,7 +49,7 @@
 				types = $.tablesorter.fileTypes.equivalents;
 			if (!m) {
 				// make a string to "quick" match the existing equivalents
-				var t = [];
+				t = [];
 				$.each(types, function(i,v){
 					t.push(v);
 				});

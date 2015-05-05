@@ -1,4 +1,4 @@
-/*! tablesorter math widget - beta - updated 5/28/2014 (v2.17.1)
+/*! Widget: math - updated 2/9/2015 (v2.19.1) *//*
 * Requires tablesorter v2.16+ and jQuery 1.7+
 * by Rob Garrison
 */
@@ -8,7 +8,11 @@
 	"use strict";
 
 	var ts = $.tablesorter,
+
 	math = {
+
+		events : ( 'tablesorter-initialized update updateAll updateRows addRows updateCell ' +
+			'filterReset filterEnd ' ).split(' ').join('.tsmath '),
 
 		// get all of the row numerical values in an arry
 		getRow : function(table, wo, $el, dataAttrib) {
@@ -27,7 +31,7 @@
 					if (typeof txt === "undefined") {
 						txt = this.textContent || $t.text();
 					}
-					txt = ts.formatFloat(txt.replace(/[^\w,. \-()]/g, ""), table);
+					txt = ts.formatFloat(txt.replace(/[^\w,. \-()]/g, ""), table) || 0;
 					return isNaN(txt) ? 0 : txt;
 				}).get();
 			}
@@ -61,7 +65,7 @@
 							if (typeof txt === "undefined") {
 								txt = $t[0].textContent || $t.text();
 							}
-							txt = ts.formatFloat(txt.replace(/[^\w,. \-()]/g, ""), table);
+							txt = ts.formatFloat(txt.replace(/[^\w,. \-()]/g, ""), table) || 0;
 							arry.push(isNaN(txt) ? 0 : txt);
 						}
 					}
@@ -75,7 +79,8 @@
 						if (typeof txt === "undefined") {
 							txt = ($t[0] ? $t[0].textContent : '') || $t.text();
 						}
-						txt = ts.formatFloat(txt.replace(/[^\w,. \-()]/g, ""), table);
+						// isNaN('') => false
+						txt = ts.formatFloat(txt.replace(/[^\w,. \-()]/g, ""), table) || 0;
 						arry.push(isNaN(txt) ? 0 : txt);
 					}
 				});
@@ -100,7 +105,7 @@
 							if (typeof txt === "undefined") {
 								txt = ($t[0] ? $t[0].textContent : '') || $t.text();
 							}
-							txt = ts.formatFloat(txt.replace(/[^\w,. \-()]/g, ""), table);
+							txt = ts.formatFloat(txt.replace(/[^\w,. \-()]/g, ""), table) || 0;
 							arry.push(isNaN(txt) ? 0 : txt);
 						}
 					});
@@ -183,7 +188,7 @@
 	* (c)2011 ecava
 	* Dual licensed under the MIT or GPL Version 2 licenses.
 	*/
-	ts.formatMask = function(m, v, tmpPrefix, tmpSuffix){
+	ts.formatMask = function(m, v, tmpPrefix, tmpSuffix) {
 		if ( !m || isNaN(+v) ) {
 			return v; // return as it is.
 		}
@@ -384,17 +389,23 @@
 			// template for or just prepend the mask prefix & suffix with this HTML
 			// e.g. '<span class="red">{content}</span>'
 			math_prefix   : '',
-			math_suffix   : ''
+			math_suffix   : '',
+			math_event    : 'recalculate'
 		},
 		init : function(table, thisWidget, c, wo){
 			c.$table
-				.bind('tablesorter-initialized update updateRows addRows updateCell filterReset filterEnd '.split(' ').join('.tsmath '), function(e){
+				.off( (math.events + ' updateComplete.tsmath ' + wo.math_event).replace(/\s+/g, ' ') )
+				.on(math.events + ' ' + wo.math_event, function(e) {
 					var init = e.type === 'tablesorter-initialized';
-					if (!wo.math_isUpdating || init) {
+					if ( !wo.math_isUpdating || init ) {
+						if ( !/filter/.test(e.type) ) {
+							// redo data-column indexes on update
+							ts.computeColumnIndex( c.$table.children('tbody').children() );
+						}
 						math.recalculate( table, c, wo, init );
 					}
 				})
-				.bind('updateComplete.tsmath', function(){
+				.on('updateComplete.tsmath', function(){
 					setTimeout(function(){
 						wo.math_isUpdating = false;
 					}, 500);
@@ -403,9 +414,10 @@
 		},
 		// this remove function is called when using the refreshWidgets method or when destroying the tablesorter plugin
 		// this function only applies to tablesorter v2.4+
-		remove: function(table, c, wo){
+		remove: function(table, c, wo, refreshing){
+			if (refreshing) { return; }
 			$(table)
-				.unbind('tablesorter-initialized update updateRows addRows updateCell filterReset filterEnd '.split(' ').join('.tsmath '))
+				.off( (math.events + ' updateComplete.tsmath ' + wo.math_event).replace(/\s+/g, ' ') )
 				.find('[data-' + wo.math_data + ']').empty();
 		}
 	});

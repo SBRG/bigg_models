@@ -20,13 +20,15 @@
     <!-- BiGG styles and js -->
     <link rel="stylesheet" type="text/css" href="/static/css/style.css">
     <script src="/static/js/script.js"></script>
-    <script src="/static/lib/tablesorter/js/jquery.tablesorter.min.js"></script>
-
+    <script src="/static/lib/tablesorter/dist/js/jquery.tablesorter.min.js"></script>
+    <script src="/static/lib/tablesorter/addons/pager/jquery.tablesorter.pager.js"></script>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/static/assets/favicon.ico">
 
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta name="google" content="notranslate">
+    <meta http-equiv="Content-Language" content="en">
   </head>
   <body>		
     {% block navbar %}	
@@ -99,7 +101,7 @@
     
     <script>
      $(function() {
-	   $(".myTable").tablesorter();
+	   $(".myTable").tablesorter({widthFixed: true});
 
 	   $("#search1").autocomplete({
 	     source: function (request, response) {

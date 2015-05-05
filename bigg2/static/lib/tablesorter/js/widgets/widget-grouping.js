@@ -1,4 +1,4 @@
-/*! tablesorter Grouping widget - updated 3/7/2014 (core v2.15.6)
+/*! Widget: grouping - updated 3/5/2015 (v2.21.0) *//*
  * Requires tablesorter v2.8+ and jQuery 1.7+
  * by Rob Garrison
  */
@@ -43,6 +43,7 @@ ts.grouping = {
 				hours = time.getHours();
 			return part === 'year' ? time.getFullYear() :
 				part === 'month' ? wo.group_months[time.getMonth()] :
+				part === 'monthyear' ?  wo.group_months[time.getMonth()] + ' ' + time.getFullYear() :
 				part === 'day' ? wo.group_months[time.getMonth()] + ' ' + time.getDate() :
 				part === 'week' ? wo.group_week[time.getDay()] :
 				part === 'time' ? ('00' + (hours > 12 ? hours - 12 : hours === 0 ? hours + 12 : hours)).slice(-2) + ':' +
@@ -53,7 +54,7 @@ ts.grouping = {
 
 	update : function(table, c, wo){
 		if ($.isEmptyObject(c.cache)) { return; }
-		var rowIndex, tbodyIndex, currentGroup, $rows, groupClass, grouping, time, cache, saveName, direction,
+		var rowIndex, tbodyIndex, currentGroup, $rows, groupClass, grouping, norm_rows, saveName, direction,
 			lang = wo.grouping_language,
 			group = '',
 			savedGroup = false,
@@ -65,13 +66,12 @@ ts.grouping = {
 			// clear pager saved spacer height (in case the rows are collapsed)
 			c.$table.data('pagerSavedHeight', 0);
 		}
-		if (column >= 0 && !c.$headers.filter('[data-column="' + column + '"]:last').hasClass('group-false')) {
-			if (c.debug){ time = new Date(); }
+		if (column >= 0 && !c.$headerIndexed[column].hasClass('group-false')) {
 			wo.group_currentGroup = ''; // save current groups
 			wo.group_currentGroups = {};
 
 			// group class finds "group-{word/separator/letter/number/date/false}-{optional:#/year/month/day/week/time}"
-			groupClass = (c.$headers.filter('[data-column="' + column + '"]:last').attr('class') || '').match(/(group-\w+(-\w+)?)/g);
+			groupClass = (c.$headerIndexed[column].attr('class') || '').match(/(group-\w+(-\w+)?)/g);
 			// grouping = [ 'group', '{word/separator/letter/number/date/false}', '{#/year/month/day/week/time}' ]
 			grouping = groupClass ? groupClass[0].split('-') : ['group','letter',1]; // default to letter 1
 
@@ -89,28 +89,28 @@ ts.grouping = {
 				}
 			}
 			for (tbodyIndex = 0; tbodyIndex < c.$tbodies.length; tbodyIndex++) {
-				cache = c.cache[tbodyIndex].normalized;
+				norm_rows = c.cache[tbodyIndex].normalized;
 				group = ''; // clear grouping across tbodies
 				$rows = c.$tbodies.eq(tbodyIndex).children('tr').not('.' + c.cssChildRow);
 				for (rowIndex = 0; rowIndex < $rows.length; rowIndex++) {
 					if ( $rows.eq(rowIndex).is(':visible') ) {
 						// fixes #438
 						if (ts.grouping.types[grouping[1]]) {
-							currentGroup = cache[rowIndex] ? 
-								ts.grouping.types[grouping[1]]( c, c.$headers.filter('[data-column="' + column + '"]:last'), cache[rowIndex][column], /date/.test(groupClass) ?
+							currentGroup = norm_rows[rowIndex] ?
+								ts.grouping.types[grouping[1]]( c, c.$headerIndexed[column], norm_rows[rowIndex][column], /date/.test(groupClass) ?
 								grouping[2] : parseInt(grouping[2] || 1, 10) || 1, group, lang ) : currentGroup;
 							if (group !== currentGroup) {
 								group = currentGroup;
 								// show range if number > 1
 								if (grouping[1] === 'number' && grouping[2] > 1 && currentGroup !== '') {
 									currentGroup += ' - ' + (parseInt(currentGroup, 10) +
-										((parseInt(grouping[2],10) - 1) * (c.$headers.filter('[data-column="' + column + '"]:last').hasClass(ts.css.sortAsc) ? 1 : -1)));
+										((parseInt(grouping[2],10) - 1) * (c.$headerIndexed[column].hasClass(ts.css.sortAsc) ? 1 : -1)));
 								}
 								if ($.isFunction(wo.group_formatter)) {
 									currentGroup = wo.group_formatter((currentGroup || '').toString(), column, table, c, wo) || currentGroup;
 								}
 								$rows.eq(rowIndex).before('<tr class="group-header ' + c.selectorRemove.slice(1) +
-									'" unselectable="on"><td colspan="' +
+									'" unselectable="on"' + ( c.tabIndex ? ' tabindex="0"' : '' ) + '><td colspan="' +
 									c.columns + '">' + (wo.group_collapsible ? '<i/>' : '') + '<span class="group-name">' +
 									currentGroup + '</span><span class="group-count"></span></td></tr>');
 								if (wo.group_saveGroups && !savedGroup && wo.group_collapsed && wo.group_collapsible) {
@@ -139,7 +139,7 @@ ts.grouping = {
 						}
 					}
 				}
-				if (wo.group_saveGroups && wo.group_currentGroups[wo.group_currentGroup].length) {
+				if (wo.group_saveGroups && wo.group_currentGroups.length && wo.group_currentGroups[wo.group_currentGroup].length) {
 					name = $row.find('.group-name').text().toLowerCase();
 					isHidden = $.inArray( name, wo.group_currentGroups[wo.group_currentGroup] ) > -1;
 					$row.toggleClass('collapsed', isHidden);
@@ -150,9 +150,6 @@ ts.grouping = {
 				}
 			});
 			c.$table.trigger(wo.group_complete);
-			if (c.debug) {
-				$.tablesorter.benchmark("Applying groups widget: ", time);
-			}
 		}
 	},
 
@@ -160,13 +157,15 @@ ts.grouping = {
 		if (wo.group_collapsible) {
 			wo.group_currentGroups = [];
 			// .on() requires jQuery 1.7+
-			c.$table.on('click toggleGroup', 'tr.group-header', function(event){
+			c.$table.on('click toggleGroup keyup', 'tr.group-header', function(event){
 				event.stopPropagation();
+				// pressing enter will toggle the group
+				if (event.type === 'keyup' && event.which !== 13) { return; }
 				var isCollapsed, $groups, indx,
 					$this = $(this),
 					name = $this.find('.group-name').text().toLowerCase();
 				// use shift-click to toggle ALL groups
-				if (event.type === 'click' && event.shiftKey) {
+				if (event.shiftKey && (event.type === 'click' || event.type ==='keyup')) {
 					$this.siblings('.group-header').trigger('toggleGroup');
 				}
 				$this.toggleClass('collapsed');
@@ -222,6 +221,8 @@ ts.addWidget({
 		group_callback    : null, // function($cell, $rows, column, table){}, callback allowing modification of the group header labels
 		group_complete    : 'groupingComplete', // event triggered on the table when the grouping widget has finished work
 
+		// checkbox parser text used for checked/unchecked values
+		group_checkbox    : [ 'checked', 'unchecked' ],
 		// change these default date names based on your language preferences
 		group_months      : [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ],
 		group_week        : [ 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday' ],

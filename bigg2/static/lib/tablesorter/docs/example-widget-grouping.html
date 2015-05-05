@@ -9,7 +9,7 @@
 
 	<!-- Demo stuff -->
 	<link class="ui-theme" rel="stylesheet" href="css/jquery-ui.min.css">
-	<script src="js/jquery-ui-latest.min.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
 	<link rel="stylesheet" href="css/jq.css">
 	<link href="css/prettify.css" rel="stylesheet">
 	<script src="js/prettify.js"></script>
@@ -69,14 +69,6 @@ tr.group-header.collapsed td i {
 	<script src="../js/parsers/parser-input-select.js"></script>
 	<script src="../js/widgets/widget-grouping.js"></script>
 
-	<script>
-	$(function(){
-		$('.options').tablesorter({
-			widgets: [ "stickyHeaders" ]
-		});
-	});
-	</script>
-
 	<script id="js">$(function(){
 
 	$("#groups").tablesorter({
@@ -86,13 +78,16 @@ tr.group-header.collapsed td i {
 			3: { sorter: "select" },
 			6: { sorter: "inputs" }
 		},
-		widgets: [ "group", "columns", "zebra" ],
+		widgets: [ "group", "columns", "filter", "zebra" ],
 		widgetOptions: {
 			group_collapsible : true,  // make the group header clickable and collapse the rows below it.
 			group_collapsed   : false, // start with all groups collapsed (if true)
 			group_saveGroups  : true,  // remember collapsed groups
 			group_saveReset   : '.group_reset', // element to clear saved collapsed groups
 			group_count       : " ({num})", // if not false, the "{num}" string is replaced with the number of rows in the group
+
+			// checkbox parser text used for checked/unchecked values
+			group_checkbox    : [ 'checked', 'unchecked' ],
 
 			// change these default date names based on your language preferences
 			group_months      : [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ],
@@ -155,7 +150,14 @@ tr.group-header.collapsed td i {
 		<div>
 		<ul>
 			<li>This widget will <strong>only work</strong> in tablesorter version 2.8+ and jQuery version 1.7+.</li>
-			<li>Please do not use this widget in very large tables (it might be really slow) <del>or when your table includes multiple tbodies</del>.</li>
+			<li>Please do not use this widget in very large tables (it might be really slow) <del>or when your table includes multiple tbodies</del>.<br><br></li>
+			<li>In <span class="version">v2.21.6</span>, group headers are now keyboard accessible using <kbd>Tab</kbd>; and pressing <kbd>Enter</kbd> while the header has focus will toggle the group header, or use <kbd>Shift</kbd> + <kbd>Enter</kbd> to toggle all groups.</li>
+			<li>In <span class="version">v2.21.0</span>
+				<ul>
+					<li>Added <code>group_checkbox</code> option to allow setting the parsed text from the "parser-input-select.js" checkbox parser.</li>
+					<li>Fixed an issue with the filter widget overriding the "group-hidden" class name.</li>
+				</ul>
+			</li>
 			<li>In <span class="version">v2.15.6</span>, added <code>group_saveGroups</code> &amp; <code>group_saveReset</code> options. More details are included in the "Options" section.</li>
 			<li>In <span class="version">v2.14</span>, added <code>group_dateString</code> option. More details are included in the "Options" section.</li>
 			<li>In <span class="version">v2.13</span>, added <code>group_separator</code> option &amp; <code>group-separator-#</code> header class name. To see this in action, check out the <a href="example-parsers-file-type.html">file type parser demo</a>.</li>
@@ -299,6 +301,21 @@ group_separator : /[/.]/</pre>
 						</td>
 					</tr>
 
+
+					<tr id="group_checkbox">
+						<td><a href="#" class="permalink">group_checkbox</a></td>
+						<td>see description)</td>
+						<td>
+							Set checkbox parser text (<span class="version">v2.21.0</span>)
+							<div class="collapsible">
+							<br>
+							The checkbox parser in the "parser-input-select.js" file will use this option to set the group header text displayed for a checkbox state.
+							<p></p>
+							Defaults are: <code>[ &quot;checked&quot;, &quot;unchecked&quot; ]</code>
+						</div>
+						</td>
+					</tr>
+
 					<tr id="group_months">
 						<td>
 							<a href="#" class="permalink">group_months</a><br>
@@ -397,6 +414,10 @@ group_dateString : function(date) {
 					<tr>
 						<td><code>&quot;group-date-month&quot;</code><span class="remark">*</span></td>
 						<td>Group the rows by month.</td>
+					</tr>
+					<tr>
+						<td><code>&quot;group-date-monthyear&quot;</code><span class="remark">*</span></td>
+						<td>Group the rows by month &amp; year.</td>
 					</tr>
 					<tr>
 						<td><code>&quot;group-date-week&quot;</code><span class="remark">*</span></td>
@@ -505,7 +526,7 @@ group_dateString : function(date) {
 			numcol = 2,
 			letcol = 4,
 			datecol = 7,
-			dateGroups = [ '', 'year', 'month', 'day', 'week', 'time' ];
+			dateGroups = [ '', 'year', 'month', 'monthyear', 'day', 'week', 'time' ];
 		// Numeric column slider
 		$( "#slider0" ).slider({
 			value: startBlock,
@@ -550,7 +571,7 @@ group_dateString : function(date) {
 		$( "#slider2" ).slider({
 			value: curGroup,
 			min: 0,
-			max: 5,
+			max: dateGroups.length - 1,
 			step: 1,
 			create: function(){
 				$('.dateclass').html(' "group-date' + (curGroup > 0 ? '-' + dateGroups[curGroup] : '') + '"');

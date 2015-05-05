@@ -23,7 +23,8 @@
 	<script id="js">$(function() {
 
 	// add new widget called repeatHeaders
-	// ************************************
+	// updated v2.18.0 (works in nested tables)
+	// *****************************************
 	$.tablesorter.addWidget({
 
 		id: "repeatHeaders",
@@ -52,8 +53,9 @@
 			skip = wo && wo.rowsToSkip || 4;
 
 			// remove appended headers by classname
-			c.$table.find("tr.repeated-header").remove();
-			$tr = c.$tbodies.find('tr');
+			c.$tbodies.children("tr.repeated-header").remove();
+			// only find visible rows (may be filtered)
+			$tr = c.$tbodies.children('tr:visible');
 			l = $tr.length;
 			// loop all tr elements and insert a copy of the "headers"
 			for (i = skip; i < l; i += skip) {
@@ -64,7 +66,7 @@
 		// this remove function is called when using the refreshWidgets method or when destroying the tablesorter plugin
 		// this function only applies to tablesorter v2.4+
 		remove: function(table, c){
-			c.$table.find("tr.repeated-header").remove();
+			c.$tbodies.children("tr.repeated-header").remove();
 		}
 
 	});
@@ -137,6 +139,13 @@
 			</li>
 			<li>The <code>remove</code> block (added v2.4):
 				<ul>
+					<li>In <span class="version">v2.19.0</span> the <code>refreshing</code> parameter was added:
+						<ul>
+							<li>It is a parameter used to indicate that the <a href="index.html#refreshwidgets"><code>refreshWidgets</code></a> method was triggered.</li>
+							<li>When widgets are refreshed, the <code>remove</code> method is called, then the widget <code>init</code> function is immediately called to reapply the widget.</li>
+							<li>In this update, this parameter is used by the filter widget to retain filtered rows and prevent a "flash" of showing all rows, then returning to its previous state after applying the filter again.</li>
+						</ul>
+					</li>
 					<li>This code is called when either the <a href="index.html#refreshwidgets"><code>refreshWidgets</code></a> or <a href="index.html#destroy"><code>destroy</code></a> methods are called.</li>
 					<li>The code contained within this block must remove all additional content/elements added by the widget. Also, any rows or content that is hidden must be restored.</li>
 					<li>If additional rows are added to the table, make sure to include the class name within the <a href="index.html#selectorremove"><code>selectorRemove</code></a> option.</li>
@@ -178,9 +187,11 @@ $.tablesorter.addWidget({
     // function above otherwise initFlag is undefined
     // * see the saveSort widget for a full example *
   },
-  remove: function(table, config, widgetOptions){
+  remove: function(table, config, widgetOptions, refreshing){
     // do what ever needs to be done to remove stuff added by your widget
     // unbind events, restore hidden content, etc.
+    // refreshing flag is true when the refreshWidgets method is triggered, meaning
+    // the widget will be removed, then immediately reapplied
   }
 });</pre>
 	</div>
