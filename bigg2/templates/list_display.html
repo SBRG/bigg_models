@@ -52,7 +52,7 @@
 			      {% for values in results[type] %}
 			        <tr class ='rowlink'>  
 			          <td><a href="/models/{{values['bigg_id']}}">{{values['bigg_id']}}</a></td>
-			          <td>{{values['organism']}}</td>
+			          <td>{% if values['organism'] is none %}-{% else %}{{values['organism']}}{% endif %}</td>
 			          <td><a href="/models/{{values['bigg_id']}}/metabolites">{{values['metabolite_count']}}</a></td>
 			          <td><a href="/models/{{values['bigg_id']}}/reactions">{{values['reaction_count']}}</a></td>
 			          <td><a href="/models/{{values['bigg_id']}}/genes">{{values['gene_count']}}</a></td>
@@ -84,7 +84,7 @@
 			              <a href="/models/{{values['model_bigg_id']}}/{{type}}/{{values['bigg_id']}}">{{values['bigg_id']}}</a>
                         {% endif %}
                       </td>
-                      <td>{{values['name']}}</td>
+					  <td>{% if values['name'] is not none %}{{values['name']}}{% endif %}</td>
                       <td>
                         {% if values['model_bigg_id'] == 'universal' %}
                           Universal
@@ -93,7 +93,7 @@
                         {% endif %}
                       </td>
                       <td>
-                        {% if values['model_bigg_id'] == 'universal' %}
+                        {% if values['model_bigg_id'] == 'universal' or values['organism'] is none %}
                           <center>-</center>
                         {% else %}
                           {{values['organism']}}

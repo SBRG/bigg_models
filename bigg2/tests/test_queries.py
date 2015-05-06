@@ -1,4 +1,5 @@
 from bigg2.queries import *
+from bigg2.queries import _shorten_name
 
 from ome import base
 
@@ -18,6 +19,10 @@ def session(request):
 
     return base.Session()
 
+# util
+def test__shorten_name():
+    assert _shorten_name(None) is None
+    assert _shorten_name('abc', 2) == 'ab...'
 
 # Reactions
 def test_get_reaction_and_models(session):

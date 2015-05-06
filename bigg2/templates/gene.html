@@ -8,16 +8,26 @@
       <hr>
 
       <h4>Descriptive name: </h4>
-      <p>{{name}}</p>
+      <p>{% if name is not none %}{{name}}{% endif %}</p>
       
       <h4>Model: </h4>
       <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
       
-      <h4>Position: </h4>
-      <p>Left: {{leftpos}} — Right: {{rightpos}}</p>
+	  {% if mapped_to_genbank %}
+		<h4>Position: </h4>
+		<p>Left: {{leftpos}} – Right: {{rightpos}}</p>
 
-      <h4>Description: </h4>
-      <p>{{info}}</p>
+		<h4>Strand: </h4>
+		<p>{% if strand == '-' %}Minus{% elif strand == '+' %}Plus{% endif %}</p>
+
+		{% if chromosome_ncbi_id is not none and genome_bioproject_id is not none %}
+			<h4>Chromosome: </h4>
+			<p><a href="/genomes/{{genome_bioproject_id}}">{{chromosome_ncbi_id}}</a></p>
+		{% endif %}
+	  {% else %}
+		<h4>Chromosome: </h4>
+		<p>Gene is not mapped to a genome annotation.</p>
+	  {% endif %}
 
       <h4> Associated reactions: </h4>
       <div class="panel panel-default">

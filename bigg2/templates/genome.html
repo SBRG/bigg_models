@@ -37,7 +37,12 @@
 	  </thead>
 	  <tbody>
   	    {% for chromosome in chromosomes %}
-          <tr><td>{{chromosome}}</td></tr>
+			<tr><td>
+				<a href="http://www.ncbi.nlm.nih.gov/nuccore/{{chromosome}}">
+					{{chromosome}}
+					<span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
+				</a>
+			</td></tr>
   	    {% endfor %}
 	  </tbody>
   	</table>

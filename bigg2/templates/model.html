@@ -6,11 +6,19 @@
     <div class="col-lg-8">
       <h1><span class="light">Model: </span>{{bigg_id}}</h1>
       <hr>
-      <h4>Organism: </h4>
-      <p>{{organism}}</p>
+	  {% if organism is not none %}
+		  <h4>Organism: </h4>
+		  <p>{{organism}}</p>
+	  {% endif %}
 
       <h4>Genome: </h4>
-      <p><a href="/genomes/{{genome}}">{{genome}}</a></p>
+      <p>
+		  {% if genome is none %}
+			  Model is not mapped to a genome annotation.
+		  {% else %}
+			  <a href="/genomes/{{genome}}">{{genome}}</a>
+		  {% endif %}
+	  </p>
 
       <h4>Model metrics: </h4>
       <div class="panel panel-default">

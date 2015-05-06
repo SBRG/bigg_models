@@ -242,6 +242,32 @@ def test_models_for_bigg_style_ids(session):
     assert all(has_pyr.values())
 
 
+def test_formulas_for_metabolites(session):
+    """Make sure all metabolites have formulas."""
+    # check for components with no formula
+    res = session.query(Metabolite).all()
+    metabolites_without_formula = {x.bigg_id: x.formula for x in res
+                                   if x.formula is None or x.formula.strip() == ''}
+    # succoa should definitely have a formula
+    assert 'succoa' not in metabolites_without_formula.keys()
+    # this number will not be zero
+    assert len(metabolites_without_formula) < 647
+
+
+def test_leading_underscores(session):
+    """Make sure metabolites and reactions do not have leading underscores."""
+    res = (session
+           .query(Metabolite)
+           .filter(Metabolite.bigg_id.like('_%'))
+           .all())
+    assert len(res) == 0
+    res = (session
+           .query(Reaction)
+           .filter(Reaction.bigg_id.like('_%'))
+           .all())
+    assert len(res) == 0
+
+
 if __name__ == "__main__":
     if len(sys.argv) == 4:
         if str(sys.argv[1]) == 'models':
