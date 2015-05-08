@@ -6,52 +6,61 @@
     <div class="col-lg-8">
       <h1><span class="light">Model: </span>{{bigg_id}}</h1>
       <hr>
-	  {% if organism is not none %}
-		  <h4>Organism: </h4>
-		  <p>{{organism}}</p>
-	  {% endif %}
+			{% if organism is not none %}
+				<h4>Organism: </h4>
+				<p>{{organism}}</p>
+			{% endif %}
 
       <h4>Genome: </h4>
       <p>
-		  {% if genome is none %}
-			  Model is not mapped to a genome annotation.
-		  {% else %}
-			  <a href="/genomes/{{genome}}">{{genome}}</a>
-		  {% endif %}
-	  </p>
+				{% if genome is none %}
+					Model is not mapped to a genome annotation.
+				{% else %}
+					<a href="/genomes/{{genome}}">{{genome}}</a>
+				{% endif %}
+			</p>
 
       <h4>Model metrics: </h4>
       <div class="panel panel-default">
-  	    <table class="table table-hover">
-	      <thead>
-  	        <tr>
-	          <th>Component</th>
-	          <th>Count</th>
-	        </tr>
-	      </thead>
-	      <tbody>
-	        <tr class="clickable-row" href="/models/{{bigg_id}}/metabolites">
-	          <td>Metabolites</td><td>{{metabolite_count}}</td>
-	        </tr>
-	        <tr class="clickable-row" href="/models/{{bigg_id}}/reactions">
-	          <td>Reactions</td><td>{{reaction_count}}</td>
-	        </tr>
-	        <tr class="clickable-row" href="/models/{{bigg_id}}/genes">
-	          <td>Genes</td><td>{{gene_count}}</td>
-	        </tr>
-	      </tbody>
-  	    </table>
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th>Component</th>
+							<th>Count</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="clickable-row" href="/models/{{bigg_id}}/metabolites">
+							<td>Metabolites</td><td>{{metabolite_count}}</td>
+						</tr>
+						<tr class="clickable-row" href="/models/{{bigg_id}}/reactions">
+							<td>Reactions</td><td>{{reaction_count}}</td>
+						</tr>
+						<tr class="clickable-row" href="/models/{{bigg_id}}/genes">
+							<td>Genes</td><td>{{gene_count}}</td>
+						</tr>
+					</tbody>
+				</table>
       </div>
 
       <h4>Download as SBML:</h4>
       Database model: <a href="/static/model_dumps/{{bigg_id}}.xml" download="{{bigg_id}}.xml">{{bigg_id}}.xml</a><br>
       Published model: <a href="/static/published_models/{{bigg_id}}_published.xml" download="{{bigg_id}}.xml">
-	    {{bigg_id}}.xml
+				{{bigg_id}}.xml
       </a>
+
+      {% if escher_maps|count > 0 %}
+				{% include 'escher_div.html' %}
+      {% endif %}
 
       {% include 'comments.html' %}
 
     </div>
 
   </div>
-{% endblock %}	
+
+  {% if escher_maps|count > 0 %}
+    {% set escher_script_type = 'model' %}
+    {% include 'escher_script.html' %}
+  {% endif %}
+{% endblock %}

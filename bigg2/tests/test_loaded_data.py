@@ -99,7 +99,7 @@ def test_sbml_input_output(session):
     try_one = True
 
     published_models = {}
-    with open(settings.model_genome_file, 'r') as f:
+    with open(settings.model_genome, 'r') as f:
         for line in f.readlines():
             model_file = join(settings.data_directory, 'models', line.split(',')[0])
             try:
@@ -206,8 +206,8 @@ def test_dad_2(session):
               .filter(Reaction.bigg_id == 'DADA')
               .filter(Component.bigg_id.like('dad_%2'))
               .all())
-    session.close()
     assert len(res_db) == 1
+    session.close()
 
 
 def test_reaction_matrix(session):
@@ -258,12 +258,12 @@ def test_leading_underscores(session):
     """Make sure metabolites and reactions do not have leading underscores."""
     res = (session
            .query(Metabolite)
-           .filter(Metabolite.bigg_id.like('_%'))
+           .filter(Metabolite.bigg_id.like('\_%'))
            .all())
     assert len(res) == 0
     res = (session
            .query(Reaction)
-           .filter(Reaction.bigg_id.like('_%'))
+           .filter(Reaction.bigg_id.like('\_%'))
            .all())
     assert len(res) == 0
 

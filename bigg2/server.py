@@ -220,7 +220,7 @@ class UniversalReactionDisplayHandler(BaseHandler):
         template = env.get_template("universal_reaction.html")
         http_client = AsyncHTTPClient()
         url_request = ('http://localhost:%d/api/%s/models/universal/reactions/%s' %
-                       (options.port, api_v, reaction_bigg_id))
+                       (options.port, api_v, url_escape(reaction_bigg_id, plus=False)))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -288,7 +288,7 @@ class UniversalMetaboliteDisplayHandler(BaseHandler):
         template = env.get_template("universal_metabolite.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/universal/metabolites/%s' % \
-                      (options.port, api_v, met_bigg_id)
+                      (options.port, api_v, url_escape(met_bigg_id, plus=False))
         response = yield gen.Task(http_client.fetch, url_request)
         if response.error:
             raise HTTPError(404)
@@ -317,7 +317,7 @@ class ReactionListDisplayHandler(BaseHandler):
         template = env.get_template("list_display.html")
         http_client = AsyncHTTPClient()
         url_request = ('http://localhost:%d/api/%s/models/%s/reactions' %
-                       (options.port, api_v, model_bigg_id))
+                       (options.port, api_v, url_escape(model_bigg_id, plus=False)))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -351,11 +351,13 @@ class ReactionHandler(BaseHandler):
 class ReactionDisplayHandler(BaseHandler):
     @asynchronous
     @gen.coroutine
-    def get(self, modelName, reactionName):
+    def get(self, model_bigg_id, reaction_bigg_id):
         template = env.get_template("reaction.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s/reactions/%s' % \
-                      (options.port, api_v, modelName, reactionName)
+                      (options.port, api_v,
+                       url_escape(model_bigg_id, plus=False),
+                       url_escape(reaction_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -425,7 +427,9 @@ class CompartmentDisplayHandler(BaseHandler):
     def get(self, compartment_bigg_id):
         template = env.get_template("compartment.html")
         http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/compartments/%s' % (options.port, api_v, compartment_bigg_id)
+        url_request = 'http://localhost:%d/api/%s/compartments/%s' % \
+                      (options.port, api_v,
+                       url_escape(compartment_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -487,7 +491,8 @@ class GenomeDisplayHandler(BaseHandler):
     def get(self, bioproject_id):
         template = env.get_template("genome.html")
         http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/genomes/%s' % (options.port, api_v, bioproject_id)
+        url_request = 'http://localhost:%d/api/%s/genomes/%s' % \
+                      (options.port, api_v, url_escape(bioproject_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -547,11 +552,12 @@ class ModelHandler(BaseHandler):
 class ModelDisplayHandler(BaseHandler):
     @asynchronous
     @gen.coroutine
-    def get(self, modelName):
+    def get(self, model_bigg_id):
         template = env.get_template("model.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s' % \
-                      (options.port, api_v, modelName)
+                      (options.port, api_v, url_escape(model_bigg_id, plus=False))
+        print url_request
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -579,11 +585,11 @@ class MetaboliteListHandler(BaseHandler):
 class MetabolitesListDisplayHandler(BaseHandler):
     @asynchronous
     @gen.coroutine
-    def get(self, modelName):
+    def get(self, model_bigg_id):
         template = env.get_template("list_display.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s/metabolites' % \
-                      (options.port, api_v, modelName)
+                      (options.port, api_v, url_escape(model_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -617,7 +623,9 @@ class MetaboliteDisplayHandler(BaseHandler):
         template = env.get_template("metabolite.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s/metabolites/%s' % \
-                      (options.port, api_v, model_id, met_bigg_id)
+                      (options.port, api_v,
+                       url_escape(model_id, plus=False),
+                       url_escape(met_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -649,7 +657,7 @@ class GeneListDisplayHandler(BaseHandler):
         template = env.get_template("list_display.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s/genes' % \
-                      (options.port, api_v, model_bigg_id)
+                      (options.port, api_v, url_escape(model_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -678,11 +686,13 @@ class GeneHandler(BaseHandler):
 class GeneDisplayHandler(BaseHandler):
     @asynchronous
     @gen.coroutine
-    def get(self, modelName, geneId):
+    def get(self, model_bigg_id, gene_bigg_id):
         template = env.get_template("gene.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s/genes/%s' % \
-                      (options.port, api_v, modelName, geneId)
+                      (options.port, api_v,
+                       url_escape(model_bigg_id, plus=False),
+                       url_escape(gene_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)

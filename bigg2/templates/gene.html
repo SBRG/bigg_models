@@ -22,7 +22,7 @@
 
 		{% if chromosome_ncbi_id is not none and genome_bioproject_id is not none %}
 			<h4>Chromosome: </h4>
-			<p><a href="/genomes/{{genome_bioproject_id}}">{{chromosome_ncbi_id}}</a></p>
+			<p><a href="/genomes/{{genome_bioproject_id}}#{{chromosome_ncbi_id}}">{{chromosome_ncbi_id}}</a></p>
 		{% endif %}
 	  {% else %}
 		<h4>Chromosome: </h4>

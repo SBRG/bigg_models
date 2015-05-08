@@ -173,12 +173,14 @@ def get_model_and_counts(model_bigg_id, session):
                 .outerjoin(Genome, Genome.id == Model.genome_id)
                 .filter(Model.bigg_id == model_bigg_id)
                 .first())
+    escher_maps = get_escher_maps_for_model(model_db[0].id, session)
     return_dict = {'bigg_id': model_db[0].bigg_id,
                    'organism': getattr(model_db[2], 'organism', None),
                    'genome': getattr(model_db[2], 'bioproject_id', None),
                    'metabolite_count': model_db[1].metabolite_count,
                    'reaction_count': model_db[1].reaction_count,
-                   'gene_count': model_db[1].gene_count}
+                   'gene_count': model_db[1].gene_count,
+                   'escher_maps': escher_maps}
     return return_dict
         
 # Metabolites
@@ -495,6 +497,13 @@ def build_reaction_string(metabolitelist, lower_bound, upper_bound):
     return reaction_string
     
 # Escher maps
+def get_escher_maps_for_model(model_id, session):
+    result_db = (session
+                 .query(EscherMap)
+                 .filter(EscherMap.model_id == model_id)
+                 .all())
+    return [{'map_name': x.map_name, 'element_id': None} for x in result_db]
+
 def get_escher_maps_for_reaction(reaction_bigg_id, model_bigg_id, session):
     result_db = (session
                  .query(EscherMap.map_name, EscherMapMatrix.escher_map_element_id)

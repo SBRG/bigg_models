@@ -13,39 +13,39 @@
   
   <h4>Models with this genome:</h4>
   <div class="panel panel-default">
-  	<table class="table table-hover">
-	  <thead>
-  	    <tr>
-	      <th>BiGG ID</th>
-	    </tr>
-	  </thead>
-	  <tbody>
-  	    {% for model in models %}
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>BiGG ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for model in models %}
           <tr class="clickable-row" href="/models/{{model}}"><td>{{model}}</td></tr>
-  	    {% endfor %}
-	  </tbody>
-  	</table>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 
   <h4>Chromosomes:</h4>
   <div class="panel panel-default">
-  	<table class="table table-hover">
-	  <thead>
-  	    <tr>
-	      <th>NCBI ID</th>
-	    </tr>
-	  </thead>
-	  <tbody>
-  	    {% for chromosome in chromosomes %}
-			<tr><td>
-				<a href="http://www.ncbi.nlm.nih.gov/nuccore/{{chromosome}}">
-					{{chromosome}}
-					<span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
-				</a>
-			</td></tr>
-  	    {% endfor %}
-	  </tbody>
-  	</table>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>NCBI ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for chromosome in chromosomes %}
+          <tr><td id="{{chromosome}}">
+            <a href="http://www.ncbi.nlm.nih.gov/nuccore/{{chromosome}}">
+              {{chromosome}}
+              <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
+            </a>
+          </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 
-{% endblock %}	
+{% endblock %}
