@@ -7,3 +7,4 @@ gurobi.log
 BiGG_2.egg-info/
 docs/schema/
 crontab.txt
+bigg2/static/model_dumps/

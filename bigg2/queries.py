@@ -4,6 +4,9 @@ from ome.loading.model_loading import parse
 from sqlalchemy import func
 from sqlalchemy import desc, func, or_, and_
 from collections import defaultdict
+from os.path import abspath, dirname, join
+
+root_directory = abspath(dirname(__file__))
 
 class NotFoundError(Exception):
     pass
@@ -175,6 +178,7 @@ def get_model_and_counts(model_bigg_id, session):
                 .first())
     escher_maps = get_escher_maps_for_model(model_db[0].id, session)
     return_dict = {'bigg_id': model_db[0].bigg_id,
+                   'published_filename': model_db[0].published_filename,
                    'organism': getattr(model_db[2], 'organism', None),
                    'genome': getattr(model_db[2], 'bioproject_id', None),
                    'metabolite_count': model_db[1].metabolite_count,
@@ -183,6 +187,18 @@ def get_model_and_counts(model_bigg_id, session):
                    'escher_maps': escher_maps}
     return return_dict
         
+
+def get_model_json_string(model_bigg_id):
+    path = join(root_directory, 'static', 'model_dumps',
+                model_bigg_id + '.json')
+    try:
+        with open(path, 'r') as f:
+            data = f.read()
+    except IOError as e:
+        raise NotFoundError(e.message)
+    return data
+
+
 # Metabolites
 def get_metabolites_for_model(model_bigg_id, session):
     result_db = (session
@@ -463,7 +479,7 @@ def get_metabolites_for_database_id(session, query, database_source):
                  .filter(LinkOut.external_source == database_source)
                  .filter(LinkOut.external_id == query.strip())
                  .all())
-    return [{'bigg_id': x[0], 'model_bigg_id': 'universal', 'name': model(x[1])}
+    return [{'bigg_id': x[0], 'model_bigg_id': 'universal', 'name': x[1]}
             for x in result_db]
 
 

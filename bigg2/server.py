@@ -84,10 +84,12 @@ def get_application():
         #
         (r'/api/%s/models/?$' % api_v, ModelListHandler),
         (r'/models/?$', ModelsListDisplayHandler),
-        # 
+        #
         (r'/api/%s/models/([^/]+)/?$' % api_v, ModelHandler),
         (r'/models/([^/]+)/?$', ModelDisplayHandler),
         # 
+        (r'/(?:api/%s/)?models/([^/]+)/download/?$' % api_v, ModelDownloadHandler),
+        #
         (r'/api/%s/models/([^/]+)/reactions/([^/]+)/?$' % api_v, ReactionHandler),
         (r'/models/([^/]+)/reactions/([^/]+)/?$', ReactionDisplayHandler),
         # 
@@ -122,19 +124,20 @@ def get_application():
         (r'/submiterror$', SubmitErrorHandler),
         #
         # Pages
-        (r'/sbml$', DownloadPageHandler),
         (r'/web_api$', WebAPIHandler),
+        (r'/license$', LicenseHandler),
         #
         # Static/Download
-        (r'/download/(.*)$', DownloadHandler, {'path': join(directory, 'download')}),
         (r'/static/(.*)$', StaticFileHandler, {'path': join(directory, 'static')})
     ], debug=True)
 
 def run(public=True):
     """Run the server"""
 
+    # make sure the indices are ready
     print('Creating pg_trgm extension and indices')
-    os.system('psql -d %s -f %s' % (settings.postgres_database, join( directory, 'setup.sql')))
+    os.system('psql -d %s -f %s' % (settings.postgres_database, join(directory, 'setup.sql')))
+
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(get_application())
     print('serving BiGG 2 on port %d' % options.port)
@@ -535,7 +538,15 @@ class ModelsListDisplayHandler(BaseHandler):
         self.write(template.render(template_data)) 
         self.set_header('Content-type','text/html')
         self.finish()
-     
+
+
+class ModelDownloadHandler(BaseHandler):
+    def get(self, model_bigg_id):
+        data = queries.get_model_json_string(model_bigg_id)
+        self.write(data)
+        self.set_header('Content-type', 'application/json')
+        self.finish()
+
 
 class ModelHandler(BaseHandler):
     def get(self, model_bigg_id):
@@ -871,6 +882,7 @@ class EscherMapJSONHandler(BaseHandler):
         self.set_header('Content-type', 'application/json')
         self.finish()
 
+
 class SubmitErrorHandler(BaseHandler):
     def post(self):
         session = Session()
@@ -883,19 +895,7 @@ class SubmitErrorHandler(BaseHandler):
         session.commit()
         session.close()
              
-class DownloadPageHandler(BaseHandler):
-    def get(self):
-        template = env.get_template('download.html')
-        input = self.get_argument("query")
-        model = sbmlio.createSBML(input)
-        #currently not implemented. Need script to convert database to coprapy object
-        #and then to sbml
-        dictionary = {"xml":model.id + ".xml"} 
-        self.write(template.render(dictionary))
-        self.set_header('Content-type','text/html')
-        self.finish()
-        
-  
+
 class WebAPIHandler(BaseHandler):
     def get(self):
         template = env.get_template('web_api.html')
@@ -904,14 +904,12 @@ class WebAPIHandler(BaseHandler):
         self.finish()
 
 
-class DownloadHandler(tornado.web.StaticFileHandler):
-    def post(self, path, include_body=True):
-        # your code from above, or anything else custom you want to do
-        self.set_header('Content-Type','text/xml')  
-        self.set_header('Accept-Ranges', 'bytes')  
-        self.set_header('Content-Encoding', 'none')  
-        self.set_header('Content-Disposition','attachment')
-        super(StaticFileHandler, self).get(path, include_body) 
+class LicenseHandler(BaseHandler):
+    def get(self):
+        template = env.get_template('about_license_page.html')
+        self.write(template.render())
+        self.set_header('Content-type','text/html')
+        self.finish()
 
 
 if __name__ == "__main__":

@@ -82,6 +82,12 @@ def test_get_model_and_counts():
     assert type(result['gene_count']) is int
     session.close()
 
+
+def test_get_model_json_string():
+    with pytest.raises(NotFoundError):
+        get_model_json_string('R2D2')
+
+
 def test_get_model_list():
     session = base.Session()
     result = get_model_list(session)

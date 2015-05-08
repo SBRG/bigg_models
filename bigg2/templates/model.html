@@ -43,11 +43,23 @@
 				</table>
       </div>
 
-      <h4>Download as SBML:</h4>
-      Database model: <a href="/static/model_dumps/{{bigg_id}}.xml" download="{{bigg_id}}.xml">{{bigg_id}}.xml</a><br>
-      Published model: <a href="/static/published_models/{{bigg_id}}_published.xml" download="{{bigg_id}}.xml">
-				{{bigg_id}}.xml
+      <h4>Download COBRA model:</h4>
+			BiGG Database model (JSON):
+			<a href="/static/model_dumps/{{bigg_id}}.json" download="{{bigg_id}}.json">
+				{{bigg_id}}.json
       </a>
+			<br/>
+			BiGG Database model (SBML):
+			<a href="/static/model_dumps/{{bigg_id}}.xml" download="{{bigg_id}}.xml">
+				{{bigg_id}}.xml
+			</a>
+			<br/>
+			{% if published_filename is not none %}
+				Original, published model:
+				<a href="/static/published_models/{{published_filename}}" download="{{published_filename}}">
+					{{published_filename}}
+				</a>
+			{% endif %}
 
       {% if escher_maps|count > 0 %}
 				{% include 'escher_div.html' %}
