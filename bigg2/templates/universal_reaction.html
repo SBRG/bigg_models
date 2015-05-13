@@ -20,8 +20,7 @@
       {% include "pseudoreaction_question.html" %}
       <hr/>
       <h4>Descriptive name:</h4> 
-      <p>{{name}}</p>
-      <br/>
+	  <p>{% if name is not none %}{{name}}{% endif %}</p>
 
       <h4>Metabolites:</h4>
       <div class="panel panel-default">
@@ -62,7 +61,7 @@
 	      <tbody>
   	        {% for model in models_containing_reaction %}
   	          <tr class="clickable-row" href="/models/{{model['bigg_id']}}/reactions/{{bigg_id}}">
-		        <td>{{model['organism']}}</td>
+				<td>{% if model['organism'] is none %}-{% else %}{{model['organism']}}{% endif %}</td>
   		        <td>{{model['bigg_id']}}</td>
   	          </tr>
   	        {% endfor %}

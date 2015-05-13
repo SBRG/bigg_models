@@ -7,10 +7,11 @@ from sqlalchemy.orm import sessionmaker, aliased
 from sqlalchemy import create_engine, desc, func, or_
 import pytest
 import sys
-from cobra.io import read_sbml_model
+from cobra.io import read_sbml_model, load_matlab_model, load_json_model
 import pytest
 import numpy
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, exists
+from os import listdir
 from numpy.testing import assert_almost_equal
 from decimal import Decimal
 
@@ -19,6 +20,7 @@ from ome.base import Session
 from ome import settings
 from ome.dumping.model_dumping import dump_model
 from ome.loading.model_loading.parse import convert_ids
+from bigg2.server import directory as bigg_root_directory
 
 
 def sharedReactions(model1, model2):
@@ -99,55 +101,69 @@ def test_sbml_input_output(session):
     try_one = True
 
     published_models = {}
-    with open(settings.model_genome_file, 'r') as f:
+    with open(settings.model_genome, 'r') as f:
         for line in f.readlines():
             model_file = join(settings.data_directory, 'models', line.split(',')[0])
             try:
                 print('Loading %s' % model_file)
-                model = read_sbml_model(model_file)
+                if model_file.endswith('.xml'):
+                    model = read_sbml_model(model_file)
+                elif model_file.endswith('.mat'):
+                    model = load_matlab_model(model_file)
+                else:
+                    print('Bad model file {}'.format(model_file))
             except IOError:
                 print('Could not find model file %s' % model_file)
                 continue
             published_models[model.id] = model
             if try_one:
                 break
-                
-    if try_one:
-        model_db = (session
-                    .query(Model)
-                    .filter(Model.bigg_id==published_models.keys()[0])
-                    .all())
-    else:
-        model_db = (session
-                    .query(Model)
-                    .all())
-    for model in model_db:
-        try:
-            published_model = published_models[model.bigg_id]
-        except KeyError:
-            print('Could not find published model for database model %s' % model.bigg_id)
+
+    if not settings.model_dump_directory:
+        raise Exception('Cannot test models unless they are in settings.model_dump_directory')
+
+    errors = []
+    for model_file in listdir(settings.model_dump_directory):
+        if try_one and not model_file.startswith(published_models.iterkeys().next().split('.')[0]):
             continue
 
-        print('Testing %s' % model.bigg_id)
+        print errors
+        print('Testing {}'.format(model_file))
 
-        database_model = dump_model(model.bigg_id)
+        model_path = join(settings.model_dump_directory, model_file)
+        if model_path.endswith('.xml'):
+            model = read_sbml_model(model_path)
+        elif model_path.endswith('.json'):
+            model = load_json_model(model_path)
+        else:
+            errors.append('Bad model file {}'.format(model_path))
+            continue
 
-        assert len(database_model.reactions) == len(published_model.reactions)
-        assert len(database_model.metabolites) == len(published_model.metabolites)
-        assert len(database_model.genes) == len(published_model.genes)
+        try:
+            published_model = published_models[model.id]
+        except KeyError:
+            errors.append('Could not find published model for database model %s' % model.id)
+            continue
 
-        # check reaction coefficients for GLCtex
-        published_model_converted, _ = convert_ids(published_model.copy(), 'cobrapy')
-        if 'GLCtex' in published_model_converted.reactions and 'GLCtex_copy1' in database_model.reactions:
-            print 'Testing GLCtex'
-            r1 = published_model_converted.reactions.get_by_id('GLCtex')
-            r2 = database_model.reactions.get_by_id('GLCtex_copy1')
-            for met in r1.metabolites:
-                assert (r1.metabolites[published_model_converted.metabolites.get_by_id(met.id)] ==
-                        r2.metabolites[database_model.metabolites.get_by_id(met.id)])
-                
-        solution1 = database_model.optimize()
+        if len(model.reactions) != len(published_model.reactions):
+            errors.append('{} reactions counts do not match: database {} published {}'
+                          .format(model_file, len(model.reactions), len(published_model.reactions)))
+        if len(model.metabolites) != len(published_model.metabolites):
+            errors.append('{} metabolites counts do not match: database {} published {}'
+                          .format(model_file, len(model.metabolites), len(published_model.metabolites)))
+        if len(model.genes) != len(published_model.genes):
+            errors.append('{} genes counts do not match: database {} published {}'
+                          .format(model_file, len(model.genes), len(published_model.genes)))
+
+        solution1 = model.optimize()
         solution2 = published_model.optimize()
+        diff = abs(solution1.f - solution2.f)
+        if diff >= 1e-5:
+            errors.append('{} solutions do not match: database {:.5f} published {:.5f}'
+                          .format(model_file, solution1.f, solution2.f))
+
+    assert len(errors) == 0
+
         # for k, v in sorted(solution1.x_dict.items(), key=lambda x: abs(x[1])):
         #     if k in solution2.x_dict:
         #         print k, solution1.x_dict[k], solution2.x_dict[k]
@@ -177,7 +193,6 @@ def test_sbml_input_output(session):
         #                                              r_p.lower_bound, r_p.upper_bound)
         #         print
 
-        assert_almost_equal(solution1.f, solution2.f, decimal=5)
 
 def test_dad_2(session):
     """Tests for a bug that occurs with dad__2_c vs. dad_2_c. Fails if you load
@@ -206,8 +221,8 @@ def test_dad_2(session):
               .filter(Reaction.bigg_id == 'DADA')
               .filter(Component.bigg_id.like('dad_%2'))
               .all())
-    session.close()
     assert len(res_db) == 1
+    session.close()
 
 
 def test_reaction_matrix(session):
@@ -240,6 +255,38 @@ def test_models_for_bigg_style_ids(session):
         has_pyr[model.bigg_id] = (mcc is not None)
     print 'No pyr: %s' % ', '.join([k for k, v in has_pyr.iteritems() if not v])
     assert all(has_pyr.values())
+
+
+def test_formulas_for_metabolites(session):
+    """Make sure all metabolites have formulas."""
+    # check for components with no formula
+    res = session.query(Metabolite).all()
+    metabolites_without_formula = {x.bigg_id: x.formula for x in res
+                                   if x.formula is None or x.formula.strip() == ''}
+    # succoa should definitely have a formula
+    assert 'succoa' not in metabolites_without_formula.keys()
+    # this number will not be zero
+    assert len(metabolites_without_formula) < 647
+
+
+def test_leading_underscores(session):
+    """Make sure metabolites and reactions do not have leading underscores."""
+    res = (session
+           .query(Metabolite)
+           .filter(Metabolite.bigg_id.like('\_%'))
+           .all())
+    assert len(res) == 0
+    res = (session
+           .query(Reaction)
+           .filter(Reaction.bigg_id.like('\_%'))
+           .all())
+    assert len(res) == 0
+
+
+def test_model_dump_directory():
+    assert exists(join(bigg_root_directory, 'static', 'model_dumps', 'iJO1366.xml'))
+    assert exists(join(bigg_root_directory, 'static', 'model_dumps', 'iJO1366.json'))
+    assert exists(join(bigg_root_directory, 'static', 'published_models', 'iJO1366.xml'))
 
 
 if __name__ == "__main__":

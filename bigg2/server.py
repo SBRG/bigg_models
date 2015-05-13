@@ -84,10 +84,12 @@ def get_application():
         #
         (r'/api/%s/models/?$' % api_v, ModelListHandler),
         (r'/models/?$', ModelsListDisplayHandler),
-        # 
+        #
         (r'/api/%s/models/([^/]+)/?$' % api_v, ModelHandler),
         (r'/models/([^/]+)/?$', ModelDisplayHandler),
         # 
+        (r'/(?:api/%s/)?models/([^/]+)/download/?$' % api_v, ModelDownloadHandler),
+        #
         (r'/api/%s/models/([^/]+)/reactions/([^/]+)/?$' % api_v, ReactionHandler),
         (r'/models/([^/]+)/reactions/([^/]+)/?$', ReactionDisplayHandler),
         # 
@@ -122,19 +124,20 @@ def get_application():
         (r'/submiterror$', SubmitErrorHandler),
         #
         # Pages
-        (r'/sbml$', DownloadPageHandler),
         (r'/web_api$', WebAPIHandler),
+        (r'/license$', LicenseHandler),
         #
         # Static/Download
-        (r'/download/(.*)$', DownloadHandler, {'path': join(directory, 'download')}),
         (r'/static/(.*)$', StaticFileHandler, {'path': join(directory, 'static')})
     ], debug=True)
 
 def run(public=True):
     """Run the server"""
 
+    # make sure the indices are ready
     print('Creating pg_trgm extension and indices')
-    os.system('psql -d %s -f %s' % (settings.postgres_database, join( directory, 'setup.sql')))
+    os.system('psql -d %s -f %s' % (settings.postgres_database, join(directory, 'setup.sql')))
+
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(get_application())
     print('serving BiGG 2 on port %d' % options.port)
@@ -220,7 +223,7 @@ class UniversalReactionDisplayHandler(BaseHandler):
         template = env.get_template("universal_reaction.html")
         http_client = AsyncHTTPClient()
         url_request = ('http://localhost:%d/api/%s/models/universal/reactions/%s' %
-                       (options.port, api_v, reaction_bigg_id))
+                       (options.port, api_v, url_escape(reaction_bigg_id, plus=False)))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -288,7 +291,7 @@ class UniversalMetaboliteDisplayHandler(BaseHandler):
         template = env.get_template("universal_metabolite.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/universal/metabolites/%s' % \
-                      (options.port, api_v, met_bigg_id)
+                      (options.port, api_v, url_escape(met_bigg_id, plus=False))
         response = yield gen.Task(http_client.fetch, url_request)
         if response.error:
             raise HTTPError(404)
@@ -317,7 +320,7 @@ class ReactionListDisplayHandler(BaseHandler):
         template = env.get_template("list_display.html")
         http_client = AsyncHTTPClient()
         url_request = ('http://localhost:%d/api/%s/models/%s/reactions' %
-                       (options.port, api_v, model_bigg_id))
+                       (options.port, api_v, url_escape(model_bigg_id, plus=False)))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -351,11 +354,13 @@ class ReactionHandler(BaseHandler):
 class ReactionDisplayHandler(BaseHandler):
     @asynchronous
     @gen.coroutine
-    def get(self, modelName, reactionName):
+    def get(self, model_bigg_id, reaction_bigg_id):
         template = env.get_template("reaction.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s/reactions/%s' % \
-                      (options.port, api_v, modelName, reactionName)
+                      (options.port, api_v,
+                       url_escape(model_bigg_id, plus=False),
+                       url_escape(reaction_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -425,7 +430,9 @@ class CompartmentDisplayHandler(BaseHandler):
     def get(self, compartment_bigg_id):
         template = env.get_template("compartment.html")
         http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/compartments/%s' % (options.port, api_v, compartment_bigg_id)
+        url_request = 'http://localhost:%d/api/%s/compartments/%s' % \
+                      (options.port, api_v,
+                       url_escape(compartment_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -487,7 +494,8 @@ class GenomeDisplayHandler(BaseHandler):
     def get(self, bioproject_id):
         template = env.get_template("genome.html")
         http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/genomes/%s' % (options.port, api_v, bioproject_id)
+        url_request = 'http://localhost:%d/api/%s/genomes/%s' % \
+                      (options.port, api_v, url_escape(bioproject_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -530,7 +538,15 @@ class ModelsListDisplayHandler(BaseHandler):
         self.write(template.render(template_data)) 
         self.set_header('Content-type','text/html')
         self.finish()
-     
+
+
+class ModelDownloadHandler(BaseHandler):
+    def get(self, model_bigg_id):
+        data = queries.get_model_json_string(model_bigg_id)
+        self.write(data)
+        self.set_header('Content-type', 'application/json')
+        self.finish()
+
 
 class ModelHandler(BaseHandler):
     def get(self, model_bigg_id):
@@ -547,11 +563,12 @@ class ModelHandler(BaseHandler):
 class ModelDisplayHandler(BaseHandler):
     @asynchronous
     @gen.coroutine
-    def get(self, modelName):
+    def get(self, model_bigg_id):
         template = env.get_template("model.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s' % \
-                      (options.port, api_v, modelName)
+                      (options.port, api_v, url_escape(model_bigg_id, plus=False))
+        print url_request
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -579,11 +596,11 @@ class MetaboliteListHandler(BaseHandler):
 class MetabolitesListDisplayHandler(BaseHandler):
     @asynchronous
     @gen.coroutine
-    def get(self, modelName):
+    def get(self, model_bigg_id):
         template = env.get_template("list_display.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s/metabolites' % \
-                      (options.port, api_v, modelName)
+                      (options.port, api_v, url_escape(model_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -617,7 +634,9 @@ class MetaboliteDisplayHandler(BaseHandler):
         template = env.get_template("metabolite.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s/metabolites/%s' % \
-                      (options.port, api_v, model_id, met_bigg_id)
+                      (options.port, api_v,
+                       url_escape(model_id, plus=False),
+                       url_escape(met_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -649,7 +668,7 @@ class GeneListDisplayHandler(BaseHandler):
         template = env.get_template("list_display.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s/genes' % \
-                      (options.port, api_v, model_bigg_id)
+                      (options.port, api_v, url_escape(model_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -678,11 +697,13 @@ class GeneHandler(BaseHandler):
 class GeneDisplayHandler(BaseHandler):
     @asynchronous
     @gen.coroutine
-    def get(self, modelName, geneId):
+    def get(self, model_bigg_id, gene_bigg_id):
         template = env.get_template("gene.html")
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s/genes/%s' % \
-                      (options.port, api_v, modelName, geneId)
+                      (options.port, api_v,
+                       url_escape(model_bigg_id, plus=False),
+                       url_escape(gene_bigg_id, plus=False))
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -861,6 +882,7 @@ class EscherMapJSONHandler(BaseHandler):
         self.set_header('Content-type', 'application/json')
         self.finish()
 
+
 class SubmitErrorHandler(BaseHandler):
     def post(self):
         session = Session()
@@ -873,19 +895,7 @@ class SubmitErrorHandler(BaseHandler):
         session.commit()
         session.close()
              
-class DownloadPageHandler(BaseHandler):
-    def get(self):
-        template = env.get_template('download.html')
-        input = self.get_argument("query")
-        model = sbmlio.createSBML(input)
-        #currently not implemented. Need script to convert database to coprapy object
-        #and then to sbml
-        dictionary = {"xml":model.id + ".xml"} 
-        self.write(template.render(dictionary))
-        self.set_header('Content-type','text/html')
-        self.finish()
-        
-  
+
 class WebAPIHandler(BaseHandler):
     def get(self):
         template = env.get_template('web_api.html')
@@ -894,14 +904,12 @@ class WebAPIHandler(BaseHandler):
         self.finish()
 
 
-class DownloadHandler(tornado.web.StaticFileHandler):
-    def post(self, path, include_body=True):
-        # your code from above, or anything else custom you want to do
-        self.set_header('Content-Type','text/xml')  
-        self.set_header('Accept-Ranges', 'bytes')  
-        self.set_header('Content-Encoding', 'none')  
-        self.set_header('Content-Disposition','attachment')
-        super(StaticFileHandler, self).get(path, include_body) 
+class LicenseHandler(BaseHandler):
+    def get(self):
+        template = env.get_template('about_license_page.html')
+        self.write(template.render())
+        self.set_header('Content-type','text/html')
+        self.finish()
 
 
 if __name__ == "__main__":

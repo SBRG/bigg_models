@@ -12,7 +12,7 @@
       <hr/>
 
       <h4>Descriptive name:</h4> 
-      <p>{{name}}</p>
+	  <p>{% if name is not none %}{{name}}{% endif %}</p>
       
       <h4>Formula:</h4>
       <p>{{formula}}</p>
@@ -32,9 +32,9 @@
 	  <tbody>
   	    {% for c in compartments_in_models %}
   	      <tr class="clickable-row" href="/models/{{c['model_bigg_id']}}/metabolites/{{bigg_id}}_{{c['bigg_id']}}">
-		<td>{{c['organism']}}</td>
-		<td>{{c['model_bigg_id']}}</td>
-		<td>{{bigg_id}}_{{c['bigg_id']}}</td>
+			  <td>{% if c['organism'] is none %}-{% else %}{{c['organism']}}{% endif %}</td>
+			  <td>{{c['model_bigg_id']}}</td>
+			  <td>{{bigg_id}}_{{c['bigg_id']}}</td>
   	      </tr>
   	    {% endfor %}
 	  </tbody>

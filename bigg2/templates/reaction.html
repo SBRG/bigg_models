@@ -13,7 +13,7 @@
       <hr/>
 
       <h4>Descriptive name: </h4>
-      <p>{{name}}</p>
+      <p>{% if name is not none %}{{name}}{% endif %}</p>
 
       <h4>Model: </h4>
       <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
@@ -57,10 +57,11 @@
         <h4>Gene Reaction Rule: </h4>
         <p>{{result['gene_reaction_rule']}}</p>
         
-        <h4>Gene IDs and names:</h4>
+        <h4>Genes:</h4>
         <p>
 	      {% for gene in result['genes'] %}
-	        <a href="/models/{{model_bigg_id}}/genes/{{gene['bigg_id']}}">{{gene['bigg_id']}}</a> ({{gene['name']}})<br>
+	          <a href="/models/{{model_bigg_id}}/genes/{{gene['bigg_id']}}">{{gene['bigg_id']}}</a>
+			  {% if gene['name'] is not none %}({{gene['name']}}){% endif %}<br>
 	      {% endfor %}
         </p>
 
