@@ -7,7 +7,14 @@
       {% include "pseudoreaction_question.html" %}
 
       {% if count > 1 %}
-        <h3>Reaction appears {{count}} times in {{model_bigg_id}}</h3>
+        <h3>
+					Reaction appears {{count}} times in {{model_bigg_id}}
+					{% with question_title='Reaction appears multiple times'%}
+						{% with question_text='This universal reaction appears multiple times in the model. However, the copies of the reaction may have differenct gene reaction rules and/or reaction bounds, so in the exported models they will be labeled as copies (e.g. ACALD_copy1 and ACALD_copy2).'%}
+							{% include 'question_mark.html' %}
+						{% endwith %}
+					{% endwith %}
+				</h3>
       {% endif %}
 
       <hr/>
@@ -77,12 +84,19 @@
     
     <div class="col-lg-4">
       <div class="well">
-        <h4>Universal reaction</h4>	
-	    <ul class="list-unstyled">
-	      <li>
-	        <a href="/universal/reactions/{{bigg_id}}">{{bigg_id}}</a>
-	      </li>
-	    </ul>
+        <h4>
+					Universal reaction
+					{% with question_title='Universal reaction'%}
+						{% with question_text='The BiGG Database has a list of universal reactions. Visit the universal reaction page to see all the models that contain this reaction.'%}
+							{% include 'question_mark.html' %}
+						{% endwith %}
+					{% endwith %}
+				</h4>	
+				<ul class="list-unstyled">
+					<li>
+						<a href="/universal/reactions/{{bigg_id}}">{{bigg_id}}</a>
+					</li>
+				</ul>
       </div>
       
       {% include 'database_links.html' %}

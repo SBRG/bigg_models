@@ -1,4 +1,5 @@
 from ome.models import *
+from ome.base import Publication, PublicationModel
 from ome.loading.model_loading import parse
 
 from sqlalchemy import func
@@ -171,11 +172,15 @@ def get_model_list(session):
 
 def get_model_and_counts(model_bigg_id, session):
     model_db = (session
-                .query(Model, ModelCount, Genome)
+                .query(Model, ModelCount, Genome, Publication.reference_type,
+                       Publication.reference_id)
                 .join(ModelCount, ModelCount.model_id == Model.id)
                 .outerjoin(Genome, Genome.id == Model.genome_id)
+                .outerjoin(PublicationModel, PublicationModel.model_id == Model.id)
+                .outerjoin(Publication, Publication.id == PublicationModel.publication_id)
                 .filter(Model.bigg_id == model_bigg_id)
                 .first())
+    print model_db
     escher_maps = get_escher_maps_for_model(model_db[0].id, session)
     return_dict = {'bigg_id': model_db[0].bigg_id,
                    'published_filename': model_db[0].published_filename,
@@ -184,6 +189,8 @@ def get_model_and_counts(model_bigg_id, session):
                    'metabolite_count': model_db[1].metabolite_count,
                    'reaction_count': model_db[1].reaction_count,
                    'gene_count': model_db[1].gene_count,
+                   'reference_type': model_db[3],
+                   'reference_id': model_db[4],
                    'escher_maps': escher_maps}
     return return_dict
         

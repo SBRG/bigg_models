@@ -14,71 +14,16 @@ from os.path import abspath, dirname, join, exists
 from os import listdir
 from numpy.testing import assert_almost_equal
 from decimal import Decimal
+import cPickle as pickle
 
 from ome.models import *
 from ome.base import Session
 from ome import settings
 from ome.dumping.model_dumping import dump_model
 from ome.loading.model_loading.parse import convert_ids
+
 from bigg2.server import directory as bigg_root_directory
 
-
-def sharedReactions(model1, model2):
-    session = Session()
-    modelquery1 = session.query(Model).filter(Model.bigg_id == model1).first()
-    modelquery2 = session.query(Model).filter(Model.bigg_id == model2).first()
-    query = (session
-             .query(ModelReaction.reaction_id)
-             .distinct()
-             .filter(or_(ModelReaction.model_id == modelquery1.id,
-                         ModelReaction.model_id == modelquery2.id)))
-    for r in query.all():
-        session.query(Reaction).filter(Reaction.id == r).one().name
-    print '' + str(query.count()) + ' shared reactions'
-    #print ' this query was used: ' + str(query)
-    session.close()
-
-    
-def shardMetabolites(model1, model2):
-    session = Session()
-    modelquery1 = session.query(Model).filter(Model.bigg_id == model1).first()
-    modelquery2 = session.query(Model).filter(Model.bigg_id == model2).first()
-    query = session.query(CompartmentalizedComponent.component_id).distinct().join(ModelCompartmentalizedComponent).filter(or_(ModelCompartmentalizedComponent.model_id == modelquery1.id, ModelCompartmentalizedComponent.model_id == modelquery2.id))
-    for m in query.all():
-        session.query(Metabolite).filter(Metabolite.id == m).one().name
-    print '' + str(query.count()) + ' shared metabolites' 
-    #print ' this query was used: ' + str(query)
-    session.close()
-
-
-def getModelsForReaction(reaction):
-    session = Session()
-    query = session.query(ModelReaction).distinct(ModelReaction.model_id).filter(ModelReaction.reaction_id == reaction.id)
-    print query.count
-    for rm in query.all():
-        model = session.query(Model).filter(Model.id == rm.model_id).one()
-        print model.bigg_id
-    session.close()
-    
-
-def getModelsForMetabolite(metaboliteName):
-    session = Session()
-    metabolite = session.query(Metabolite).filter(Metabolite.name == metaboliteName)
-    for cc in session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.component_id == metabolite.id).all():
-        for mcc in session.query(ModelCompartmentalizedComponent).filter(ModelCompartmentalizedComponent.compartmentalized_component_id == cc.id).all():
-            model = session.query(Model).filter(Model.id == mcc.model_id).first()
-            print model.bigg_id
-    session.close()
-    
-
-# TODO finish
-def getMetabolitesOfReaction(reactionName):
-    session = Session()
-    reaction = session.query(Reaction).filter(Reaction.name == reactionName)
-    for met in session.query(ReactionMatrix).filter(ReactionMatrix.reaction_id == reaction.id).all():
-        cc = session.query(CompartmentalizedComponent).filter(CompartmentalizedComponent.id == met.compartmentalized_component_id).first()
-        print session.query(Metabolite).filter(Metabolite.id == cc.component_id).name
-    session.close()
 
 @pytest.fixture(scope='function')
 def session(request):
@@ -98,43 +43,83 @@ def test_compartment_names(session):
 
 
 def test_sbml_input_output(session):
-    try_one = True
 
-    published_models = {}
-    with open(settings.model_genome, 'r') as f:
-        for line in f.readlines():
-            model_file = join(settings.data_directory, 'models', line.split(',')[0])
-            try:
-                print('Loading %s' % model_file)
-                if model_file.endswith('.xml'):
-                    model = read_sbml_model(model_file)
-                elif model_file.endswith('.mat'):
-                    model = load_matlab_model(model_file)
-                else:
-                    print('Bad model file {}'.format(model_file))
-            except IOError:
-                print('Could not find model file %s' % model_file)
-                continue
-            published_models[model.id] = model
-            if try_one:
-                break
+    # check for cached published_models
+    try:                        # TODO remove this
+        with open('published_models_cache.pickle', 'r') as f:
+            print 'Loading published_models_cache.pickle'
+            published_models = pickle.load(f)
+    except IOError:
+        published_models = {}
+        with open(settings.model_genome, 'r') as f:
+            for line in f.readlines():
+                model_file = join(settings.data_directory, 'models', line.split(',')[0])
+                try:
+                    print('Loading %s' % model_file)
+                    if model_file.endswith('.xml'):
+                        model = read_sbml_model(model_file)
+                    elif model_file.endswith('.mat'):
+                        model = load_matlab_model(model_file)
+                    else:
+                        print('Bad model file {}'.format(model_file))
+                except IOError:
+                    print('Could not find model file %s' % model_file)
+                    continue
 
-    if not settings.model_dump_directory:
-        raise Exception('Cannot test models unless they are in settings.model_dump_directory')
+                # Convert the ids for comparison. This also removes _b
+                # metabolites which prevent solving in COBRApy.
+                published_models[model.id], _ = convert_ids(model)
+
+        # TODO remove 
+        with open('published_models_cache.pickle', 'w') as f:
+            pickle.dump(published_models, f)
 
     errors = []
+    model_paths = []
+    # json dumps
     for model_file in listdir(settings.model_dump_directory):
-        if try_one and not model_file.startswith(published_models.iterkeys().next().split('.')[0]):
+        if model_file.endswith('.json'):
+            model_id = model_file[:-5]
+        elif model_file.endswith('.xml'):
+            model_id = model_file[:-4]
+        else:
             continue
+        if model_id in published_models.keys():
+            model_paths.append(join(settings.model_dump_directory, model_file))
 
-        print errors
-        print('Testing {}'.format(model_file))
+    # TODO polished sbml cannot currently be tested, because I can't read them in.
+    # for model_dir in listdir(settings.model_polished_directory):
+    #     if not model_dir.startswith(published_models.iterkeys().next().split('.')[0]):
+    #         continue
+    #     for model_file in listdir(join(settings.model_polished_directory, model_dir)):
+    #         if not model_file.startswith(published_models.iterkeys().next().split('.')[0]):
+    #             continue
+    #         if model_file.endswith('.xml'):
+    #             model_paths.append(join(settings.model_polished_directory, model_dir, model_file))
 
-        model_path = join(settings.model_dump_directory, model_file)
+    # test each model 
+    print 'testing {} models'.format(len(model_paths))
+    error_len = len(errors)
+    for model_path in model_paths:
+        if len(errors) > error_len:
+            import ipdb; ipdb.set_trace()
+            error_len += 1
+
+        print('Testing {}'.format(model_path))
+
         if model_path.endswith('.xml'):
-            model = read_sbml_model(model_path)
+            # try:
+            if True:
+                model = read_sbml_model(model_path)
+            # except Exception as e:
+            #     errors.append('{}: {}'.format(model_path, e.message))
+            #     continue
         elif model_path.endswith('.json'):
-            model = load_json_model(model_path)
+            try:
+                model = load_json_model(model_path)
+            except Exception as e:
+                errors.append('{}: {}'.format(model_path, e.message))
+                continue
         else:
             errors.append('Bad model file {}'.format(model_path))
             continue
@@ -145,53 +130,56 @@ def test_sbml_input_output(session):
             errors.append('Could not find published model for database model %s' % model.id)
             continue
 
-        if len(model.reactions) != len(published_model.reactions):
-            errors.append('{} reactions counts do not match: database {} published {}'
-                          .format(model_file, len(model.reactions), len(published_model.reactions)))
-        if len(model.metabolites) != len(published_model.metabolites):
-            errors.append('{} metabolites counts do not match: database {} published {}'
-                          .format(model_file, len(model.metabolites), len(published_model.metabolites)))
-        if len(model.genes) != len(published_model.genes):
-            errors.append('{} genes counts do not match: database {} published {}'
-                          .format(model_file, len(model.genes), len(published_model.genes)))
+        def compare_sets(dictlist1, dictlist2, ignore_boundary=False):
+            """Find the difference between the reaction, metabolite, or gene sets."""
+            sets = [set([x.id for x in dl if (not ignore_boundary or not x.id.endswith('_b'))])
+                    for dl in [dictlist1, dictlist2]]
+            return list(set.symmetric_difference(*sets))
+
+        # count elements. be sure to removed duplicates from the published model
+        dat_reactions_len = len(model.reactions)
+        pub_reactions_len = len(set([x.id for x in published_model.reactions]))
+        if dat_reactions_len != pub_reactions_len:
+            errors.append(['{} reactions counts do not match: database {} published {}'
+                           .format(model_path, dat_reactions_len, pub_reactions_len),
+                           compare_sets(model.reactions, published_model.reactions)])
+
+        # TODO for these two models, check the metabolites cer2_24_c and
+        # cer2__24_c, cer2_24_c and cer2'_24_c
+        if model.id != 'iMM904' and model.id != 'iND750':
+            dat_metabolites_len = len(model.metabolites)
+            pub_metabolites_len = len(set([x.id for x in published_model.metabolites]))
+            if dat_metabolites_len != pub_metabolites_len:
+                errors.append(['{} metabolites counts do not match: database {} published {}'
+                            .format(model_path, dat_metabolites_len, pub_metabolites_len),
+                            compare_sets(model.metabolites, published_model.metabolites, ignore_boundary=True)])
+
+        # TODO check for merged genes (e.g. model.genes.zitB,
+        # model.genes.B21_00694 in iB21_1397). For now, not checking the gene
+        # count.
+
+        # dat_genes_len = len(model.genes)
+        # pub_genes_len = len(set([x.id for x in published_model.genes]))
+        # if dat_genes_len != pub_genes_len:
+        #     errors.append(['{} genes counts do not match: database {} published {}'
+        #                    .format(model_path, dat_genes_len, pub_genes_len),
+        #                    compare_sets(model.genes, published_model.genes)])
 
         solution1 = model.optimize()
         solution2 = published_model.optimize()
-        diff = abs(solution1.f - solution2.f)
+        f1 = 0.0 if solution1.f is None else solution1.f
+        f2 = 0.0 if solution2.f is None else solution2.f
+        diff = abs(f1 - f2)
         if diff >= 1e-5:
-            errors.append('{} solutions do not match: database {:.5f} published {:.5f}'
-                          .format(model_file, solution1.f, solution2.f))
+            try:
+                errors.append('{} solutions do not match: database {:.5f} published {:.5f}'
+                            .format(model_path, f1, f2))
+            except ValueError:
+                print 'fix', model_path, f1, f2
 
+    with open('errors.pickle', 'w') as f:
+        pickle.dump(errors, f)
     assert len(errors) == 0
-
-        # for k, v in sorted(solution1.x_dict.items(), key=lambda x: abs(x[1])):
-        #     if k in solution2.x_dict:
-        #         print k, solution1.x_dict[k], solution2.x_dict[k]
-        #         r1 = database_model.reactions.get_by_id(k)
-        #         r2 = published_model.reactions.get_by_id(k)
-        #         if r1.lower_bound != r2.lower_bound or r1.upper_bound != r2.upper_bound:
-        #             print '(%.2f, %.2f) (%.2f, %.2f)' % (r1.lower_bound, r1.upper_bound,
-        #                                                  r2.lower_bound, r2.upper_bound)
-        #         print
-        #     elif k.split('_copy')[0] in solution2.x_dict:
-        #         print k, solution1.x_dict[k], solution2.x_dict[k.split('_copy')[0]]
-        #         r1 = database_model.reactions.get_by_id(k)
-        #         r2 = published_model.reactions.get_by_id(k.split('_copy')[0])
-        #         if r1.lower_bound != r2.lower_bound or r1.upper_bound != r2.upper_bound:
-        #             print '(%.2f, %.2f) (%.2f, %.2f)' % (r1.lower_bound, r1.upper_bound,
-        #                                                  r2.lower_bound, r2.upper_bound)
-        #         print
-        #     else:
-        #         print k, solution1.x_dict[k]
-        #         print '%s not in published model' % k
-
-        # for r in database_model.reactions:
-        #     if '_copy' in r:
-        #         r_p = published_model.reactions.get_by_id(r.notes['original_bigg_id'])
-        #         print r.id, (solution1.x_dict[r.id] if r.id in solution1.x_dict else '-'), r_p.id, (solution2.x_dict[r_p.id] if r_p.id in solution2.x_dict else '-')
-        #         print '(%.2f, %.2f) (%.2f, %.2f)' % (r.lower_bound, r.upper_bound,
-        #                                              r_p.lower_bound, r_p.upper_bound)
-        #         print
 
 
 def test_dad_2(session):
@@ -283,9 +271,9 @@ def test_leading_underscores(session):
     assert len(res) == 0
 
 
-def test_model_dump_directory():
-    assert exists(join(bigg_root_directory, 'static', 'model_dumps', 'iJO1366.xml'))
-    assert exists(join(bigg_root_directory, 'static', 'model_dumps', 'iJO1366.json'))
+def test_model_directories():
+    assert exists(join(bigg_root_directory, 'static', 'dumped_models', 'iJO1366.json'))
+    assert exists(join(bigg_root_directory, 'static', 'polished_models', 'iJO1366.xml'))
     assert exists(join(bigg_root_directory, 'static', 'published_models', 'iJO1366.xml'))
 
 

@@ -7,7 +7,18 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: normal;
+}
+h1 {
   font-weight: 700;
+}
+h3 {
+  margin: 0 0 20px 0;
+}
+h4 {
+  font-size: 21px;
+  font-weight: 200;
+  color: #999999;
 }
 
 span.pseudoreaction {
@@ -16,8 +27,16 @@ span.pseudoreaction {
   font-style: italic;
 }
 
+/* Help popovers */
+.popover h3 {
+  font-weight: bold;
+  color: #333;
+}
 .popover-content {
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: normal;
+  line-height: 1.5em;
+  color: #333;
 }
 
 .navbar {
@@ -26,6 +45,9 @@ span.pseudoreaction {
   top: 0;
   width: 100%;
   z-index: 100;
+}
+.navbar-default {
+  background-color: #F9FCFF;
 }
 .navbar-form {
   margin-left: 0px;
@@ -50,16 +72,7 @@ span.pseudoreaction {
   text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 10px;
 }
 
-h3 {
-  font-weight: bold;
-  margin: 0 0 20px 0;
-}
 .light { 
-  color: #999999;
-}
-h4 {
-  font-size: 21px;
-  font-weight: 200;
   color: #999999;
 }
 p {
@@ -72,8 +85,20 @@ p {
 .section-break {
   margin: 50px 0 50px 0;
 }
-pre, samp {
+pre {
   font-size: 14px;
+  border: none;
+  margin: 0;
+  border-radius: 0 0 4px 4px;
+  color: rgb(59, 59, 59);
+  background-color: #F1F1F1;
+  border: 1px solid rgb(57, 57, 57);
+}
+pre.get {
+  background-color: #393939;
+  margin-top: 30px;
+  border-radius: 4px 4px 0 0;
+  color: rgb(222, 222, 222);
 }
 samp {
   white-space: pre;

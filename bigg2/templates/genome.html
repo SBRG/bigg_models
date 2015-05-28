@@ -11,7 +11,14 @@
   <h4>Organism: </h4>
   <p>{{organism}}</p>
   
-  <h4>Models with this genome:</h4>
+  <h4>
+    Models with this genome:
+    {% with question_title='Models with this genome'%}
+      {% with question_text='A list of models that are mapped to this genome. Genes in the models are mapped to individual chromosomes.'%}
+        {% include 'question_mark.html' %}
+      {% endwith %}
+    {% endwith %}
+  </h4>
   <div class="panel panel-default">
     <table class="table table-hover">
       <thead>
@@ -37,15 +44,17 @@
       </thead>
       <tbody>
         {% for chromosome in chromosomes %}
-          <tr><td id="{{chromosome}}">
-            <a href="http://www.ncbi.nlm.nih.gov/nuccore/{{chromosome}}">
+          <tr class="clickable-row" href="http://www.ncbi.nlm.nih.gov/nuccore/{{chromosome}}">
+            <td id="{{chromosome}}">
               {{chromosome}}
               <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
-            </a>
-          </td></tr>
+            </td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+
+  {% include 'comments.html' %}
 
 {% endblock %}
