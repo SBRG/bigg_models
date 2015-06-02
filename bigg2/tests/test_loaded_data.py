@@ -44,35 +44,26 @@ def test_compartment_names(session):
 
 def test_sbml_input_output(session):
 
-    # check for cached published_models
-    try:                        # TODO remove this
-        with open('published_models_cache.pickle', 'r') as f:
-            print 'Loading published_models_cache.pickle'
-            published_models = pickle.load(f)
-    except IOError:
-        published_models = {}
-        with open(settings.model_genome, 'r') as f:
-            for line in f.readlines():
-                model_file = join(settings.data_directory, 'models', line.split(',')[0])
-                try:
-                    print('Loading %s' % model_file)
-                    if model_file.endswith('.xml'):
-                        model = read_sbml_model(model_file)
-                    elif model_file.endswith('.mat'):
-                        model = load_matlab_model(model_file)
-                    else:
-                        print('Bad model file {}'.format(model_file))
-                except IOError:
-                    print('Could not find model file %s' % model_file)
-                    continue
+    # loaded published models
+    published_models = {}
+    with open(settings.model_genome, 'r') as f:
+        for line in f.readlines():
+            model_file = join(settings.data_directory, 'models', line.split(',')[0])
+            try:
+                print('Loading %s' % model_file)
+                if model_file.endswith('.xml'):
+                    model = read_sbml_model(model_file)
+                elif model_file.endswith('.mat'):
+                    model = load_matlab_model(model_file)
+                else:
+                    print('Bad model file {}'.format(model_file))
+            except IOError:
+                print('Could not find model file %s' % model_file)
+                continue
 
-                # Convert the ids for comparison. This also removes _b
-                # metabolites which prevent solving in COBRApy.
-                published_models[model.id], _ = convert_ids(model)
-
-        # TODO remove 
-        with open('published_models_cache.pickle', 'w') as f:
-            pickle.dump(published_models, f)
+            # Convert the ids for comparison. This also removes _b
+            # metabolites which prevent solving in COBRApy.
+            published_models[model.id], _ = convert_ids(model)
 
     errors = []
     model_paths = []

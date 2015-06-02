@@ -25,5 +25,5 @@ setup(name='BiGG 2',
       install_requires=['Jinja2>=2.7.3',
                         'tornado>=4.0.2',
                         'pytest>=2.6.2',
-                        'python-libsbml>=5.11.0', # may require sudo
+                        'python-libsbml>=5.11.4', # may require sudo
                         'ome==0.0.1-bigg'])
