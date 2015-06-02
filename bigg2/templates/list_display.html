@@ -1,6 +1,13 @@
 {% extends "parent_display.html" %}
 {% block content %}
-  <h1 class="centered">Search Results</h1>
+  <h1 class="centered">
+		Search Results
+		{% with question_title='Search Results'%}
+      {% with question_text='Use the tabs below to filter your search results to a particular category. The results can also be sorted by clicking a heading at the top of each table.'%}
+        {% include 'question_mark.html' %}
+      {% endwith %}
+    {% endwith %}
+	</h1>
 
   <div class="tabbable" style="margin-bottom:50px;">
 	<ul class="nav nav-tabs list-display-tabs">

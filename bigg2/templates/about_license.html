@@ -1,7 +1,21 @@
-<div class="modal-header">
+<div class="modal-header" id="beta">
   {% if modal %}
     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
   {% endif %}
+  <h4 class="modal-title">Beta release</h4>
+</div>
+<div class="modal-body">
+  <p>BiGG 2 is currently a beta release, which means that we are still testing
+    the database and website. Please be patient if you encounter bugs, and be
+    aware that some changes to the database content may change before the final
+    release. If you have questions or find any bugs in the database, please
+    contact Zachary King (zaking-AT-ucsd-DOT-edu).</p>
+
+  <p>If you are looking for the old BiGG, you can still find it here:
+    <a href="http://bigg.ucsd.edu/bigg1">http://bigg.ucsd.edu/bigg1</a></p>
+</div>
+
+<div class="modal-header">
   <h4 class="modal-title">About BiGG</h4>
 </div>
 <div class="modal-body">
@@ -15,9 +29,21 @@
 	  annotations, and metabolites are linked to many external databases
 	  (KEGG, PubChem, and many more).</p>
 
-	<p>BiGG is hosted and maintained by the <a href="http://systemsbiology.ucsd.edu/">Systems Biology Research
-	  Group</a> at the <a href="http://ucsd.edu"> University of California, San Diego</a>.</p>
+	<p>BiGG is freely available for non-commercial use. It is hosted and
+	  maintained by the <a href="http://systemsbiology.ucsd.edu/">Systems Biology
+	  Research Group</a> at the <a href="http://ucsd.edu"> University of California, San Diego</a>.</p>
+</div>
 
+<div class="modal-header">
+  <h4 class="modal-title">How do I use BiGG?</h4>
+</div>
+<div class="modal-body">
+  <p>BiGG can be browsed on this website or accessed using a <a href="/web_api">web
+    API</a>. Try searching for a metabolite, reaction, gene, or organism in the
+    search box to browse the content of genome-scale models. Question marks like
+    this {% include 'question_mark.html' %} are available throughout the site to
+    provide more help.
+  </p>
 </div>
 
 <div class="modal-header">

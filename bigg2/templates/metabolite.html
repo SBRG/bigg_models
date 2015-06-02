@@ -50,12 +50,19 @@
 
     <div class="col-lg-4">
       <div class="well">
-        <h4>Universal metabolite</h4>	
-	    <ul class="list-unstyled">
-	      <li>
-	        <a href="/universal/metabolites/{{bigg_id}}">{{bigg_id}}</a>
-	      </li>
-	    </ul>
+        <h4>
+					Universal metabolite
+					{% with question_title='Universal metabolite'%}
+						{% with question_text='The BiGG Database has a list of universal metabolites. Visit the universal metabolite page to see all the models and compartments that contain this metabolite.'%}
+							{% include 'question_mark.html' %}
+						{% endwith %}
+					{% endwith %}
+				</h4>	
+				<ul class="list-unstyled">
+					<li>
+						<a href="/universal/metabolites/{{bigg_id}}">{{bigg_id}}</a>
+					</li>
+				</ul>
       </div>
       
       {% include 'database_links.html' %}

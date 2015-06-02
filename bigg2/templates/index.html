@@ -9,11 +9,12 @@
 
     <!-- Scripts -->
     <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
+    <script src="/static/js/question_mark.js"></script>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
     <link href="static/css/style.css" rel="stylesheet">
     <link href="static/css/frontpage.css" rel="stylesheet">
@@ -60,13 +61,25 @@
 	          <!-- Button trigger modal -->
 	          <div id="bigg1-alert" class="alert alert-info alert-dismissible" role="alert">
 	            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-	            This is the new BiGG website (version 2). If you are looking for the old BiGG, you can find it here: <a href="http://bigg.ucsd.edu">http://bigg.ucsd.edu/</a>.
-	          </div>
+              <p style="text-align: center">
+                Welcome to the new BiGG! <br/>
+                BiGG 2 is a beta release, so please be patient if you encounter
+                any issues.
+                <a href="#" data-toggle="modal" data-target="#about-modal">Learn more about BiGG 2 beta.</a>
+              </p>
+            </div>
 
 	          <div class="intro-message">
               <h1 class="title">BiGG Database</h1>
               <hr class="intro-divider">
-              <p class="lead">Search the database by model, reaction, metabolite, or gene</p>
+              <div style="width: 100%; text-align: center; margin-bottom: 20px">
+                <span class="lead">Search the database by model, reaction, metabolite, or gene</span>
+                {% with question_title='Searching the BiGG Database'%}
+                  {% with question_text='Enter the name of a metabolite, reaction, gene, organism, or genome-scale model into the search box. Or click the buttons below for complete lists of the components in the database.'%}
+                    {% include 'question_mark.html' %}
+                  {% endwith %}
+                {% endwith %}
+              </div>
               <form id="search-form" action="/search" method="get">
 		            <div class="input-group">
 		              <input id ="search" type="text" name="query" class="form-control" placeholder="" autofocus></input>
@@ -192,11 +205,11 @@
               <img class="img-responsive footer-image" src="/static/assets/sbrg-logo.png">
 	          </a>
 	        </div>
-          <div class="col-md-5">
-            <a href="http://www.ucsd.edu/"><img class="img-responsive footer-image" src="/static/assets/ucsd-logo.png"></a>
-	        </div>
 	        <div class="col-md-2">
             <a href="http://www.biosustain.dtu.dk/"><img class="img-responsive footer-image" src="/static/assets/cfb-logo.png"></a>
+	        </div>
+          <div class="col-md-5">
+            <a href="http://www.ucsd.edu/"><img class="img-responsive footer-image" src="/static/assets/ucsd-logo.png"></a>
 	        </div>
 	      </div>
 	      <div class="row">

@@ -43,21 +43,59 @@
 				</table>
       </div>
 
-      <h4>Download COBRA model:</h4>
-			BiGG Database model (JSON):
-			<a href="/static/model_dumps/{{bigg_id}}.json" download="{{bigg_id}}.json">
+      <h4>Download COBRA model from the BiGG Database:</h4>
+			COBRA model (JSON
+      {% with question_title='COBRA model: JSON format'%}
+        {% with question_text='COBRA model in JSON format can be read with COBRApy v0.3 and later and the Escher pathway map visualization tool.'%}
+          {% include 'question_mark.html' %}
+        {% endwith %}
+      {% endwith %}
+			):&nbsp;
+			<a href="/static/dumped_models/{{bigg_id}}.json" download="{{bigg_id}}.json">
 				{{bigg_id}}.json
       </a>
 			<br/>
-			BiGG Database model (SBML):
-			<a href="/static/model_dumps/{{bigg_id}}.xml" download="{{bigg_id}}.xml">
+			COBRA model (SBML
+      {% with question_title='COBRA model: SBML level 2 (v1)'%}
+        {% with question_text='This file uses a version of SBML which can by read by COBRApy and the COBRA toolbox.'%}
+          {% include 'question_mark.html' %}
+        {% endwith %}
+      {% endwith %}
+			):&nbsp;
+			<a href="/static/dumped_models/{{bigg_id}}.xml" download="{{bigg_id}}.xml">
 				{{bigg_id}}.xml
 			</a>
 			<br/>
+			COBRA model (Zipped SBML with FBC 2
+      {% with question_title='COBRA model: SBML level 3 (v1) with FBC (v2)'%}
+        {% with question_text='This file uses the latest, unfinalized version of the FBC package (version 2). It is only readable by COBRApy v0.4 and later.'%}
+          {% include 'question_mark.html' %}
+        {% endwith %}
+      {% endwith %}
+			):&nbsp;
+			<a href="/static/polished_models/{{bigg_id}}.xml/{{bigg_id}}.xml.zip" download="{{bigg_id}}.xml.zip">
+				{{bigg_id}}.xml.zip
+			</a>
+			<br/>
+			<br/>
 			{% if published_filename is not none %}
-				Original, published model:
+				Published model:&nbsp;
 				<a href="/static/published_models/{{published_filename}}" download="{{published_filename}}">
 					{{published_filename}}
+				</a>
+			{% endif %}
+			<br/>
+			{% if reference_type == 'pmid' %}
+				Publication PMID:&nbsp;
+				<a href="http://www.ncbi.nlm.nih.gov/pubmed/{{reference_id}}" target="_blank">
+					{{reference_id}}
+          <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
+				</a>
+			{% elif reference_type == 'doi' %}
+				Publication DOI:&nbsp;
+				<a href="http://dx.doi.org/{{reference_id}}" target="_blank">
+					{{reference_id}}
+          <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
 				</a>
 			{% endif %}
 

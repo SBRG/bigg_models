@@ -5,7 +5,14 @@
   <h1 class="centered">Advanced Search</h1>
 
   <hr/>
-  <h2>Search Metabolites by External IDs</h2>
+  <h2>
+    Search Metabolites by External IDs
+    {% with question_title='Search Metabolites by External IDs'%}
+      {% with question_text='You can search for metabolites in the BiGG Database by entering an identifier from an external database. Use the dropdown menu to choose the external database, and enter the identifier in the Database ID box.'%}
+        {% include 'question_mark.html' %}
+      {% endwith %}
+    {% endwith %}
+  </h2>
   <br/>
 
   <form action="/advanced_search_external_id_results" method="post">
@@ -20,7 +27,14 @@
   </form>
 
   <hr/>
-  <h2>Search by Keyword</h2>
+  <h2>
+    Search by Keyword
+    {% with question_title='Search by Keyword'%}
+      {% with question_text='You can search for reactions, metabolites, and genes in specific models by entering keywords in the input box below. You must choose at least one model, category, and keyword.'%}
+        {% include 'question_mark.html' %}
+      {% endwith %}
+    {% endwith %}
+  </h2>
   <br/>
   
   <form action="/advanced_search_results" method="post">
@@ -79,15 +93,15 @@
 
   <script>
    $(document).ready(function () {
-     $("#submitSearch").click(function(event) { 
-       if (!$("#search").val()){
-	     $('#alert-container').html('<div class="alert alert-warning alert-dismissible" role="alert"> \
-		   <button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
-                   <span aria-hidden="true">&times;</span></button>Please provide a keyword.</div>');
-	     event.preventDefault();
-	     return;
-	   }
-     });
+       $("#submitSearch").click(function(event) { 
+           if (!$("#search").val()) {
+	             $('#alert-container').html('<div class="alert alert-warning alert-dismissible" role="alert"> ' +
+		                                      '<button type="button" class="close" data-dismiss="alert" aria-label="Close"> ' +
+                                          '<span aria-hidden="true">&times;</span></button>Please provide a keyword.</div>');
+	             event.preventDefault();
+	             return;
+	         }
+       });
    });     
   </script>
 {% endblock %}	

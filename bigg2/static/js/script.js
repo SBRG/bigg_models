@@ -1,70 +1,67 @@
-$( document ).ready(function() {
+$(document).ready(function() {
     // clickable table rows
     $(".clickable-row").click(function() {
-	window.document.location = $(this).attr("href");
+	    window.document.location = $(this).attr("href");
     });
     
     // submit buttons
-    $("#submit").click(function(){
-	$.post("/submiterror",
-	       {
-		   email: $.trim($("input[name='email']").val()),
-		   comments:$.trim($("textarea[name='comments']").val()),
-		   type:$.trim($("select[name='type']").val())
-	       },
-	       function(data,status){
-		   alert("message stored");
-	       });
+    $("#submit").click(function(event) {
+	    event.preventDefault();
+		var email = $.trim($("input[name='email']").val()),
+		    comments = $.trim($("textarea[name='comments']").val()),
+		    type = $.trim($("select[name='type']").val()),
+            error = null;
+        if (email == '' || email.indexOf('@') == -1) error = 'Please enter an email address.';
+        else if (comments.length < 10) error = 'Please enter a descriptive comment.';
+        if (error) {
+	        $('#message-container').html(
+                '<div class="alert alert-danger alert-dismissible" role="alert"> ' +
+		            '<button type="button" class="close" data-dismiss="alert" aria-label="Close"> ' +
+                    '<span aria-hidden="true">&times;</span></button>' +
+                    error + '</div>');
+            return;
+        }
+	    $.post("/submiterror", {email: email, comments: comments, type: type})
+            .done(function(data) {
+	            $('#message-container').html(
+                    '<div class="alert alert-success alert-dismissible" role="alert"> ' +
+		                '<button type="button" class="close" data-dismiss="alert" aria-label="Close"> ' +
+                        '<span aria-hidden="true">&times;</span></button>' +
+                        'Thank you for your submission. If you have any further ' +
+                        'questions, please contact Zachary King (zaking@ucsd.edu).' +
+                        '</div>');
+            })
+            .fail(function() {
+	            $('#message-container').html(
+                    '<div class="alert alert-danger alert-dismissible" role="alert"> ' +
+		                '<button type="button" class="close" data-dismiss="alert" aria-label="Close"> ' +
+                        '<span aria-hidden="true">&times;</span></button>' +
+                        'The form could not be submitted. Please try again later.' +
+                        '<div style="font-family: monospace">' +
+                        '<br/>' +
+                        '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FAIL&nbsp;WHALE!<br/>' +
+                        '<br/>' +
+                        'W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>' +
+                        'W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;W&nbsp;&nbsp;W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;W&nbsp;&nbsp;&nbsp;&nbsp;<br/>' +
+                        '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\'.&nbsp;&nbsp;W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>' +
+                        '&nbsp;&nbsp;.-""-._&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\\&nbsp;\\.--|&nbsp;&nbsp;<br/>' +
+                        '&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"-..__)&nbsp;.-\'&nbsp;&nbsp;&nbsp;<br/>' +
+                        '|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>' +
+                        '\\\'-.__,&nbsp;&nbsp;&nbsp;.__.,\'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>' +
+                        '&nbsp;`\'----\'._\\--\'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>' +
+                        'VVVVVVVVVVVVVVVVVVVVV<br/>' +
+                        '</div></div>');
+	        });
     });
     
     // navbar position
     var navPos = $('.navbar').offset().top;
 
     // fixed nav on scroll
-    $(window).scroll(function(){
-	var checkScrollPosition = $(this).scrollTop() >= navPos;
-	var setPos = checkScrollPosition ? 'fixed' : 'relative' ;
-	$('.navbar').css({position: setPos});
+    $(window).scroll(function() {
+	    var checkScrollPosition = $(this).scrollTop() >= navPos;
+	    $('.navbar').css('position', checkScrollPosition ? 'fixed' : 'relative');
+	    $('body').css('padding-top', checkScrollPosition ? '72px' : '0px');
+	    $('#nav-title-background').css('visibility', checkScrollPosition ? 'hidden' : 'visible');
     });
-    
-    // carousel start
-    // $('.carousel').carousel({interval: 9000});
-    
-    // model buttons
-    // $( "#showmodels" ).click(function () {
-	
-    // 	if ( $( ".btn-group-vertical" ).is( ":hidden" ) ) {
-    // 	    $( ".btn-group-vertical" ).slideDown( "slow" );
-    // 	} else {
-    // 	    $( ".btn-group-vertical" ).hide();
-    // 	}
-    // });
-    // $('.mlist').slideUp("fast");
-    // $('.met_button').click(function(event){
-    // 	event.preventDefault();
-    // 	$(this).next().slideToggle("slow", function(){
-	    
-    // 	});
-    // });
-    //  $('#metabolite_c_table').slideUp("fast");
-    //  $('#metabolite_p_table').slideUp("fast");
-    //  $('#metabolite_e_table').slideUp("fast");
-    //  $('#metabolitelist_c').click(function(){
-    //  $('#metabolite_c_table').slideToggle("slow", function(){
-     
-    //  });
-    //  });
-    //  $('#metabolitelist_p').click(function(){
-    //  $('#metabolite_p_table').slideToggle("slow", function(){
-     
-    //  });
-    //  });
-    //  $('#metabolitelist_e').click(function(){
-    //  $('#metabolite_e_table').slideToggle("slow", function(){
-     
-    //  });
-    //  });
 });
-
-
-

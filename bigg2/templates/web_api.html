@@ -1,23 +1,24 @@
 {% extends "parent_display.html" %}
 {% block title %}BiGG Web API{% endblock %}
 {% block content %}
-  <style>
-   .centered {
-       text-align: center;
-   }
-   samp {
-       padding: 5px 0 20px 0;
-       display: inline-block;
-   } 
-  </style>
   <h1 class="centered">BiGG Website API</h1>
   <h3 class="centered">Version 2.0</h3>
-  <hr>
-  Example curl requests: 
-  <br/><br/>
-  <h3>Models, reaction, metabolites, and genes</h3>
-  <pre>curl 'http://{{api_host}}/api/v2/models'</pre>
-  <samp>[{"bigg_id": "iAPECO1_1312",
+
+  <p>The BiGG Database can be accessed using a simple web API. Here we provide
+    some examples of the API reponses. All of the following are GET requests.</p> 
+
+  <p>Please be respectful when using this service and do not send more than 10
+    request per second. The API is very simple, but we hope to add features
+    (including batch requests) over time.</p>
+
+  <p>If you experience any unexpected behavior with the API, you can submit an error
+    report at the <a href="#bottom">bottom of this page</a>.</p>
+
+  <hr/>
+
+  <h3>Models, reactions, metabolites, and genes</h3>
+  <pre class="get"># Get a list of models<br/>curl 'http://{{api_host}}/api/v2/models'</pre>
+  <pre>[{"bigg_id": "iAPECO1_1312",
  "organism": "Escherichia coli APEC O1",
  "metabolite_count": 1944,
  "gene_count": 1313,
@@ -30,27 +31,27 @@
  "reaction_count": 1266},
 
 ...
-]</samp>
+]</pre>
 	
-  <pre>curl 'http://{{api_host}}/api/v2/models/iND750'</pre>
-  <samp>{"organism": "Saccharomyces cerevisiae S288c",
+  <pre class="get"># Get model details<br/>curl 'http://{{api_host}}/api/v2/models/iND750'</pre>
+  <pre>{"organism": "Saccharomyces cerevisiae S288c",
  "genome": "PRJNA43747",
  "metabolite_count": 1061,
  "gene_count": 750,
- "reaction_count": 1266}</samp>
+ "reaction_count": 1266}</pre>
   
-  <pre>curl 'http://{{api_host}}/api/v2/models/iND750/download'</pre>
-  <p>Returns the model in the COBRApy-compatible JSON format.</p>
+  <pre class="get"># Download a model in JSON format<br/>curl 'http://{{api_host}}/api/v2/models/iND750/download'</pre>
+  <pre># Returns the whole model</pre>
 
-  <pre>curl 'http://{{api_host}}/api/v2/models/iND750/reactions'</pre>
-  <samp>[{"bigg_id": "EX_4abut_e", "name": "4-Aminobutanoate exchange", "organism": "Saccharomyces cerevisiae S288c"},
+  <pre class="get"># Get a list of model reactions<br/>curl 'http://{{api_host}}/api/v2/models/iND750/reactions'</pre>
+  <pre>[{"bigg_id": "EX_4abut_e", "name": "4-Aminobutanoate exchange", "organism": "Saccharomyces cerevisiae S288c"},
  {"bigg_id": "EX_ac_e", "name": "Acetate exchange", "organism": "Saccharomyces cerevisiae S288c"},
 
 ...
-]</samp>
+]</pre>
 
-  <pre>curl 'http://{{api_host}}/api/v2/models/iND750/reactions/GAPD'</pre>
-  <samp>{"bigg_id": "GAPD",
+  <pre class="get">curl 'http://{{api_host}}/api/v2/models/iND750/reactions/GAPD'</pre>
+  <pre>{"bigg_id": "GAPD",
  "name": "glyceraldehyde-3-phosphate dehydrogenase",
  "pseudoreaction": false,
  "model_bigg_id": "iND750"
@@ -96,19 +97,19 @@
 	         {"bigg_id": "YJR009C",
 	          "name": "YJR009C"}]}
  ]
-}</samp>
+}</pre>
 
-        <pre>curl 'http://{{api_host}}/api/v2/models/iND750/metabolites'</pre>
-	    <samp>[{"bigg_id": "10fthf",
+  <pre class="get">curl 'http://{{api_host}}/api/v2/models/iND750/metabolites'</pre>
+	<pre>[{"bigg_id": "10fthf",
   "model_bigg_id": "iND750", 
   "compartment_bigg_id": "c", 
   "name": "10-Formyltetrahydrofolate", 
   "organism": "Saccharomyces cerevisiae S288c"},
 
  ...
-]</samp>
-        <pre>curl 'http://{{api_host}}/api/v2/models/iND750/metabolites/10fthf_c'</pre>
-	<samp>{"formula": "C20H21N7O7",
+]</pre>
+  <pre class="get">curl 'http://{{api_host}}/api/v2/models/iND750/metabolites/10fthf_c'</pre>
+	<pre>{"formula": "C20H21N7O7",
  "bigg_id": "10fthf",
  "compartment_bigg_id": "c",
  "name": "10-Formyltetrahydrofolate",
@@ -138,18 +139,18 @@
    ...
  ]
 }
-</samp>
+  </pre>
 
-        <pre>curl 'http://{{api_host}}/api/v2/models/iMM904/genes'</pre>
-	    <samp> [{"bigg_id": "Q0045", 
+  <pre class="get">curl 'http://{{api_host}}/api/v2/models/iMM904/genes'</pre>
+	<pre> [{"bigg_id": "Q0045", 
   "organism": "Saccharomyces cerevisiae S288c", 
   "model_bigg_id": "iMM904", 
   "name": "Q0045"},
 
   ... 
-]</samp>
-        <pre>curl 'http://{{api_host}}/api/v2/models/iMM904/genes/Q0045'</pre>
-	<samp>{"bigg_id": "Q0045",
+]</pre>
+  <pre class="get">curl 'http://{{api_host}}/api/v2/models/iMM904/genes/Q0045'</pre>
+	<pre>{"bigg_id": "Q0045",
  "name": "",
  "leftpos": ,
  "rightpos": ,
@@ -158,17 +159,18 @@
  "reactions": [{"bigg_id": "",
 		        "name": "",
 		        "gene_reaction_rule": ""}]
-}</samp> 
+}</pre> 
 
+  <hr/>
 	<h3>Universal database</h3>
-	<pre>curl 'http://{{api_host}}/api/v2/universal/reactions'</pre>
-	<samp>[{"bigg_id": "12DGR120tipp", "name": "_1,2 diacylglycerol transport via flipping (periplasm to cytoplasm, n-C12:0)"},
+	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/reactions'</pre>
+	<pre>[{"bigg_id": "12DGR120tipp", "name": "_1,2 diacylglycerol transport via flipping (periplasm to cytoplasm, n-C12:0)"},
  {"bigg_id": "12DGR140tipp", "name": "_1,2 diacylglycerol transport via flipping (periplasm to cytoplasm, n-C14:0)"},
  ...
-]</samp>
+]</pre>
 
-	<pre>curl 'http://{{api_host}}/api/v2/universal/reactions/ADA'</pre>
-	<samp>{"bigg_id": "ADA",
+	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/reactions/ADA'</pre>
+	<pre>{"bigg_id": "ADA",
  "name": "Adenosine deaminase",
  "database_links": {},
  "pseudoreaction": false,
@@ -182,16 +184,16 @@
                  {"stoichiometry": -1.0, "bigg_id": "h", "compartment_bigg_id": "c", "name": "H+"}, 
                  {"stoichiometry": 1.0, "bigg_id": "ins", "compartment_bigg_id": "c", "name": "Inosine"}, 
                  {"stoichiometry": 1.0, "bigg_id": "nh4", "compartment_bigg_id": "c", "name": "Ammonium"}],
-}</samp>
+}</pre>
 
-	<pre>curl 'http://{{api_host}}/api/v2/universal/metabolites'</pre>
-	<samp>[{"bigg_id": "10fthf", "name": "_10-Formyltetrahydrofolate"},
+	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/metabolites'</pre>
+	<pre>[{"bigg_id": "10fthf", "name": "_10-Formyltetrahydrofolate"},
  {"bigg_id": "12dgr120", "name": "_1,2-Diacyl-sn-glycerol (didodecanoyl, n-C12:0)"},
  ...
-]</samp>
+]</pre>
 
-	<pre>curl 'http://{{api_host}}/api/v2/universal/metabolites/g3p'</pre>
-	<samp>{"bigg_id": "g3p",
+	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/metabolites/g3p'</pre>
+	<pre>{"bigg_id": "g3p",
  "name": "Glyceraldehyde 3-phosphate",
  "formula": "C3H5O6P",
  "database_links": {
@@ -218,11 +220,12 @@
 
    ...
  ]
-}</samp>
+}</pre>
 
+  <hr/>
 	<h3>Search</h3>
-        <pre>curl 'http://{{api_host}}/api/v2/search?query=g3p'</pre>
-	<samp>{"results": {
+  <pre class="get">curl 'http://{{api_host}}/api/v2/search?query=g3p'</pre>
+	<pre>{"results": {
     "models": [],
     "reactions": [
       {"model_bigg_id": "universal",
@@ -242,10 +245,10 @@
     ],
     "genes": []
   }
-}</samp>
+}</pre>
 	
-	<pre>curl 'http://{{api_host}}/api/v2/search?query=gapA'</pre>
-	<samp>{"results": {
+	<pre class="get">curl 'http://{{api_host}}/api/v2/search?query=gapA'</pre>
+	<pre>{"results": {
     "models": [],
     "reactions": [],
     "metabolites": [],
@@ -258,10 +261,10 @@
       ...
     ]
   }
-}</samp>
+}</pre>
 
-	<pre>curl 'http://{{api_host}}/api/v2/search?query=iJO1366'</pre>
-	<samp>{"results": {
+	<pre class="get">curl 'http://{{api_host}}/api/v2/search?query=iJO1366'</pre>
+	<pre>{"results": {
     "models": [
       {"bigg_id": "iJO1366"
        "organism": "Escherichia coli str. K-12 substr. MG1655",
@@ -273,6 +276,10 @@
     "metabolites": [],
     "genes": []
   }
-}</samp>
+}</pre>
+
+  <div id="bottom">
+    {% include 'comments.html' %}
+  </div>
 
 {% endblock %}	
