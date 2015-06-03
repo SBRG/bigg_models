@@ -10,6 +10,7 @@ $(document).ready(function() {
 		var email = $.trim($("input[name='email']").val()),
 		    comments = $.trim($("textarea[name='comments']").val()),
 		    type = $.trim($("select[name='type']").val()),
+            url = window.location.href
             error = null;
         if (email == '' || email.indexOf('@') == -1) error = 'Please enter an email address.';
         else if (comments.length < 10) error = 'Please enter a descriptive comment.';
