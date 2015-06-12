@@ -251,9 +251,10 @@ class UniversalReactionHandler(BaseHandler):
             result = queries.get_reaction_and_models(reaction_bigg_id, session)
         except NotFoundError:
             raise HTTPError(404)
+        
         data = json.dumps(result)
         self.write(data)
-        self.set_header('Content-type', 'json')
+        self.set_header('Content-type', 'application/json')
         self.finish()
             
 
@@ -383,7 +384,7 @@ class ReactionListHandler(BaseHandler):
 
         session.close()
         self.write(json.dumps(result))
-        self.set_header('Content-type', 'json')
+        self.set_header('Content-type', 'application/json')
         self.finish()   
         
         
@@ -599,6 +600,7 @@ class ModelListHandler(BaseHandler):
                   'results_count': queries.get_models_count(session)}
 
         session.close()
+
         data = json.dumps(result)
         self.write(data)
         self.set_header('Content-type', 'application/json')
@@ -686,6 +688,7 @@ class MetaboliteListHandler(BaseHandler):
 
         session.close()
         data = json.dumps(result)
+
         self.write(data)
         self.set_header('Content-type', 'application/json')
         self.finish()
@@ -776,6 +779,7 @@ class GeneListHandler(BaseHandler):
 
         session.close()
         data = json.dumps(result)
+
         self.write(data)
         self.set_header('Content-type', 'application/json')
         self.finish()
@@ -902,6 +906,7 @@ class SearchHandler(BaseHandler):
         session.close()
         data = json.dumps(result)
         self.write(data) 
+
         self.set_header('Content-type', 'application/json')
         self.finish()
 
@@ -961,7 +966,8 @@ class AdvancedSearchExternalIDHandler(BaseHandler):
                                                               database_source)
         session.close()
         dictionary = {'results': {'metabolites': metabolites},
-                      'no_pager': True}
+                      'no_pager': True,
+                      'hide_organism': True}
         
         template = env.get_template("list_display.html")
         self.write(template.render(dictionary)) 
@@ -1018,8 +1024,8 @@ class AutocompleteHandler(BaseHandler):
 
         # get the session
         session = Session()
-        result_array = queries.search_ids_fast(query_string, session)
-        session.close()       
+        result_array = queries.search_ids_fast(query_string, session, limit=15)
+        session.close()
 
         self.write(json.dumps(result_array))
         self.set_header('Content-type', 'application/json')
