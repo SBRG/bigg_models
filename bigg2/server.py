@@ -731,7 +731,7 @@ class MetaboliteListHandler(BaseHandler):
         else:
             raw_results = queries.get_metabolites_pager(page, size, sort_col_index, 
                                                                 sort_direction,  model_bigg_id, session)
-            table_results = [{'BiGG': '<a href ="/{0}/metabolites/{1}>{1}</a>'.format(x['model_bigg_id'], x['bigg_id']),
+            table_results = [{'BiGG': '<a href ="/models/{0}/metabolites/{1}_{2}">{1}_{2}</a>'.format(x['model_bigg_id'], x['bigg_id'], x['compartment']),
                               'Name': x['name'], 'Model': x['model_bigg_id'], 'Organism': x['organism']}
                               for x in raw_results]
             result = {'rows': table_results,
@@ -771,7 +771,6 @@ class MetaboliteHandler(BaseHandler):
         results = queries.get_model_comp_metabolite(met_bigg_id, compartment_bigg_id,
                                                     model_bigg_id, session)
         session.close()
-
         data = json.dumps(results)
         self.write(data)
         self.set_header('Content-type', 'application/json')
@@ -826,7 +825,7 @@ class GeneListHandler(BaseHandler):
         else:
             raw_results = queries.get_genes_pager(page, size, sort_col_index, 
                                                                 sort_direction,  model_bigg_id, session)
-            table_results = [{'BiGG': '<a href ="/{0}/genes/{1}>{1}</a>'.format(x['model_bigg_id'], x['bigg_id']),
+            table_results = [{'BiGG': '<a href ="/models/{0}/genes/{1}">{1}</a>'.format(x['model_bigg_id'], x['bigg_id']),
                               'Name': x['name'], 'Model': x['model_bigg_id'], 'Organism': x['organism']}
                               for x in raw_results]
             result = {'rows': table_results,
