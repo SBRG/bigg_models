@@ -168,8 +168,6 @@ def test_sbml_input_output(session):
             except ValueError:
                 print 'fix', model_path, f1, f2
 
-    with open('errors.pickle', 'w') as f:
-        pickle.dump(errors, f)
     assert len(errors) == 0
 
 

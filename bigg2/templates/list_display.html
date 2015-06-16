@@ -56,7 +56,7 @@
                   <tr class ='rowlink'>  
                     <td><a href="/models/{{values['bigg_id']}}">{{values['bigg_id']}}</a></td>
                     {% if hide_organism != true %}
-                      <td>{% if values['organism'] is none %}-{% else %}{{values['organism']}}{% endif %}</td>
+                      <td>{% if values['organism'] is none %}{% else %}{{values['organism']}}{% endif %}</td>
                     {% endif %}
                     <td><a href="/models/{{values['bigg_id']}}/metabolites">{{values['metabolite_count']}}</a></td>
                     <td><a href="/models/{{values['bigg_id']}}/reactions">{{values['reaction_count']}}</a></td>
@@ -100,7 +100,6 @@
                     {% if hide_organism != true %}
                       <td>
                         {% if values['model_bigg_id'] == 'universal' or values['organism'] is none %}
-                          <center>-</center>
                         {% else %}
                           {{values['organism']}}
                         {% endif %}

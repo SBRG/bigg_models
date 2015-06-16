@@ -252,3 +252,9 @@ td:target {
 .no-processing>th {
   background-image: none !important;
 }
+
+/* Advanced search */
+.advanced-selection {
+  font-size: 15px;
+  line-height: 1.5em;
+}

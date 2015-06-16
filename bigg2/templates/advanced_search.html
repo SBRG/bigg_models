@@ -39,15 +39,15 @@
   
   <form action="/advanced_search_results" method="post">
 
-	<div class="panel panel-primary" >
+    <div class="panel panel-primary" >
       <div class="panel-heading">
         <h3 class="panel-title">
-	      <span class="fa fa-check"></span> Choose Models
-	    </h3>
+          <span class="fa fa-check"></span> Choose Models
+        </h3>
       </div>
       <div class="panel-body">
         <div class="form-group">
-          <div id ="models" class="checkbox">
+          <div class="checkbox advanced-selection">
             {% for m in models %}
               <label>
                 <input id="{{m}}" name="{{m}}" type="checkbox" />
@@ -60,48 +60,48 @@
         </div>
       </div>
       
-	</div>
-	
-	<div class="panel panel-primary" >
+    </div>
+
+    <div class="panel panel-primary" >
       <div class="panel-heading">
         <h3 class="panel-title">
-	      <span class="fa fa-check"></span> Choose Categories
-	    </h3>
+          <span class="fa fa-check"></span> Choose Categories
+        </h3>
       </div>
 
       <div class="panel-body">
         <div class="form-group">
-          <div class="checkbox">
+          <div class="checkbox advanced-selection">
             {% for type in ['reactions', 'metabolites', 'genes'] %}
               <label>
-		        <input name="include_{{type}}" type="checkbox" />
-                {{type}}
+                <input name="include_{{type}}" type="checkbox" />
+                {{type.capitalize()}}
               </label>
-		      <br/>
+              <br/>
             {% endfor %}
           </div>
           
         </div>
       </div>
       
-	</div>
-	<h3>Choose keywords:</h3>
-	<div id="alert-container"></div>
-	<input id="search" type="text" name="query" class="form-control" placeholder="Separate with commas: e.g. GAPD, PGI"></input>
-	<input id="submitSearch" type="submit" class="btn btn-default" style="margin-top: 20px;">
+    </div>
+    <h3>Choose keywords:</h3>
+    <div id="alert-container"></div>
+    <input id="search" type="text" name="query" class="form-control" placeholder="Separate with commas: e.g. GAPD, PGI"></input>
+    <input id="submitSearch" type="submit" class="btn btn-default" style="margin-top: 20px;">
   </form>
 
   <script>
    $(document).ready(function () {
        $("#submitSearch").click(function(event) { 
            if (!$("#search").val()) {
-	             $('#alert-container').html('<div class="alert alert-warning alert-dismissible" role="alert"> ' +
-		                                      '<button type="button" class="close" data-dismiss="alert" aria-label="Close"> ' +
+               $('#alert-container').html('<div class="alert alert-warning alert-dismissible" role="alert"> ' +
+                                          '<button type="button" class="close" data-dismiss="alert" aria-label="Close"> ' +
                                           '<span aria-hidden="true">&times;</span></button>Please provide a keyword.</div>');
-	             event.preventDefault();
-	             return;
-	         }
+               event.preventDefault();
+               return;
+           }
        });
    });     
   </script>
-{% endblock %}	
+{% endblock %}

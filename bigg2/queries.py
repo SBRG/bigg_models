@@ -925,9 +925,9 @@ def build_reaction_string(metabolitelist, lower_bound, upper_bound):
     if len(metabolitelist) == 1:
         reaction_string = pre_reaction_string[:-2] + " &#8652; " + post_reaction_string[:-2]
     elif lower_bound <0 and upper_bound <=0:
-        reaction_string = pre_reaction_string[:-2] + " &#10229; " + post_reaction_string[:-2]
+        reaction_string = pre_reaction_string[:-2] + " &#x2192; " + post_reaction_string[:-2]
     elif lower_bound >= 0:
-        reaction_string = pre_reaction_string[:-2] + " &#10230; " + post_reaction_string[:-2]
+        reaction_string = pre_reaction_string[:-2] + " &#x2192; " + post_reaction_string[:-2]
     else:
         reaction_string = pre_reaction_string[:-2] + " &#8652; " + post_reaction_string[:-2]
 
@@ -1530,7 +1530,7 @@ def search_for_models(query_string, session, page=None, size=None,
             for x in query.all()]
 
 
-def search_ids_fast(query_string, session):
+def search_ids_fast(query_string, session, limit=None):
     """Search used for autocomplete."""
     gene_q = (session
               .query(Gene.bigg_id)
@@ -1558,14 +1558,17 @@ def search_ids_fast(query_string, session):
     organism_q = (session
                   .query(Genome.organism)
                   .filter(Genome.organism.ilike(query_string + '%')))
-    result_db = (gene_q
-                 .union(gene_name_q,
-                        reaction_q,
-                        reaction_name_q,
-                        metabolite_q,
-                        metabolite_name_q,
-                        model_q,
-                        organism_q)
-                 .all())
+    query = (gene_q
+             .union(gene_name_q,
+                    reaction_q,
+                    reaction_name_q,
+                    metabolite_q,
+                    metabolite_name_q,
+                    model_q,
+                    organism_q))
 
-    return [x[0] for x in result_db]
+    if limit is not None:
+        print limit
+        query = query.limit(limit)
+        
+    return [x[0] for x in query.all()]
