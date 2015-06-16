@@ -18,27 +18,30 @@
 
   <h3>Models, reactions, metabolites, and genes</h3>
   <pre class="get"># Get a list of models<br/>curl 'http://{{api_host}}/api/v2/models'</pre>
-  <pre>[{"bigg_id": "iAPECO1_1312",
- "organism": "Escherichia coli APEC O1",
- "metabolite_count": 1944,
- "gene_count": 1313,
- "reaction_count": 2737},
+  <pre>{"results_count": 76,
+ "results": [{"bigg_id": "iAPECO1_1312",
+              "organism": "Escherichia coli APEC O1",
+              "metabolite_count": 1944,
+              "gene_count": 1313,
+              "reaction_count": 2737},
+ 
+             {"bigg_id": "iND750",
+              "organism": "Saccharomyces cerevisiae S288c",
+              "metabolite_count": 1061,
+              "gene_count": 750,
+              "reaction_count": 1266},
 
-{"bigg_id": "iND750",
- "organism": "Saccharomyces cerevisiae S288c",
- "metabolite_count": 1061,
- "gene_count": 750,
- "reaction_count": 1266},
-
-...
-]</pre>
+             ... ]
+}</pre>
 	
   <pre class="get"># Get model details<br/>curl 'http://{{api_host}}/api/v2/models/iND750'</pre>
   <pre>{"organism": "Saccharomyces cerevisiae S288c",
  "genome": "PRJNA43747",
  "metabolite_count": 1061,
  "gene_count": 750,
- "reaction_count": 1266}</pre>
+ "reaction_count": 1266,
+ "reference_type": "pmid",
+ "reference_id": "15197165"}</pre>
   
   <pre class="get"># Download a model in JSON format<br/>curl 'http://{{api_host}}/api/v2/models/iND750/download'</pre>
   <pre># Returns the whole model</pre>
@@ -224,58 +227,31 @@
 
   <hr/>
 	<h3>Search</h3>
-  <pre class="get">curl 'http://{{api_host}}/api/v2/search?query=g3p'</pre>
-	<pre>{"results": {
-    "models": [],
-    "reactions": [
-      {"model_bigg_id": "universal",
-       "bigg_id": "G3PD"},
-      {"model_bigg_id": "universal",
-       "bigg_id": "G3PT"},
-
-      ...
-    ],
-    "metabolites": [
-      {"model_bigg_id": "universal",
-       "bigg_id": "g3p"},
-      {"model_bigg_id": "universal",
-       "bigg_id": "g3pg"},
-
-      ...
-    ],
-    "genes": []
-  }
+  <pre class="get">curl 'http://{{api_host}}/api/v2/search?query=g3p&search_type=metabolites'</pre>
+	<pre>{"results_count": 10,
+ "results": [
+     {"model_bigg_id": "Universal", "bigg_id": "g3p", "name": "Glyceraldehyde 3-phosphate", "organism": ""},
+     {"model_bigg_id": "Universal", "bigg_id": "g3pc", "name": "sn-Glycero-3-phosphocholine", "organism": ""},
+     ...
+    ]
 }</pre>
 	
-	<pre class="get">curl 'http://{{api_host}}/api/v2/search?query=gapA'</pre>
-	<pre>{"results": {
-    "models": [],
-    "reactions": [],
-    "metabolites": [],
-    "genes": [
-      {"model_bigg_id": "iSF_1195",
-       "bigg_id": "SF1444"},
-      {"model_bigg_id": "iPC815",
-       "bigg_id": "YPO2157"},
-	  
-      ...
+	<pre class="get">curl 'http://{{api_host}}/api/v2/search?query=gapA&search_type=genes'</pre>
+	<pre>{"results_count": 55,
+ "results": [
+     {"model_bigg_id": "iAF987", "bigg_id": "Gmet_1946", "name": "gapA", "organism": "Geobacter metallireducens GS-15"},
+     {"model_bigg_id": "iAF1260", "bigg_id": "b1779", "name": "gapA", "organism": "Escherichia coli str. K-12 substr. MG1655"},
+     ...
     ]
-  }
 }</pre>
 
-	<pre class="get">curl 'http://{{api_host}}/api/v2/search?query=iJO1366'</pre>
-	<pre>{"results": {
-    "models": [
-      {"bigg_id": "iJO1366"
-       "organism": "Escherichia coli str. K-12 substr. MG1655",
-       "metabolite_count": 1866,
-       "gene_count": 1367,
-       "reaction_count": 2645}
-    ],
-    "reactions": [],
-    "metabolites": [],
-    "genes": []
-  }
+	<pre class="get">curl 'http://{{api_host}}/api/v2/search?query=iJO1366&search_type=models'</pre>
+	<pre>{"results_count": 1,
+ "results": [{"bigg_id": "iJO1366",
+              "organism": "Escherichia coli str. K-12 substr. MG1655",
+              "metabolite_count": 1866,
+              "gene_count": 1367, 
+              "reaction_count": 2644}]}
 }</pre>
 
   <div id="bottom">

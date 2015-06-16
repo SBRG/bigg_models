@@ -129,7 +129,7 @@ def get_application():
         #
         # Static/Download
         (r'/static/(.*)$', StaticFileHandler, {'path': join(directory, 'static')})
-    ], debug=True)
+    ], debug=False)
 
 def run(public=True):
     """Run the server"""
@@ -155,6 +155,34 @@ def stop():
 # Handlers
 # -------------------------------------------------------------------------------
 
+
+def _possibly_compartmentalized_met_id(obj):
+    if 'compartment_bigg_id' not in obj:
+        return obj['bigg_id']
+    else:
+        return '{bigg_id}_{compartment_bigg_id}'.format(**obj)
+
+
+def _parse_col_arg(s):
+    try:
+        return s.split(',')
+    except AttributeError:
+        return None
+
+
+def _get_col_name(query_arguments, columns, default_column=None,
+                  default_direction='ascending'):
+    for k, v in query_arguments.iteritems():
+        split = [x.strip('[]') for x in k.split('[')] 
+        if len(split) != 2:
+            continue
+        if split[0] == 'col':
+            sort_direction = ('ascending' if v[0] == '0' else 'descending')
+            sort_col_index = int(split[1])
+            return columns[sort_col_index], sort_direction
+    return default_column, default_direction
+
+
 class BaseHandler(RequestHandler):
     pass
 
@@ -170,10 +198,33 @@ class MainHandler(BaseHandler):
 # reactions
 class UniversalReactionListHandler(BaseHandler):
     def get(self):
+        # get arguments
+        page = self.get_argument('page', None)
+        size = self.get_argument('size', None)
+        include_link_urls = (self.get_argument('include_link_urls', None) is not None) 
+
+        # defaults
+        sort_column = 'bigg_id'
+        sort_direction = 'ascending'
+
+        # get the sorting column
+        columns = _parse_col_arg(self.get_argument('columns', None))
+        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns, 
+                                                    sort_column, sort_direction)
+
+        # run the queries
         session = Session()
-        universal_reactions = [{'bigg_id': x[0], 'name': x[1]}
-                               for x in session.query(Reaction.bigg_id, Reaction.name).all()]
-        data = json.dumps(sorted(universal_reactions, key=lambda r: r['bigg_id'].lower()))
+        raw_results = queries.get_universal_reactions(session, page, size,
+                                                      sort_column, sort_direction)
+        if include_link_urls:
+            raw_results = [dict(x, link_urls={'bigg_id': '/universal/reactions/{bigg_id}'.format(**x)})
+                           for x in raw_results]
+        print raw_results
+        result = {'results': [dict(x, model_bigg_id='Universal') for x in raw_results],
+                  'results_count': queries.get_universal_reactions_count(session)}
+
+        # write out the JSON
+        data = json.dumps(result)
         self.write(data)
         self.set_header('Content-type', 'application/json')
         self.finish()
@@ -185,18 +236,8 @@ class UniversalReactionListDisplayHandler(BaseHandler):
     @gen.coroutine
     def get(self):
         template = env.get_template("list_display.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/universal/reactions' % (options.port, api_v)
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        dictionary = {'results': {'reactions': [{'bigg_id': r['bigg_id'],
-                                                 'name': r['name'],
-                                                 'model_bigg_id': 'universal'}
-                                                for r in json.loads(response.body)]}}
+        dictionary = {'results': {'reactions': 'ajax'},
+                      'hide_organism': True}
         self.write(template.render(dictionary)) 
         self.set_header('Content-type','text/html')
         self.finish()
@@ -215,6 +256,7 @@ class UniversalReactionHandler(BaseHandler):
         self.set_header('Content-type', 'json')
         self.finish()
             
+
 
 class UniversalReactionDisplayHandler(BaseHandler):
     @asynchronous
@@ -238,12 +280,33 @@ class UniversalReactionDisplayHandler(BaseHandler):
 
 class UniversalMetaboliteListHandler(BaseHandler):
     def get(self):
-        session = Session()
-        metabolites = [{'bigg_id': x[0], 'name': x[1]}
-                       for x in session.query(Metabolite.bigg_id, Metabolite.name).all()]
-        data = json.dumps(sorted(metabolites, key=lambda m: m['bigg_id'].lower()))
-        session.close()
+        # get arguments
+        page = self.get_argument('page', None)
+        size = self.get_argument('size', None)
+        include_link_urls = (self.get_argument('include_link_urls', None) is not None) 
 
+        # defaults
+        sort_column = 'bigg_id'
+        sort_direction = 'ascending'
+
+        # get the sorting column
+        columns = _parse_col_arg(self.get_argument('columns', None))
+        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns, 
+                                                    sort_column, sort_direction)
+
+        # run the queries
+        session = Session()
+        raw_results = queries.get_universal_metabolites(session, page, size,
+                                                        sort_column, sort_direction)
+        # add links and universal
+        if include_link_urls:
+            raw_results = [dict(x, link_urls={'bigg_id': '/universal/metabolites/{bigg_id}'.format(**x)})
+                           for x in raw_results]
+        result = {'results': [dict(x, model_bigg_id='Universal') for x in raw_results],
+                  'results_count': queries.get_universal_metabolites_count(session)}
+        
+        session.close()
+        data = json.dumps(result)
         self.write(data)
         self.set_header('Content-type', 'application/json')
         self.finish()
@@ -254,19 +317,8 @@ class UniversalMetaboliteListDisplayHandler(BaseHandler):
     @gen.coroutine
     def get(self):
         template = env.get_template("list_display.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/universal/metabolites' % \
-                      (options.port, api_v)
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        template_data = {'results': {'metabolites': [{'bigg_id': r['bigg_id'],
-                                                      'name': r['name'],
-                                                      'model_bigg_id': 'universal'}
-                                                     for r in json.loads(response.body)]}}
+        template_data = {'results': {'metabolites': 'ajax'},
+                         'hide_organism': True}
         self.write(template.render(template_data)) 
         self.set_header('Content-type','text/html')
         self.finish()
@@ -303,11 +355,33 @@ class UniversalMetaboliteDisplayHandler(BaseHandler):
 
 class ReactionListHandler(BaseHandler):
     def get(self, model_bigg_id):
-        session = Session()
-        result = queries.get_reactions_for_model(model_bigg_id, session)
-        sorted(result, key=lambda r: r['bigg_id'].lower())
-        session.close()
+        # get arguments
+        page = self.get_argument('page', None)
+        size = self.get_argument('size', None)
+        include_link_urls = (self.get_argument('include_link_urls', None) is not None) 
 
+        # defaults
+        sort_column = 'bigg_id'
+        sort_direction = 'ascending'
+
+        # get the sorting column
+        columns = _parse_col_arg(self.get_argument('columns', None))
+        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns, 
+                                                    sort_column, sort_direction)
+
+        # run the queries
+        session = Session()
+        raw_results = queries.get_model_reactions(model_bigg_id, session, page,
+                                                  size, sort_column,
+                                                  sort_direction) 
+        # add the URL
+        if include_link_urls:
+            raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/reactions/{bigg_id}'.format(**x)})
+                           for x in raw_results]
+        result = {'results': raw_results,
+                  'results_count': queries.get_model_reactions_count(model_bigg_id, session)}
+
+        session.close()
         self.write(json.dumps(result))
         self.set_header('Content-type', 'json')
         self.finish()   
@@ -318,21 +392,7 @@ class ReactionListDisplayHandler(BaseHandler):
     @gen.coroutine
     def get(self, model_bigg_id):
         template = env.get_template("list_display.html")
-        http_client = AsyncHTTPClient()
-        url_request = ('http://localhost:%d/api/%s/models/%s/reactions' %
-                       (options.port, api_v, url_escape(model_bigg_id, plus=False)))
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        response_data = json.loads(response.body)
-        template_data = {'results': {'reactions': [{'model_bigg_id': model_bigg_id,
-                                                    'bigg_id': x['bigg_id'],
-                                                    'name': x['name'],
-                                                    'organism': x['organism']}
-                                                   for x in response_data]}}
+        template_data = {'results': {'reactions': 'ajax'}}
         self.write(template.render(template_data)) 
         self.set_header('Content-type','text/html')
         self.finish()
@@ -404,7 +464,8 @@ class CompartmentListDisplayHandler(BaseHandler):
         if response.error:
             raise HTTPError(404)
         results = json.loads(response.body)
-        self.write(template.render({'compartments': results})) 
+        self.write(template.render({'compartments': results,
+                                    'no_pager': True})) 
         self.set_header('Content-type','text/html')
         self.finish()
 
@@ -511,11 +572,34 @@ class GenomeDisplayHandler(BaseHandler):
 # Models
 class ModelListHandler(BaseHandler):    
     def get(self):
-        session = Session()
-        model_list = queries.get_model_list_and_counts(session)
-        session.close()
+        # get arguments
+        page = self.get_argument('page', None)
+        size = self.get_argument('size', None)
+        include_link_urls = (self.get_argument('include_link_urls', None) is not None) 
 
-        data = json.dumps(model_list)
+        # defaults
+        sort_column = 'bigg_id'
+        sort_direction = 'ascending'
+
+        # get the sorting column
+        columns = _parse_col_arg(self.get_argument('columns', None))
+        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns, 
+                                                    sort_column, sort_direction)
+
+        # run the queries
+        session = Session()
+        raw_results = queries.get_models(session, page, size, sort_column, sort_direction)
+        if include_link_urls:
+            raw_results = [dict(x, link_urls={'bigg_id': '/models/{bigg_id}'.format(**x),
+                                              'metabolite_count': '/models/{bigg_id}/metabolites'.format(**x),
+                                              'reaction_count': '/models/{bigg_id}/reactions'.format(**x),
+                                              'gene_count': '/models/{bigg_id}/genes'.format(**x)})
+                           for x in raw_results]
+        result = {'results': raw_results,
+                  'results_count': queries.get_models_count(session)}
+
+        session.close()
+        data = json.dumps(result)
         self.write(data)
         self.set_header('Content-type', 'application/json')
         self.finish()
@@ -526,15 +610,7 @@ class ModelsListDisplayHandler(BaseHandler):
     @gen.coroutine
     def get(self):
         template = env.get_template("list_display.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/models' % (options.port, api_v)
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        template_data = {'results': {'models': json.loads(response.body)}}
+        template_data = {'results': {'models': 'ajax'}}
         self.write(template.render(template_data)) 
         self.set_header('Content-type','text/html')
         self.finish()
@@ -568,7 +644,6 @@ class ModelDisplayHandler(BaseHandler):
         http_client = AsyncHTTPClient()
         url_request = 'http://localhost:%d/api/%s/models/%s' % \
                       (options.port, api_v, url_escape(model_bigg_id, plus=False))
-        print url_request
         request = tornado.httpclient.HTTPRequest(url=url_request,
                                                  connect_timeout=20.0,
                                                  request_timeout=20.0)
@@ -583,11 +658,34 @@ class ModelDisplayHandler(BaseHandler):
 
 class MetaboliteListHandler(BaseHandler):
     def get(self, model_bigg_id):
+        # get arguments
+        page = self.get_argument('page', None)
+        size = self.get_argument('size', None)
+        include_link_urls = (self.get_argument('include_link_urls', None) is not None) 
+
+        # defaults
+        sort_column = 'bigg_id'
+        sort_direction = 'ascending'
+
+        # get the sorting column
+        columns = _parse_col_arg(self.get_argument('columns', None))
+        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns, 
+                                                    sort_column, sort_direction)
+
+        # run the queries
         session = Session()
-        metaboliteList = queries.get_metabolites_for_model(model_bigg_id, session)
+        raw_results = queries.get_model_metabolites(model_bigg_id, session,
+                                                    page, size, sort_column,
+                                                    sort_direction)
+        # add the URL
+        if include_link_urls:
+            raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/metabolites/{bigg_id}_{compartment_bigg_id}'.format(**x)})
+                           for x in raw_results]
+        result = {'results': raw_results,
+                  'results_count': queries.get_model_metabolites_count(model_bigg_id, session)}
+
         session.close()
-        
-        data = json.dumps(sorted(metaboliteList, key=lambda m: m['bigg_id'].lower()))
+        data = json.dumps(result)
         self.write(data)
         self.set_header('Content-type', 'application/json')
         self.finish()
@@ -651,11 +749,33 @@ class MetaboliteDisplayHandler(BaseHandler):
 
 class GeneListHandler(BaseHandler):
     def get(self, model_bigg_id):
-        session = Session()
-        results = queries.get_gene_list_for_model(model_bigg_id, session)
-        session.close()
+        page = self.get_argument('page', None)
+        size = self.get_argument('size', None)
+        include_link_urls = (self.get_argument('include_link_urls', None) is not None) 
 
-        data = json.dumps(sorted(results, key=lambda s: s['bigg_id'].lower()))
+        # defaults
+        sort_column = 'bigg_id'
+        sort_direction = 'ascending'
+
+        # get the sorting column
+        columns = _parse_col_arg(self.get_argument('columns', None))
+        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns, 
+                                                    sort_column, sort_direction)
+
+        # run the queries
+        session = Session()
+        raw_results = queries.get_model_genes(model_bigg_id, session, page,
+                                              size, sort_column, sort_direction)
+
+        # add the URL
+        if include_link_urls:
+            raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/genes/{bigg_id}'.format(**x)})
+                           for x in raw_results]
+        result = {'results': raw_results,
+                  'results_count': queries.get_model_genes_count(model_bigg_id, session)}
+
+        session.close()
+        data = json.dumps(result)
         self.write(data)
         self.set_header('Content-type', 'application/json')
         self.finish()
@@ -666,16 +786,8 @@ class GeneListDisplayHandler(BaseHandler):
     @gen.coroutine
     def get(self, model_bigg_id):
         template = env.get_template("list_display.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/models/%s/genes' % \
-                      (options.port, api_v, url_escape(model_bigg_id, plus=False))
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        template_data = {'results': {'genes': json.loads(response.body)}}
+        template_data = {'results': {'genes': 'ajax'}}
+
         self.write(template.render(template_data))
         self.set_header('Content-type','text/html') 
         self.finish()
@@ -718,51 +830,92 @@ class GeneDisplayHandler(BaseHandler):
 
 class SearchHandler(BaseHandler):
     def get(self):
+        # get arguments
         query_string = self.get_argument("query")
+        page = self.get_argument('page', None)
+        size = self.get_argument('size', None)
+        search_type = self.get_argument('search_type', None)
+        include_link_urls = (self.get_argument('include_link_urls', None) is not None) 
 
-        session = Session()
-        # genes
-        gene_list = queries.search_for_genes(query_string, session)
+        # defaults
+        sort_column = None
+        sort_direction = 'ascending'
+
+        # get the sorting column
+        columns = _parse_col_arg(self.get_argument('columns', None))
+        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns, 
+                                                    sort_column, sort_direction)
+
+        # run the queries
+        session = Session()      
+        result = None
         
-        # reactions
-         
-        reaction_list = queries.search_for_universal_reactions(query_string,
-                                                               session)
-        # metabolites
-        metabolite_list = []
-        metabolite_list += queries.search_for_universal_metabolites(query_string,
-                                                                    session)
-        metabolite_list += queries.search_for_metabolites(query_string, session,
-                                                          strict=True)
-        # models
-        
-        model_list = queries.search_for_models(query_string, session)
+        if search_type == 'reactions':
+            # reactions
+            raw_results = queries.search_for_universal_reactions(query_string, session, page,
+                                                                 size, sort_column, sort_direction)
+            if include_link_urls:
+                raw_results = [dict(x, link_urls={'bigg_id': '/universal/reactions/{bigg_id}'.format(**x)})
+                               for x in raw_results]
+            result = {'results': [dict(x, model_bigg_id='Universal', organism='') for x in raw_results],
+                      'results_count': queries.search_for_universal_reactions_count(query_string,
+                                                                                    session)}
+
+        elif search_type == 'metabolites':
+            raw_results = queries.search_for_universal_metabolites(query_string, session,
+                                                                    page, size, sort_column,
+                                                                    sort_direction)
+            if include_link_urls:
+                raw_results = [dict(x, link_urls={'bigg_id': '/universal/metabolites/{bigg_id}'.format(**x)})
+                            for x in raw_results]
+
+            result = {'results': [dict(x, model_bigg_id='Universal', organism='') for x in raw_results],
+                        'results_count': queries.search_for_universal_metabolites_count(query_string, session)}
+
+        elif search_type == 'genes':
+            raw_results = queries.search_for_genes(query_string, session, page,
+                                                   size, sort_column,
+                                                   sort_direction)
+            if include_link_urls:
+                raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/genes/{bigg_id}'.format(**x)})
+                               for x in raw_results]
+
+            result = {'results': raw_results,
+                      'results_count': queries.search_for_genes_count(query_string, session)}
+
+        elif search_type == 'models':
+            raw_results = queries.search_for_models(query_string, session, page,
+                                                    size, sort_column, sort_direction)
+            if include_link_urls:
+                raw_results = [dict(x, link_urls={'bigg_id': '/models/{bigg_id}'.format(**x),
+                                                'metabolite_count': '/models/{bigg_id}/metabolites'.format(**x),
+                                                'reaction_count': '/models/{bigg_id}/reactions'.format(**x),
+                                                'gene_count': '/models/{bigg_id}/genes'.format(**x)})
+                               for x in raw_results]
+
+            result = {'results': raw_results,
+                      'results_count': queries.search_for_models_count(query_string, session)}
+
+        else:
+            raise HTTPError(400, 'Bad search_type %s' % search_type)
+            
         session.close()
-
-        dictionary = {"results": {"reactions": reaction_list, 
-                                  "metabolites": metabolite_list,
-                                  "models": model_list,
-                                  "genes": gene_list}}
-        self.write(json.dumps(dictionary)) 
+        data = json.dumps(result)
+        self.write(data) 
         self.set_header('Content-type', 'application/json')
         self.finish()
+
 
 class SearchDisplayHandler(BaseHandler):
     @asynchronous
     @gen.coroutine
     def get(self):
         template = env.get_template("list_display.html")
-        http_client = AsyncHTTPClient()
-        query_url = url_escape(self.get_argument("query"), plus=True)
-        url_request = ('http://localhost:%d/api/%s/search?query=%s' %
-                       (options.port, api_v, query_url))
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        template_data = json.loads(response.body)
+        template_data = {'results': {'models': 'ajax',
+                                     'reactions': 'ajax',
+                                     'metabolites': 'ajax',
+                                     'genes': 'ajax'},
+                         'tablesorter_size': 20}
         self.write(template.render(template_data))
         self.set_header('Content-type','text/html')
         self.finish() 
@@ -781,24 +934,22 @@ class AdvancedSearchHandler(BaseHandler):
         self.set_header('Content-type','text/html') 
         self.finish()
 
+
 class LinkoutAdvanceSearchResultsHandler(BaseHandler):
     def post(self):
         template = env.get_template("list_display.html")
-        #query_strings = [x.strip() for x in self.get_argument('query', '').split(',') if x != '']
-        query_string = self.get_argument('query', '')
+        query_string = self.get_argument('query', None)
         external_id = self.get_argument("linkout_choice", None)
-        reaction_results = []
-        metabolite_results = []
-        gene_results = []
+
         session = Session()
-        metabolite_results += queries.search_for_metabolites_by_external_id(query_string, external_id, session)
-        dictionary = {'results': {'reactions': reaction_results, 
-                                  'metabolites': metabolite_results, 
-                                  'genes': gene_results}}
+        metabolite_results = queries.search_for_metabolites_by_external_id(query_string, external_id, session)
+        dictionary = {'results': {'metabolites': metabolite_results}}
+        session.close()
 
         self.write(template.render(dictionary)) 
         self.set_header('Content-type','text/html')
         self.finish()
+
 
 class AdvancedSearchExternalIDHandler(BaseHandler):
     def post(self):
@@ -809,29 +960,31 @@ class AdvancedSearchExternalIDHandler(BaseHandler):
                                                               query_string,
                                                               database_source)
         session.close()
-        dictionary = {'results': {'metabolites': metabolites}}
+        dictionary = {'results': {'metabolites': metabolites},
+                      'no_pager': True}
         
         template = env.get_template("list_display.html")
         self.write(template.render(dictionary)) 
         self.set_header('Content-type','text/html')
         self.finish() 
 
+
 class AdvancedSearchResultsHandler(BaseHandler):
     def post(self):
         query_strings = [x.strip() for x in
                          self.get_argument('query', '').split(',')
                          if x != '']
-
+        # run the queries
+        session = Session()
         def checkbox_arg(name):
             return self.get_argument(name, None) == 'on'
 
-        session = Session()
+        
         all_models = queries.get_model_list(session)
         model_list = [m for m in all_models if checkbox_arg(m)]
         include_metabolites = checkbox_arg('include_metabolites')
         include_reactions = checkbox_arg('include_reactions')
         include_genes = checkbox_arg('include_genes')
-
         metabolite_results = []
         reaction_results = []
         gene_results = []
@@ -847,14 +1000,14 @@ class AdvancedSearchResultsHandler(BaseHandler):
             if include_metabolites:
                 metabolite_results += queries.search_for_metabolites(query_string, session,
                                                                      limit_models=model_list)
+        result = {'results': {'reactions': reaction_results, 
+                              'metabolites': metabolite_results, 
+                              'genes': gene_results},
+                  'no_pager': True}
+        
         session.close()
-
-        dictionary = {'results': {'reactions': reaction_results, 
-                                  'metabolites': metabolite_results, 
-                                  'genes': gene_results}}
-
         template = env.get_template("list_display.html")
-        self.write(template.render(dictionary)) 
+        self.write(template.render(result)) 
         self.set_header('Content-type','text/html')
         self.finish() 
 
@@ -871,6 +1024,7 @@ class AutocompleteHandler(BaseHandler):
         self.write(json.dumps(result_array))
         self.set_header('Content-type', 'application/json')
         self.finish()
+
 
 class EscherMapJSONHandler(BaseHandler):
     def get(self, map_name):
@@ -891,7 +1045,8 @@ class SubmitErrorHandler(BaseHandler):
         type = self.get_argument("type", "empty")
         weburl = self.get_argument("url", "empty")
         now = datetime.datetime.now()
-        commentobject = Comments(email = useremail, text = comments, date_created = now, type = type, url = weburl)
+        commentobject = Comments(email=useremail, text=comments,
+                                 date_created=now, type=type, url=weburl)
         session.add(commentobject)
         session.commit()
         session.close()

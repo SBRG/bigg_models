@@ -19,10 +19,12 @@ def session(request):
 
     return base.Session()
 
+
 # util
 def test__shorten_name():
     assert _shorten_name(None) is None
     assert _shorten_name('abc', 2) == 'ab...'
+
 
 # Reactions
 def test_get_reaction_and_models(session):
@@ -62,15 +64,16 @@ def test_get_model_reaction(session):
 
     
 # Models
-def test_get_model_list_and_counts():
+def test_get_models():
     session = base.Session()
-    result = get_model_list_and_counts(session)
+    result = get_models(session)
     assert 'iAPECO1_1312' in [r['bigg_id'] for r in result]
     assert 'Escherichia coli APEC O1' in [r['organism'] for r in result]
     assert type(result[0]['metabolite_count']) is int
     assert type(result[0]['reaction_count']) is int
     assert type(result[0]['gene_count']) is int
     session.close()
+
 
 def test_get_model_and_counts():
     session = base.Session()
@@ -94,6 +97,7 @@ def test_get_model_list():
     assert 'iAPECO1_1312' in result
     session.close()
     
+
 # Metabolites
 def test_get_metabolite_list_for_reaction():
     session = base.Session()
@@ -103,6 +107,7 @@ def test_get_metabolite_list_for_reaction():
     assert 'c' in [r['compartment_bigg_id'] for r in result]
     session.close()
     
+
 def test_get_metabolite():
     session = base.Session()
     result = get_metabolite('akg', session)
@@ -129,12 +134,11 @@ def test_get_model_comp_metabolite(session):
     assert all([r['model_bigg_id'] == 'iAPECO1_1312' for r in result['reactions']])
     
 
-def test_get_metabolites_for_model():
-    session = base.Session()
-    results = get_metabolites_for_model('iAPECO1_1312', session)
+def test_get_model_metabolites(session):
+    results = get_model_metabolites('iAPECO1_1312', session)
     assert 'akg' in [x['bigg_id'] for x in results]
     assert 'c' in [x['compartment_bigg_id'] for x in results]
-    session.close()
+
 
 # genes
 def test_get_gene_list_for_model():
@@ -142,6 +146,7 @@ def test_get_gene_list_for_model():
     results = get_gene_list_for_model('iAPECO1_1312', session)
     assert 'APECO1_706' in [x['bigg_id'] for x in results]
     session.close()
+
 
 def test_get_gene_list_for_model_reaction(session):
     mr_db = (session
@@ -199,26 +204,10 @@ def test_json_for_map():
 
 
 # search
-def test_search_for_genes(session):
-    results = search_for_genes('APECO1_706', session)
-    assert results[0]['bigg_id'] == 'APECO1_706'
-    assert results[0]['model_bigg_id'] == 'iAPECO1_1312'
-    results = search_for_genes('APECO1_706', session,
-                               limit_models=['iAPECO1_1312', 'iJO1366'])
-    assert results[0]['bigg_id'] == 'APECO1_706'
-    results = search_for_genes('APECO1_706', session, limit_models=['iJO1366'])
-    assert len(results) == 0
-    results = search_for_genes('APECO1_706_6', session)
-    assert len(results) == 0
-    # test query == ''
-    results = search_for_genes('', session)
-    assert len(results) == 0
-
 
 def test_search_for_universal_reactions(session):
     results = search_for_universal_reactions('GAPD', session)
     assert results[0]['bigg_id'] == 'GAPD'
-    assert results[0]['model_bigg_id'] == 'universal'
     
 
 def test_search_for_reactions(session):
@@ -239,7 +228,6 @@ def test_search_for_reactions(session):
 def test_search_for_universal_metabolites(session):
     results = search_for_universal_metabolites('g3p', session)
     assert results[0]['bigg_id'] == 'g3p'
-    assert results[0]['model_bigg_id'] == 'universal'
 
 
 def test_search_for_metabolites():
@@ -257,6 +245,23 @@ def test_search_for_metabolites():
     assert results == []
     session.close()
     
+
+def test_search_for_genes(session):
+    results = search_for_genes('APECO1_706', session)
+    assert results[0]['bigg_id'] == 'APECO1_706'
+    assert results[0]['model_bigg_id'] == 'iAPECO1_1312'
+    results = search_for_genes('APECO1_706', session,
+                               limit_models=['iAPECO1_1312', 'iJO1366'])
+    assert results[0]['bigg_id'] == 'APECO1_706'
+    results = search_for_genes('APECO1_706', session, limit_models=['iJO1366'])
+    assert len(results) == 0
+    results = search_for_genes('APECO1_706_6', session)
+    assert len(results) == 0
+    # test query == ''
+    results = search_for_genes('', session)
+    assert len(results) == 0
+
+
 def test_search_for_models():
     session = base.Session()
     results = search_for_models('iAPECO1_1312', session)
@@ -269,6 +274,7 @@ def test_search_for_models():
     results = search_for_models('Escherichia coli', session)
     assert 'iAPECO1_1312' in [x['bigg_id'] for x in results]
     session.close()
+
 
 def test_search_ids_fast():
     session = base.Session()

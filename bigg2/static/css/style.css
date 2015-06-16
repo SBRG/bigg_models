@@ -235,3 +235,20 @@ td:target {
 .group {
   text-align: center;
 }
+
+/* TableSorter and Pager */
+.tablesorter {
+  margin-bottom: 30px !important;
+}
+/* pager style */
+.pager {
+  border-width: 2px !important;
+  border-color: rgb(185, 202, 213) !important;
+  padding-left: 20px !important;
+  /*  border-radius: 5px 5px 0 0 !important; */
+  border-style: solid !important;
+}
+/* spinner on right */
+.no-processing>th {
+  background-image: none !important;
+}
