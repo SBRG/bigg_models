@@ -1568,7 +1568,6 @@ def search_ids_fast(query_string, session, limit=None):
                     organism_q))
 
     if limit is not None:
-        print limit
         query = query.limit(limit)
         
     return [x[0] for x in query.all()]

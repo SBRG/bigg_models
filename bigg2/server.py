@@ -219,7 +219,6 @@ class UniversalReactionListHandler(BaseHandler):
         if include_link_urls:
             raw_results = [dict(x, link_urls={'bigg_id': '/universal/reactions/{bigg_id}'.format(**x)})
                            for x in raw_results]
-        print raw_results
         result = {'results': [dict(x, model_bigg_id='Universal') for x in raw_results],
                   'results_count': queries.get_universal_reactions_count(session)}
 
