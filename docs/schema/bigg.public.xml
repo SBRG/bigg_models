@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<database name="bigg" schema="public" type="PostgreSQL - 9.4.0">
+   <tables>
+      <table name="chromosome" numRows="127" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <child column="chromosome_id" foreignKey="genome_region_chromosome_id_fkey" implied="false" onDeleteCascade="false" table="genome_region"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="genome_id" nullable="true" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="chromosome_genome_id_fkey" implied="false" onDeleteCascade="false" table="genome"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="genbank_id" nullable="true" remarks="" size="100" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="ncbi_id" nullable="true" remarks="" size="100" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="chromosome_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="chromosome_genome_id_genbank_id_key" unique="true">
+            <column ascending="true" name="genome_id"/>
+            <column ascending="true" name="genbank_id"/>
+         </index>
+      </table>
+      <table name="compartment" numRows="14" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <child column="compartment_id" foreignKey="compartmentalized_component_compartment_id_fkey" implied="false" onDeleteCascade="true" table="compartmentalized_component"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="bigg_id" nullable="true" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="2" name="name" nullable="true" remarks="" size="2147483647" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="compartment_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="compartment_bigg_id_key" unique="true">
+            <column ascending="true" name="bigg_id"/>
+         </index>
+      </table>
+      <table name="compartmentalized_component" numRows="7033" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <child column="compartmentalized_component_id" foreignKey="model_compartmentalized_compo_compartmentalized_component__fkey" implied="false" onDeleteCascade="false" table="model_compartmentalized_component"/>
+            <child column="compartmentalized_component_id" foreignKey="reaction_matrix_compartmentalized_component_id_fkey" implied="false" onDeleteCascade="true" table="reaction_matrix"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="component_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="compartmentalized_component_component_id_fkey" implied="false" onDeleteCascade="true" table="component"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="compartment_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="compartmentalized_component_compartment_id_fkey" implied="false" onDeleteCascade="true" table="compartment"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="compartmentalized_component_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="compartmentalized_component_compartment_id_component_id_key" unique="true">
+            <column ascending="true" name="compartment_id"/>
+            <column ascending="true" name="component_id"/>
+         </index>
+      </table>
+      <table name="component" numRows="4040" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <child column="component_id" foreignKey="compartmentalized_component_component_id_fkey" implied="false" onDeleteCascade="true" table="compartmentalized_component"/>
+            <child column="id" foreignKey="metabolite_id_fkey" implied="false" onDeleteCascade="true" table="metabolite"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="bigg_id" nullable="true" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="2" name="name" nullable="true" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="type" nullable="true" remarks="" size="20" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="component_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="component_bigg_id" unique="false">
+            <column ascending="true" name="bigg_id"/>
+         </index>
+         <index name="component_bigg_id_key" unique="true">
+            <column ascending="true" name="bigg_id"/>
+         </index>
+         <index name="component_name" unique="false">
+            <column ascending="true" name="name"/>
+         </index>
+      </table>
+      <table name="escher_map" numRows="8" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <child column="escher_map_id" foreignKey="escher_map_matrix_escher_map_id_fkey" implied="false" onDeleteCascade="false" table="escher_map_matrix"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="map_name" nullable="false" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="2" name="map_data" nullable="false" remarks="" size="2147483647" type="bytea"/>
+         <column autoUpdated="false" digits="0" id="3" name="model_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="escher_map_model_id_fkey" implied="false" onDeleteCascade="false" table="model"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="4" name="priority" nullable="false" remarks="" size="10" type="int4"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="escher_map_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="escher_map_map_name_key" unique="true">
+            <column ascending="true" name="map_name"/>
+         </index>
+      </table>
+      <table name="escher_map_matrix" numRows="1343" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4"/>
+         <column autoUpdated="false" digits="0" id="1" name="ome_id" nullable="false" remarks="" size="10" type="int4"/>
+         <column autoUpdated="false" digits="0" id="2" name="escher_map_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="escher_map_matrix_escher_map_id_fkey" implied="false" onDeleteCascade="false" table="escher_map"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="escher_map_element_id" nullable="true" remarks="" size="50" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="4" name="type" nullable="false" remarks="" size="2147483647" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="escher_map_matrix_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="escher_map_matrix_ome_id_escher_map_id_key" unique="true">
+            <column ascending="true" name="ome_id"/>
+            <column ascending="true" name="escher_map_id"/>
+         </index>
+      </table>
+      <table name="gene" numRows="349445" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <child column="alternative_transcript_of" foreignKey="gene_alternative_transcript_of_fkey" implied="false" onDeleteCascade="false" table="gene"/>
+            <child column="gene_id" foreignKey="model_gene_gene_id_fkey" implied="false" onDeleteCascade="true" table="model_gene"/>
+            <parent column="id" foreignKey="gene_id_fkey" implied="false" onDeleteCascade="true" table="genome_region"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="info" nullable="true" remarks="" size="300" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="2" name="name" nullable="true" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="locus_tag" nullable="true" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="4" name="mapped_to_genbank" nullable="true" remarks="" size="1" type="bool"/>
+         <column autoUpdated="false" digits="0" id="5" name="alternative_transcript_of" nullable="true" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="gene_alternative_transcript_of_fkey" implied="false" onDeleteCascade="false" table="gene"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="gene_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="gene_name" unique="false">
+            <column ascending="true" name="name"/>
+         </index>
+      </table>
+      <table name="genome" numRows="69" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <child column="genome_id" foreignKey="chromosome_genome_id_fkey" implied="false" onDeleteCascade="false" table="chromosome"/>
+            <child column="genome_id" foreignKey="model_genome_id_fkey" implied="false" onDeleteCascade="true" table="model"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="bioproject_id" nullable="false" remarks="" size="200" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="2" name="organism" nullable="false" remarks="" size="200" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="taxon_id" nullable="true" remarks="" size="200" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="genome_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="genome_bioproject_id_organism_key" unique="true">
+            <column ascending="true" name="bioproject_id"/>
+            <column ascending="true" name="organism"/>
+         </index>
+         <index name="genome_organism" unique="false">
+            <column ascending="true" name="organism"/>
+         </index>
+      </table>
+      <table name="metabolite" numRows="4040" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="metabolite_id_fkey" implied="false" onDeleteCascade="true" table="component"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="formula" nullable="true" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="2" name="smiles" nullable="true" remarks="" size="200" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="charge" nullable="true" remarks="" size="10" type="int4"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="metabolite_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="model" numRows="76" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <child column="model_id" foreignKey="escher_map_model_id_fkey" implied="false" onDeleteCascade="false" table="escher_map"/>
+            <child column="model_id" foreignKey="model_compartmentalized_component_model_id_fkey" implied="false" onDeleteCascade="true" table="model_compartmentalized_component"/>
+            <child column="model_id" foreignKey="model_count_model_id_fkey" implied="false" onDeleteCascade="true" table="model_count"/>
+            <child column="model_id" foreignKey="model_gene_model_id_fkey" implied="false" onDeleteCascade="true" table="model_gene"/>
+            <child column="model_id" foreignKey="model_reaction_model_id_fkey" implied="false" onDeleteCascade="true" table="model_reaction"/>
+            <child column="model_id" foreignKey="publication_model_model_id_fkey" implied="false" onDeleteCascade="true" table="publication_model"/>
+         </column>
+         <column autoUpdated="false" digits="6" id="1" name="first_created" nullable="false" remarks="" size="29" type="timestamp"/>
+         <column autoUpdated="false" digits="0" id="2" name="bigg_id" nullable="false" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="genome_id" nullable="true" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="model_genome_id_fkey" implied="false" onDeleteCascade="true" table="genome"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="4" name="description" nullable="false" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="5" name="published_filename" nullable="true" remarks="" size="2147483647" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="model_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="model_bigg_id" unique="false">
+            <column ascending="true" name="bigg_id"/>
+         </index>
+         <index name="model_bigg_id_genome_id_key" unique="true">
+            <column ascending="true" name="bigg_id"/>
+            <column ascending="true" name="genome_id"/>
+         </index>
+      </table>
+      <table name="model_compartmentalized_component" numRows="129628" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4"/>
+         <column autoUpdated="false" digits="0" id="1" name="model_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="model_compartmentalized_component_model_id_fkey" implied="false" onDeleteCascade="true" table="model"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="compartmentalized_component_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="model_compartmentalized_compo_compartmentalized_component__fkey" implied="false" onDeleteCascade="false" table="compartmentalized_component"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="model_compartmentalized_component_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="model_compartmentalized_compo_compartmentalized_component_i_key" unique="true">
+            <column ascending="true" name="compartmentalized_component_id"/>
+            <column ascending="true" name="model_id"/>
+         </index>
+      </table>
+      <table name="model_count" numRows="76" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('model_count_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="model_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="model_count_model_id_fkey" implied="false" onDeleteCascade="true" table="model"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="reaction_count" nullable="true" remarks="" size="10" type="int4"/>
+         <column autoUpdated="false" digits="0" id="3" name="gene_count" nullable="true" remarks="" size="10" type="int4"/>
+         <column autoUpdated="false" digits="0" id="4" name="metabolite_count" nullable="true" remarks="" size="10" type="int4"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="model_count_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="model_gene" numRows="88842" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4"/>
+         <column autoUpdated="false" digits="0" id="1" name="model_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="model_gene_model_id_fkey" implied="false" onDeleteCascade="true" table="model"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="gene_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="model_gene_gene_id_fkey" implied="false" onDeleteCascade="true" table="gene"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="model_gene_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="model_gene_model_id_gene_id_key" unique="true">
+            <column ascending="true" name="model_id"/>
+            <column ascending="true" name="gene_id"/>
+         </index>
+      </table>
+      <table name="model_reaction" numRows="178784" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4"/>
+         <column autoUpdated="false" digits="0" id="1" name="reaction_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="model_reaction_reaction_id_fkey" implied="false" onDeleteCascade="true" table="reaction"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="model_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="model_reaction_model_id_fkey" implied="false" onDeleteCascade="true" table="model"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="objective_coefficient" nullable="false" remarks="" size="131089" type="numeric"/>
+         <column autoUpdated="false" digits="0" id="4" name="lower_bound" nullable="false" remarks="" size="131089" type="numeric"/>
+         <column autoUpdated="false" digits="0" id="5" name="upper_bound" nullable="false" remarks="" size="131089" type="numeric"/>
+         <column autoUpdated="false" digits="0" id="6" name="gene_reaction_rule" nullable="false" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="7" name="original_gene_reaction_rule" nullable="true" remarks="" size="2147483647" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="model_reaction_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="old_id_model_synonym" numRows="617248" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4"/>
+         <column autoUpdated="false" digits="0" id="1" name="type" nullable="true" remarks="" size="2147483647" type="old_id_synonym_type"/>
+         <column autoUpdated="false" digits="0" id="2" name="synonym_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="old_id_model_synonym_synonym_id_fkey" implied="false" onDeleteCascade="true" table="synonym"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="ome_id" nullable="false" remarks="" size="10" type="int4"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="old_id_model_synonym_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="old_id_model_synonym_synonym_id_ome_id_key" unique="true">
+            <column ascending="true" name="synonym_id"/>
+            <column ascending="true" name="ome_id"/>
+         </index>
+      </table>
+      <table name="publication" numRows="24" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <child column="publication_id" foreignKey="publication_model_publication_id_fkey" implied="false" onDeleteCascade="true" table="publication_model"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="reference_type" nullable="true" remarks="" size="2147483647" type="reference_type"/>
+         <column autoUpdated="false" digits="0" id="2" name="reference_id" nullable="true" remarks="" size="2147483647" type="varchar"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="publication_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="publication_reference_type_reference_id_key" unique="true">
+            <column ascending="true" name="reference_type"/>
+            <column ascending="true" name="reference_id"/>
+         </index>
+      </table>
+      <table name="publication_model" numRows="76" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="model_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="publication_model_model_id_fkey" implied="false" onDeleteCascade="true" table="model"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="publication_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="publication_model_publication_id_fkey" implied="false" onDeleteCascade="true" table="publication"/>
+         </column>
+         <primaryKey column="model_id" sequenceNumberInPK="1"/>
+         <primaryKey column="publication_id" sequenceNumberInPK="2"/>
+         <index name="publication_model_pkey" unique="true">
+            <column ascending="true" name="model_id"/>
+            <column ascending="true" name="publication_id"/>
+         </index>
+      </table>
+      <table name="reaction" numRows="11459" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <child column="reaction_id" foreignKey="model_reaction_reaction_id_fkey" implied="false" onDeleteCascade="true" table="model_reaction"/>
+            <child column="reaction_id" foreignKey="reaction_matrix_reaction_id_fkey" implied="false" onDeleteCascade="false" table="reaction_matrix"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="type" nullable="true" remarks="" size="20" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="2" name="bigg_id" nullable="false" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="name" nullable="false" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="4" name="reaction_hash" nullable="false" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="5" name="pseudoreaction" nullable="true" remarks="" size="1" type="bool"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="reaction_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="reaction_bigg_id" unique="false">
+            <column ascending="true" name="bigg_id"/>
+         </index>
+         <index name="reaction_bigg_id_key" unique="true">
+            <column ascending="true" name="bigg_id"/>
+         </index>
+         <index name="reaction_name" unique="false">
+            <column ascending="true" name="name"/>
+         </index>
+      </table>
+      <table name="reaction_matrix" numRows="50058" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4"/>
+         <column autoUpdated="false" digits="0" id="1" name="reaction_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="reaction_matrix_reaction_id_fkey" implied="false" onDeleteCascade="false" table="reaction"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="compartmentalized_component_id" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="reaction_matrix_compartmentalized_component_id_fkey" implied="false" onDeleteCascade="true" table="compartmentalized_component"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="stoichiometry" nullable="true" remarks="" size="131089" type="numeric"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="reaction_matrix_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="reaction_matrix_reaction_id_compartmentalized_component_id_key" unique="true">
+            <column ascending="true" name="reaction_id"/>
+            <column ascending="true" name="compartmentalized_component_id"/>
+         </index>
+      </table>
+      <table name="synonym" numRows="996156" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="int4">
+            <child column="synonym_id" foreignKey="old_id_model_synonym_synonym_id_fkey" implied="false" onDeleteCascade="true" table="old_id_model_synonym"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="ome_id" nullable="true" remarks="" size="10" type="int4"/>
+         <column autoUpdated="false" digits="0" id="2" name="synonym" nullable="true" remarks="" size="2147483647" type="varchar"/>
+         <column autoUpdated="false" digits="0" id="3" name="type" nullable="true" remarks="" size="2147483647" type="synonym_type"/>
+         <column autoUpdated="false" digits="0" id="4" name="synonym_data_source_id" nullable="true" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="synonym_synonym_data_source_id_fkey" implied="false" onDeleteCascade="true" table="data_source"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="synonym_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="synonym_ome_id_synonym_type_key" unique="true">
+            <column ascending="true" name="ome_id"/>
+            <column ascending="true" name="synonym"/>
+            <column ascending="true" name="type"/>
+         </index>
+      </table>
+   </tables>
+</database>

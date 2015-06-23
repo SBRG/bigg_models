@@ -5,7 +5,6 @@
 env/
 gurobi.log
 BiGG_2.egg-info/
-docs/schema/
 crontab.txt
 bigg2/static/dumped_models/
 bigg2/static/polished_models/

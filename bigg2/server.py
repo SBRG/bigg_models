@@ -128,7 +128,8 @@ def get_application():
         (r'/license$', LicenseHandler),
         #
         # Static/Download
-        (r'/static/(.*)$', StaticFileHandler, {'path': join(directory, 'static')})
+        (r'/static/(.*)$', StaticFileHandler, {'path': join(directory, 'static')}),
+        (r'/schema/(.*)$', StaticFileHandler, {'path': join(directory, '..', 'docs', 'schema')})
     ], debug=True)
 
 def run(public=True):
