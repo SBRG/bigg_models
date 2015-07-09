@@ -2,6 +2,8 @@
 *.DS_Store
 *.pyc
 *.mat
+.idea/
+.project
 env/
 gurobi.log
 BiGG_2.egg-info/
