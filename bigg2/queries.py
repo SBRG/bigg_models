@@ -1,6 +1,7 @@
 from ome.models import *
 from ome.base import Publication, PublicationModel
 from ome.loading.model_loading import parse
+from ome import settings
 
 from sqlalchemy import func
 from sqlalchemy import desc, asc, func, or_, and_
@@ -555,7 +556,7 @@ def get_model_list(session):
 
 def get_model_json_string(model_bigg_id):
     """Get the model JSON for download."""
-    path = join(root_directory, 'static', 'model_dumps',
+    path = join(settings.model_dump_directory,
                 model_bigg_id + '.json')
     try:
         with open(path, 'r') as f:

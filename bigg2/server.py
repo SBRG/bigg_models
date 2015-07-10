@@ -30,8 +30,10 @@ from ome.loading.model_loading.parse import split_compartment
 import ome
 import datetime
 
+# command line options
 define("port", default= 8888, help="run on given port", type=int)
 define("password", default= "", help="password to email", type=str)
+define('debug', default=False, help='Start server in debug mode')
 
 # set up jinja2 template location
 env = Environment(loader=PackageLoader('bigg2', 'templates'),
@@ -50,7 +52,7 @@ api_host = 'bigg.ucsd.edu'
 # -------------------------------------------------------------------------------
 # Application API
 # -------------------------------------------------------------------------------
-def get_application():
+def get_application(debug=False):
     return tornado.web.Application([
         (r'/', MainHandler),
         # 
@@ -129,7 +131,7 @@ def get_application():
         #
         # Static/Download
         (r'/static/(.*)$', StaticFileHandler, {'path': join(directory, 'static')})
-    ], debug=False)
+    ], debug=debug)
 
 def run(public=True):
     """Run the server"""
@@ -139,7 +141,8 @@ def run(public=True):
     os.system('psql -d %s -f %s' % (settings.postgres_database, join(directory, 'setup.sql')))
 
     tornado.options.parse_command_line()
-    http_server = tornado.httpserver.HTTPServer(get_application())
+    debug = options.debug
+    http_server = tornado.httpserver.HTTPServer(get_application(debug=debug))
     print('serving BiGG 2 on port %d' % options.port)
     http_server.listen(options.port, None if public else "localhost")
     try:
