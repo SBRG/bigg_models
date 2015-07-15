@@ -126,9 +126,17 @@ ul.banner-social-buttons {
 p.copyright {
   margin: 15px 0 0;
 }
+
+/* autocomplete */
 .ui-autocomplete-loading {
   background: #fff url('/static/assets/ajax-loader.gif') no-repeat right center;
 }
+.ui-menu-item {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: #444444;
+}
+
 .intro-divider {
   margin-bottom: 30px;
 }
@@ -152,3 +160,11 @@ footer {
   margin: 0 auto 20px auto;
   max-width: 80%;
 }
+
+@media (min-width: 992px) {
+  #bigg2-github {
+    margin-top: 30px;
+  }
+}
+
+

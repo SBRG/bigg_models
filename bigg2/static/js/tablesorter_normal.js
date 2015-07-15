@@ -1,5 +1,4 @@
 $(function() {
-
-$(".tablesorter").tablesorter({widthFixed: true});
-$(".pager.tablesorter-header").hide();
+    $(".tablesorter").tablesorter({widthFixed: true});
+    $(".pager.tablesorter-header").hide();
 });

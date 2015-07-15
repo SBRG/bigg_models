@@ -1,23 +1,27 @@
 {% extends "parent_display.html" %}
 {% block title %}BiGG: Compartments{% endblock %}
 {% block content %}
+  <!-- TableSorter -->
+  <script src="/static/lib/tablesorter/jquery.tablesorter.min.js"></script>
+  <link rel="stylesheet" href="/static/lib/tablesorter/theme.bigg.css">
+  <script src="/static/js/tablesorter_normal.js"></script>
 
   <h1>Compartments</h1>
   <table class="myTable tablesorter">
-	<thead>
-	  <tr>
-		<th>BiGG ID</th>
-		<th>Name</th>
-	  </tr>
-	</thead>
-	<tbody>
+    <thead>
+      <tr>
+        <th>BiGG ID</th>
+        <th>Name</th>
+      </tr>
+    </thead>
+    <tbody>
       {% for compartment in compartments %}
-		<tr class ='rowlink'>  
-	      <td><a href="/compartments/{{compartment['bigg_id']}}">{{compartment['bigg_id']}}</a></td>
-	      <td><a href="/compartments/{{compartment['bigg_id']}}">{{compartment['name']}}</a></td>
-		</tr>
-	  {% endfor %}
-	</tbody>
+        <tr class ='rowlink'>  
+          <td><a href="/compartments/{{compartment['bigg_id']}}">{{compartment['bigg_id']}}</a></td>
+          <td><a href="/compartments/{{compartment['bigg_id']}}">{{compartment['name']}}</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
   </table>
 
-{% endblock %}	
+{% endblock %}

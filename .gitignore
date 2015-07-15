@@ -2,6 +2,8 @@
 *.DS_Store
 *.pyc
 *.mat
+.idea/
+.project
 env/
 gurobi.log
 BiGG_2.egg-info/
@@ -10,3 +12,4 @@ crontab.txt
 bigg2/static/dumped_models/
 bigg2/static/polished_models/
 bigg2/static/published_models/
+.#*
