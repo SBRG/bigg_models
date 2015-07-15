@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import smtplib
 import tornado.ioloop
 import tornado.web
@@ -266,6 +267,9 @@ class UniversalReactionDisplayHandler(BaseHandler):
         if response.error:
             raise HTTPError(404)
         results = json.loads(response.body)
+        results['reaction_string'] = queries.build_reaction_string(results['metabolites'],
+                                                                      result['lower_bound'],
+                                                                      result['upper_bound'])
         self.write(template.render(results))
         self.set_header('Content-type','text/html')
         self.finish()  
@@ -343,7 +347,6 @@ class UniversalMetaboliteHandler(BaseHandler):
         session = Session()
         results = queries.get_metabolite(met_bigg_id, session)
         session.close()            
-
         data = json.dumps(results)
         self.write(data)
         self.set_header('Content-type', 'application/json')
