@@ -258,8 +258,8 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
                          .filter(Model.bigg_id == model_bigg_id)
                          .filter(Reaction.bigg_id == reaction_bigg_id)
                          .all())
-    if model_reaction_db is None:
-        raise NotFoundError('ModelReaction not found')
+    if model_reaction_db is None or len(model_reaction_db) == 0:
+        raise NotFoundError('Reaction %s not found in model %s' %(reaction_bigg_id, model_bigg_id))
 
     # metabolites
     metabolite_db = get_metabolite_list_for_reaction(reaction_bigg_id, session)
@@ -283,7 +283,7 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
                             'upper_bound': result_db[5],
                             'objective_coefficient': result_db[6],
                             'genes': gene_db})
-    
+
     return {'count': len(result_list),
             'bigg_id': reaction_bigg_id,
             'name': model_reaction_db[0][1],
@@ -528,6 +528,8 @@ def get_model_and_counts(model_bigg_id, session):
                 .outerjoin(Publication, Publication.id == PublicationModel.publication_id)
                 .filter(Model.bigg_id == model_bigg_id)
                 .first())
+    if model_db is None:
+        raise NotFoundError("No model found with bigg_id " + model_bigg_id)
     escher_maps = get_escher_maps_for_model(model_db[0].id, session)
     return_dict = {'bigg_id': model_db[0].bigg_id,
                    'published_filename': model_db[0].published_filename,
@@ -659,8 +661,9 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
                  .filter(Model.bigg_id == model_bigg_id)
                  .first())
     if result_db is None:
-        raise NotFoundError('Gene not found for bigg_id %s' % gene_bigg_id)
-    
+        raise NotFoundError('Gene %s not found in model %s' %
+                            (gene_bigg_id, model_bigg_id))
+
     reaction_db = (session
                    .query(Reaction.bigg_id,
                           ModelReaction.gene_reaction_rule,
@@ -724,6 +727,8 @@ def get_metabolite(met_bigg_id, session):
                         Metabolite.formula)
                  .filter(Metabolite.bigg_id == met_bigg_id)
                  .first())
+    if result_db is None:
+        raise NotFoundError("No Metabolite found with bigg id " + met_bigg_id)
     comp_comp_db = (session
                     .query(Compartment.bigg_id, Model.bigg_id, Genome.organism)
                     .join(CompartmentalizedComponent)
@@ -758,6 +763,9 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id,
                  .filter(Compartment.bigg_id == compartment_bigg_id)
                  .filter(Model.bigg_id == model_bigg_id)
                  .first())
+    if result_db is None:
+        raise NotFoundError("Metabolite %s in compartment %s not in model %s" %
+                            (met_bigg_id, compartment_bigg_id, model_bigg_id))
     reactions_db = (session
                     .query(Reaction.bigg_id, Reaction.name, Model.bigg_id)
                     .join(ReactionMatrix)
