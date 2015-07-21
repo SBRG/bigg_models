@@ -186,6 +186,17 @@ def _get_col_name(query_arguments, columns, default_column=None,
     return default_column, default_direction
 
 
+def safe_query(func, *args, **kwargs):
+    session = Session()
+    kwargs["session"] = session
+    try:
+        return func(*args, **kwargs)
+    except queries.NotFoundError as e:
+        raise HTTPError(status_code=404, reason=e.message)
+    finally:
+        session.close()
+
+
 class BaseHandler(RequestHandler):
     pass
 
@@ -329,10 +340,7 @@ class UniversalMetaboliteListDisplayHandler(BaseHandler):
 
 class UniversalMetaboliteHandler(BaseHandler):
     def get(self, met_bigg_id):
-        session = Session()
-        results = queries.get_metabolite(met_bigg_id, session)
-        session.close()
-
+        results = safe_query(queries.get_metabolite, met_bigg_id)
         data = json.dumps(results)
         self.write(data)
         self.set_header('Content-type', 'application/json')
@@ -403,11 +411,8 @@ class ReactionListDisplayHandler(BaseHandler):
 
 class ReactionHandler(BaseHandler):
     def get(self, model_bigg_id, reaction_bigg_id):
-        session = Session()
-        results = queries.get_model_reaction(model_bigg_id, reaction_bigg_id,
-                                             session)
-        session.close()
-
+        results = safe_query(queries.get_model_reaction,
+                             model_bigg_id, reaction_bigg_id)
         data = json.dumps(results)
         self.write(data)
         self.set_header('Content-type', 'application/json')
@@ -634,10 +639,7 @@ class ModelDownloadHandler(BaseHandler):
 
 class ModelHandler(BaseHandler):
     def get(self, model_bigg_id):
-        session = Session()
-        result = queries.get_model_and_counts(model_bigg_id, session)
-        session.close()
-
+        result = safe_query(queries.get_model_and_counts, model_bigg_id)
         data = json.dumps(result)
         self.write(data)
         self.set_header('Content-type', 'application/json')
@@ -722,11 +724,9 @@ class MetabolitesListDisplayHandler(BaseHandler):
 
 class MetaboliteHandler(BaseHandler):
     def get(self, model_bigg_id, comp_met_id):
-        session = Session()
         met_bigg_id, compartment_bigg_id = split_compartment(comp_met_id)
-        results = queries.get_model_comp_metabolite(met_bigg_id, compartment_bigg_id,
-                                                    model_bigg_id, session)
-        session.close()
+        results = safe_query(queries.get_model_comp_metabolite,
+                             met_bigg_id, compartment_bigg_id, model_bigg_id)
 
         data = json.dumps(results)
         self.write(data)
@@ -805,11 +805,8 @@ class GeneListDisplayHandler(BaseHandler):
 
 class GeneHandler(BaseHandler):
     def get(self, model_bigg_id, gene_bigg_id):
-        session = Session()
-        result= queries.get_model_gene(gene_bigg_id, model_bigg_id, session)
-
-        session.close()
-
+        result = safe_query(queries.get_model_gene,
+                            gene_bigg_id, model_bigg_id)
         data = json.dumps(result)
         self.write(data)
         self.set_header('Content-type', 'application/json')
