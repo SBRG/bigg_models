@@ -632,9 +632,12 @@ class ModelsListDisplayHandler(BaseHandler):
 
 class ModelDownloadHandler(BaseHandler):
     def get(self, model_bigg_id):
-        data = queries.get_model_json_string(model_bigg_id)
-        self.write(data)
+        json_path = join(static_model_dir, model_bigg_id + ".json")
+        if not isfile(json_path):
+            raise HTTPError(404)
         self.set_header('Content-type', 'application/json')
+        with open(json_path, "rb") as infile:
+            self.write(infile.read())
         self.finish()
 
 
