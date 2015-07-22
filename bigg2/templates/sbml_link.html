@@ -1,0 +1,22 @@
+{% if xml_gz_size %}
+SBML
+{% with question_title='SBML level 3 (v1) with FBC (v2)'%}
+    {% with question_text='This file is fully annotated through MIRIAM and uses version 2 of the FBC package. It is only readable by COBRApy v0.4 and later.' %}
+      {% include 'question_mark.html' %}
+    {% endwith %}
+{% endwith %}
+:&nbsp;
+<a href="/static/models/{{bigg_id}}.xml.gz"
+    download="{{bigg_id}}.xml.gz"
+    data-toggle="tooltip"
+    data-trigger="hover"
+    data-title="{{xml_gz_size}}"
+    >
+    {{bigg_id}}.xml.gz</a>
+(<a href="/static/models/{{bigg_id}}.xml"
+    download="{{bigg_id}}.xml"
+    data-toggle="tooltip"
+    data-trigger="hover"
+    data-title="{{xml_size}}"
+    ><small>uncompressed</small></a>)
+{% endif %}

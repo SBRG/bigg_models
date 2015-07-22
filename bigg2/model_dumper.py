@@ -1,4 +1,4 @@
-from os.path import abspath, dirname, join, isdir
+from os.path import join, isdir
 from os import mkdir, system
 
 import cobra
@@ -7,7 +7,8 @@ from ome.base import Session
 from ome.models import Model
 from ome.dumping.model_dumping import dump_model
 
-static_dir = abspath(join(dirname(__file__), "static", "models"))
+from bigg2.server import static_model_dir as static_dir
+
 if not isdir(static_dir):
     mkdir(static_dir)
 

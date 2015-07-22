@@ -2,6 +2,7 @@ $(document).ready(function() {
     // question mark popovers
     $(function() {
         $('[data-toggle="popover"]').popover();
+        $('[data-toggle="tooltip"]').tooltip();
     });
     $('body').on('click touchstart', function (e) {
         $('[data-toggle="popover"]').each(function () {

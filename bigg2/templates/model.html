@@ -44,41 +44,11 @@
       </div>
 
       <h4>Download COBRA model from the BiGG Database:</h4>
-			SBML
-      {% with question_title='SBML level 3 (v1) with FBC (v2)'%}
-        {% with question_text='This file is fully annotated through MIRIAM and uses version 2 of the FBC package. It is only readable by COBRApy v0.4 and later.'%}
-          {% include 'question_mark.html' %}
-        {% endwith %}
-      {% endwith %}
-			:&nbsp;
-			<a href="/static/models/{{bigg_id}}.xml.gz" download="{{bigg_id}}.xml.gz">
-				{{bigg_id}}.xml.gz
-            </a>
-			<a href="/static/models/{{bigg_id}}.xml" download="{{bigg_id}}.xml">
-                <small>(uncompressed)</small>
-            </a>
-			<br/>
-			JSON
-      {% with question_title='JSON format'%}
-        {% with question_text='COBRA models in JSON are primarily used by the Escher pathway map visualization tool. They can also be loaded by COBRApy v0.3 and later.'%}
-          {% include 'question_mark.html' %}
-        {% endwith %}
-      {% endwith %}
-			:&nbsp;
-			<a href="/static/models/{{bigg_id}}.json" download="{{bigg_id}}.json">
-				{{bigg_id}}.json
-            </a>
-			<br/>
-			MAT
-      {% with question_title='MAT'%}
-        {% with question_text='This file is primarily for use with the COBRA toolbox. It can also be read by cobrapy'%}
-          {% include 'question_mark.html' %}
-        {% endwith %}
-      {% endwith %}
-			:&nbsp;
-			<a href="/static/models/{{bigg_id}}.mat" download="{{bigg_id}}.mat">
-                {{bigg_id}}.mat
-			</a>
+      {% include 'sbml_link.html' %}
+      <br/>
+      {% include 'json_link.html' %}
+      <br/>
+      {% include 'mat_link.html' %}
 			<br/>
 			<br/>
 			{% if reference_type == 'pmid' %}
