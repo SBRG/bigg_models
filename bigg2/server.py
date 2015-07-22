@@ -131,7 +131,7 @@ def get_application(debug=False):
         (r'/license$', LicenseHandler),
         #
         # Static/Download
-        (r'/static/(.*)$', StaticFileHandler, {'path': join(directory, 'static')})
+        (r'/static/(.*)$', BiggStaticFileHandler, {'path': join(directory, 'static')})
     ], debug=debug)
 
 def run(public=True):
@@ -158,6 +158,24 @@ def stop():
 # -------------------------------------------------------------------------------
 # Handlers
 # -------------------------------------------------------------------------------
+
+
+class BiggStaticFileHandler(StaticFileHandler):
+    """This is sets the Content-Type for the various model formats
+
+    This is mainly for testing. In production, the /static path should be
+    handled by nginx or apache"""
+    def get_content_type(self):
+        path = self.absolute_path
+        # need to fix encoding for gzip files until tornado patched
+        # https://github.com/tornadoweb/tornado/pull/1465
+        if path.endswith(".xml.gz"):
+            self.set_header("Content-Encoding", "x-gzip")
+        # mat needs to be binary
+        if path.endswith(".mat"):
+            return "application/octet-stream"
+        else:
+            return StaticFileHandler.get_content_type(self)
 
 
 def _possibly_compartmentalized_met_id(obj):
@@ -632,13 +650,8 @@ class ModelsListDisplayHandler(BaseHandler):
 
 class ModelDownloadHandler(BaseHandler):
     def get(self, model_bigg_id):
-        json_path = join(static_model_dir, model_bigg_id + ".json")
-        if not isfile(json_path):
-            raise HTTPError(404)
-        self.set_header('Content-type', 'application/json')
-        with open(json_path, "rb") as infile:
-            self.write(infile.read())
-        self.finish()
+        extension = self.get_argument("format", "json")
+        self.redirect("/static/models/%s.%s" % (model_bigg_id, extension))
 
 
 class ModelHandler(BaseHandler):
