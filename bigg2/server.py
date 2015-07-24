@@ -4,8 +4,8 @@ import tornado.web
 import tornado.httpserver
 from tornado.options import define, options
 from tornado.escape import url_escape
-from tornado.web import (StaticFileHandler, RequestHandler, asynchronous,
-                         HTTPError)
+from tornado.web import (StaticFileHandler, RequestHandler, RedirectHandler,
+                         asynchronous, HTTPError)
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
 from os.path import abspath, dirname, join, isfile, getsize
@@ -16,6 +16,7 @@ from collections import Counter
 import simplejson as json
 import subprocess
 import os
+import mimetypes
 
 from bigg2 import queries
 from bigg2.queries import NotFoundError
@@ -47,12 +48,16 @@ static_model_dir = join(directory, "static", "models")
 api_v = 'v2'
 api_host = 'bigg.ucsd.edu'
 
+# content types
+
+
 # make a tutorial on how to make a api request using curl
 # http://www.restapitutorial.com/
 
 # -------------------------------------------------------------------------------
 # Application API
 # -------------------------------------------------------------------------------
+
 def get_application(debug=False):
     return tornado.web.Application([
         (r'/', MainHandler),
@@ -131,7 +136,10 @@ def get_application(debug=False):
         (r'/license$', LicenseHandler),
         #
         # Static/Download
-        (r'/static/(.*)$', BiggStaticFileHandler, {'path': join(directory, 'static')})
+        (r'/static/(.*)$', StaticFileHandlerWithEncoding, {'path': join(directory, 'static')}),
+        #
+        # redirects
+        (r'/multiecoli/?$', RedirectHandler, {'url': 'http://bigg1.ucsd.edu/multiecoli'})
     ], debug=debug)
 
 def run(public=True):
@@ -217,14 +225,22 @@ def safe_query(func, *args, **kwargs):
 
 
 class BaseHandler(RequestHandler):
-    pass
+    def set_content_type(self, category):
+        """Add a content type for 'html' or 'json'."""
+        if category == 'html':
+            self.set_header('Content-type', 'text/html; charset=utf-8')
+        elif category == 'json':
+            self.set_header('Content-type', 'application/json; charset=utf-8')
+        else:
+            raise Exception('Bad content type category %s' % category)
+
 
 
 class MainHandler(BaseHandler):
     def get(self):
         template = env.get_template('index.html')
         self.write(template.render())
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -259,7 +275,7 @@ class UniversalReactionListHandler(BaseHandler):
         # write out the JSON
         data = json.dumps(result)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -271,7 +287,7 @@ class UniversalReactionListDisplayHandler(BaseHandler):
         dictionary = {'results': {'reactions': 'ajax'},
                       'hide_organism': True}
         self.write(template.render(dictionary))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -287,7 +303,7 @@ class UniversalReactionHandler(BaseHandler):
 
         data = json.dumps(result)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -307,7 +323,7 @@ class UniversalReactionDisplayHandler(BaseHandler):
             raise HTTPError(404)
         results = json.loads(response.body)
         self.write(template.render(results))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -341,7 +357,7 @@ class UniversalMetaboliteListHandler(BaseHandler):
         session.close()
         data = json.dumps(result)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -353,7 +369,7 @@ class UniversalMetaboliteListDisplayHandler(BaseHandler):
         template_data = {'results': {'metabolites': 'ajax'},
                          'hide_organism': True}
         self.write(template.render(template_data))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -362,7 +378,7 @@ class UniversalMetaboliteHandler(BaseHandler):
         results = safe_query(queries.get_metabolite, met_bigg_id)
         data = json.dumps(results)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -379,7 +395,7 @@ class UniversalMetaboliteDisplayHandler(BaseHandler):
             raise HTTPError(404)
         results = json.loads(response.body)
         self.write(template.render(results))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -413,7 +429,7 @@ class ReactionListHandler(BaseHandler):
 
         session.close()
         self.write(json.dumps(result))
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -424,7 +440,7 @@ class ReactionListDisplayHandler(BaseHandler):
         template = env.get_template("list_display.html")
         template_data = {'results': {'reactions': 'ajax'}}
         self.write(template.render(template_data))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -434,7 +450,7 @@ class ReactionHandler(BaseHandler):
                              model_bigg_id, reaction_bigg_id)
         data = json.dumps(results)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -460,7 +476,7 @@ class ReactionDisplayHandler(BaseHandler):
                                                                       result['lower_bound'],
                                                                       result['upper_bound'])
         self.write(template.render(data))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -474,7 +490,7 @@ class CompartmentListHandler(BaseHandler):
 
         data = json.dumps(results)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -494,7 +510,7 @@ class CompartmentListDisplayHandler(BaseHandler):
         results = json.loads(response.body)
         self.write(template.render({'compartments': results,
                                     'no_pager': True}))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -510,7 +526,7 @@ class CompartmentHandler(BaseHandler):
         result = {'bigg_id': result_db.bigg_id, 'name': result_db.name}
         data = json.dumps(result)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -531,7 +547,7 @@ class CompartmentDisplayHandler(BaseHandler):
             raise HTTPError(404)
         results = json.loads(response.body)
         self.write(template.render(results))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -545,7 +561,7 @@ class GenomeListHandler(BaseHandler):
 
         data = json.dumps(results)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -564,7 +580,7 @@ class GenomeListDisplayHandler(BaseHandler):
             raise HTTPError(404)
         results = json.loads(response.body)
         self.write(template.render({'genomes': results}))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -576,7 +592,7 @@ class GenomeHandler(BaseHandler):
 
         data = json.dumps(result)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -596,7 +612,7 @@ class GenomeDisplayHandler(BaseHandler):
             raise HTTPError(404)
         results = json.loads(response.body)
         self.write(template.render(results))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -633,7 +649,7 @@ class ModelListHandler(BaseHandler):
 
         data = json.dumps(result)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -644,7 +660,7 @@ class ModelsListDisplayHandler(BaseHandler):
         template = env.get_template("list_display.html")
         template_data = {'results': {'models': 'ajax'}}
         self.write(template.render(template_data))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -670,7 +686,7 @@ class ModelHandler(BaseHandler):
                 result[ext + "_size"] = "%d B" % (byte_size)
         data = json.dumps(result)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -690,7 +706,7 @@ class ModelDisplayHandler(BaseHandler):
             raise HTTPError(404)
         results = json.loads(response.body)
         self.write(template.render(results))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -726,7 +742,7 @@ class MetaboliteListHandler(BaseHandler):
         data = json.dumps(result)
 
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -746,7 +762,7 @@ class MetabolitesListDisplayHandler(BaseHandler):
             raise HTTPError(404)
         dictionary = {"results": {"metabolites": json.loads(response.body)}}
         self.write(template.render(dictionary))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -758,7 +774,7 @@ class MetaboliteHandler(BaseHandler):
 
         data = json.dumps(results)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -780,7 +796,7 @@ class MetaboliteDisplayHandler(BaseHandler):
             raise HTTPError(404)
         results = json.loads(response.body)
         self.write(template.render(results))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -815,7 +831,7 @@ class GeneListHandler(BaseHandler):
         data = json.dumps(result)
 
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -827,7 +843,7 @@ class GeneListDisplayHandler(BaseHandler):
         template_data = {'results': {'genes': 'ajax'}}
 
         self.write(template.render(template_data))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -837,7 +853,7 @@ class GeneHandler(BaseHandler):
                             gene_bigg_id, model_bigg_id)
         data = json.dumps(result)
         self.write(data)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -859,7 +875,7 @@ class GeneDisplayHandler(BaseHandler):
             raise HTTPError(404)
         results = json.loads(response.body)
         self.write(template.render(results))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -938,7 +954,7 @@ class SearchHandler(BaseHandler):
         data = json.dumps(result)
         self.write(data)
 
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -953,7 +969,7 @@ class SearchDisplayHandler(BaseHandler):
                                      'genes': 'ajax'},
                          'tablesorter_size': 20}
         self.write(template.render(template_data))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -967,7 +983,7 @@ class AdvancedSearchHandler(BaseHandler):
 
         self.write(template.render({'models': model_list,
                                     'database_sources': database_sources}))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -983,7 +999,7 @@ class LinkoutAdvanceSearchResultsHandler(BaseHandler):
         session.close()
 
         self.write(template.render(dictionary))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -1002,7 +1018,7 @@ class AdvancedSearchExternalIDHandler(BaseHandler):
 
         template = env.get_template("list_display.html")
         self.write(template.render(dictionary))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -1045,7 +1061,7 @@ class AdvancedSearchResultsHandler(BaseHandler):
         session.close()
         template = env.get_template("list_display.html")
         self.write(template.render(result))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -1059,7 +1075,7 @@ class AutocompleteHandler(BaseHandler):
         session.close()
 
         self.write(json.dumps(result_array))
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -1070,7 +1086,7 @@ class EscherMapJSONHandler(BaseHandler):
         session.close()
 
         self.write(map_json)
-        self.set_header('Content-type', 'application/json')
+        self.set_content_type('json')
         self.finish()
 
 
@@ -1093,7 +1109,7 @@ class WebAPIHandler(BaseHandler):
     def get(self):
         template = env.get_template('web_api.html')
         self.write(template.render(api_host=api_host))
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
 
 
@@ -1101,8 +1117,20 @@ class LicenseHandler(BaseHandler):
     def get(self):
         template = env.get_template('about_license_page.html')
         self.write(template.render())
-        self.set_header('Content-type','text/html')
+        self.set_content_type('html')
         self.finish()
+
+
+# static files
+class StaticFileHandlerWithEncoding(StaticFileHandler):
+    def get_content_type(self):
+        """Same as the default, except that we add a utf8 encoding for XML and JSON files."""
+        mime_type, encoding = mimetypes.guess_type(self.absolute_path)
+        if mime_type == 'application/xml':
+            return 'application/xml; charset=utf-8'
+        elif mime_type == 'application/json':
+            return 'application/json; charset=utf-8'
+        return mime_type
 
 
 if __name__ == "__main__":

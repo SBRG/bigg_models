@@ -48,7 +48,7 @@ def test_sbml_input_output(session):
     published_models = {}
     with open(settings.model_genome, 'r') as f:
         for line in f.readlines():
-            model_file = join(settings.data_directory, 'models', line.split(',')[0])
+            model_file = join(settings.data_directory, 'models', line.split('\t')[0])
             try:
                 print('Loading %s' % model_file)
                 if model_file.endswith('.xml'):
