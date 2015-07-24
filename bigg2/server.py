@@ -167,12 +167,12 @@ class BiggStaticFileHandler(StaticFileHandler):
     handled by nginx or apache"""
     def get_content_type(self):
         path = self.absolute_path
-        # need to fix encoding for gzip files until tornado patched
-        # https://github.com/tornadoweb/tornado/pull/1465
+        # need to fix type for gzip files until tornado patched
+        # https://github.com/tornadoweb/tornado/pull/1468
         if path.endswith(".xml.gz"):
-            self.set_header("Content-Encoding", "x-gzip")
+            return "application/gzip"
         # mat needs to be binary
-        if path.endswith(".mat"):
+        elif path.endswith(".mat"):
             return "application/octet-stream"
         else:
             return StaticFileHandler.get_content_type(self)
