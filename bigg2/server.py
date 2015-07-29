@@ -8,7 +8,7 @@ from tornado.web import (StaticFileHandler, RequestHandler, asynchronous,
                          HTTPError)
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, isfile, getsize
 from jinja2 import Environment, PackageLoader
 from sqlalchemy.orm import sessionmaker, aliased, Bundle
 from sqlalchemy import create_engine, desc, func, or_
@@ -41,6 +41,7 @@ env = Environment(loader=PackageLoader('bigg2', 'templates'),
 
 # root directory
 directory = abspath(dirname(__file__))
+static_model_dir = join(directory, "static", "models")
 
 # api version
 api_v = 'v2'
@@ -130,7 +131,7 @@ def get_application(debug=False):
         (r'/license$', LicenseHandler),
         #
         # Static/Download
-        (r'/static/(.*)$', StaticFileHandler, {'path': join(directory, 'static')})
+        (r'/static/(.*)$', BiggStaticFileHandler, {'path': join(directory, 'static')})
     ], debug=debug)
 
 def run(public=True):
@@ -157,6 +158,24 @@ def stop():
 # -------------------------------------------------------------------------------
 # Handlers
 # -------------------------------------------------------------------------------
+
+
+class BiggStaticFileHandler(StaticFileHandler):
+    """This is sets the Content-Type for the various model formats
+
+    This is mainly for testing. In production, the /static path should be
+    handled by nginx or apache"""
+    def get_content_type(self):
+        path = self.absolute_path
+        # need to fix type for gzip files until tornado patched
+        # https://github.com/tornadoweb/tornado/pull/1468
+        if path.endswith(".xml.gz"):
+            return "application/gzip"
+        # mat needs to be binary
+        elif path.endswith(".mat"):
+            return "application/octet-stream"
+        else:
+            return StaticFileHandler.get_content_type(self)
 
 
 def _possibly_compartmentalized_met_id(obj):
@@ -631,15 +650,24 @@ class ModelsListDisplayHandler(BaseHandler):
 
 class ModelDownloadHandler(BaseHandler):
     def get(self, model_bigg_id):
-        data = queries.get_model_json_string(model_bigg_id)
-        self.write(data)
-        self.set_header('Content-type', 'application/json')
-        self.finish()
+        extension = self.get_argument("format", "json")
+        self.redirect("/static/models/%s.%s" % (model_bigg_id, extension))
 
 
 class ModelHandler(BaseHandler):
     def get(self, model_bigg_id):
         result = safe_query(queries.get_model_and_counts, model_bigg_id)
+        # get filesizes
+        for ext in ("xml", "mat", "json", "xml_gz"):
+            fpath = join(static_model_dir,
+                         model_bigg_id + "." + ext.replace("_", "."))
+            byte_size = getsize(fpath) if isfile(fpath) else 0
+            if byte_size > 1048576:
+                result[ext + "_size"] = "%.1f MB" % (byte_size / 1048576.)
+            elif byte_size > 1024:
+                result[ext + "_size"] = "%.1f kB" % (byte_size / 1024.)
+            elif byte_size > 0:
+                result[ext + "_size"] = "%d B" % (byte_size)
         data = json.dumps(result)
         self.write(data)
         self.set_header('Content-type', 'application/json')

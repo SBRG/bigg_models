@@ -11,12 +11,13 @@ href="https://github.com/sbrg/ome/tree/bigg">bigg branch</a>.
 To install BiGG, first, follow the OME installation instructions:
 https://github.com/SBRG/ome/blob/bigg/INSTALL.md
 
-Then, BiGG 2 can be installed and run with these commands:
+Then, do the following to get BiGG2 up and running:
 
-```
-python setup.py install # or develop
-python -m bigg2.server --port=8910
-```
+1. Download the code with ```git clone git@github.com:SBRG/BIGG2.git```
+2. ```cd BIGG2```
+3. Install with ```python setup.py develop``` (may need to sudo or add --user)
+4. Generate the static models by running the ```make_all_static_models``` command.
+5. Start the server with ```python -m bigg2.server --port=8910```
 
 Generate a schema browser
 =========================

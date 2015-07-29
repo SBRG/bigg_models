@@ -556,18 +556,6 @@ def get_model_list(session):
     return list
 
 
-def get_model_json_string(model_bigg_id):
-    """Get the model JSON for download."""
-    path = join(settings.model_dump_directory,
-                model_bigg_id + '.json')
-    try:
-        with open(path, 'r') as f:
-            data = f.read()
-    except IOError as e:
-        raise NotFoundError(e.message)
-    return data
-
-
 #-------------------------------------------------------------------------------
 # Genes
 #-------------------------------------------------------------------------------
