@@ -782,7 +782,7 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id,
                                                  model_bigg_id, session)
     model_result = [x for x in model_db if x['bigg_id'] != model_bigg_id]
 
-    db_link_results = get_db_links_for_metabolite(met_bigg_id, session)
+    db_link_results = get_db_links_for_model_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id,  session)
 
     return {'bigg_id': result_db[0],
             'name': result_db[1],
@@ -841,7 +841,7 @@ def get_genome_and_models(session, bioproject_id):
 # database sources
 def get_database_sources(session):
     result_db = (session
-                 .query(LinkOut.external_source)
+                 .query(DataSource.name)
                  .distinct()
                  .all())
     return [x[0] for x in result_db]
@@ -885,36 +885,53 @@ def compile_db_links(results, link_type=None):
 
 def get_db_links_for_reaction(reaction_bigg_id, session):
     result_db = (session
-                 .query(LinkOut.external_source, LinkOut.external_id)
-                 .join(Reaction, Reaction.id == LinkOut.ome_id)
-                 .filter(LinkOut.type == 'reaction')
+                 .query(DataSource.name, Synonym.synonym)
+                 .join(Synonym)
+                 .join(Reaction, Reaction.id == Synonym.ome_id)
+                 .filter(Synonym.type == 'reaction')
                  .filter(Reaction.bigg_id == reaction_bigg_id)
                  .all())
     return compile_db_links(result_db, link_type='reaction')
 
 def get_db_links_for_metabolite(met_bigg_id, session):
     result_db = (session
-                 .query(LinkOut.external_source, LinkOut.external_id)
-                 .join(Metabolite, Metabolite.id == LinkOut.ome_id)
-                 .filter(LinkOut.type == 'metabolite')
+                 .query(DataSource.name, Synonym.synonym)
+                 .join(Synonym)
+                 .join(Metabolite, Metabolite.id == Synonym.ome_id)
+                 .filter(Synonym.type == 'component')
                  .filter(Metabolite.bigg_id == met_bigg_id)
                  .all())
-    return compile_db_links(result_db, link_type='metabolite')
+    return compile_db_links(result_db, link_type='component')
 
+def get_db_links_for_model_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, session):
+    result_db = (session
+                .query(DataSource.name, Synonym.synonym)
+                .join(Synonym)
+                .join(CompartmentalizedComponent, 
+                       CompartmentalizedComponent.id == Synonym.ome_id)
+                .join(Metabolite, 
+                       Metabolite.id == CompartmentalizedComponent.component_id)
+                .join(Compartment,
+                       Compartment.id == CompartmentalizedComponent.compartment_id) 
+                .filter(Synonym.type =='compartmentalized_component')
+                .filter(Metabolite.bigg_id == met_bigg_id)
+                .filter(Compartment.bigg_id == compartment_bigg_id)
+                .all())
+    return compile_db_links(result_db, link_type='compartmentalized_component')
 
 def get_metabolites_for_database_id(session, query, database_source):
     result_db = (session
                  .query(Metabolite.bigg_id, Metabolite.name)
-                 .join(LinkOut, LinkOut.ome_id == Metabolite.id)
-                 .filter(LinkOut.external_source == database_source)
-                 .filter(LinkOut.external_id == query.strip())
+                 .join(Synonym, Synonym.ome_id == Metabolite.id)
+                 .join(DataSource, DataSource.id == Synonym.synonym_data_source_id)
+                 .filter(DataSource.name == database_source)
+                 .filter(Synonym.synonym == query.strip())
                  .all())
     return [{'bigg_id': x[0], 'model_bigg_id': 'universal', 'name': x[1]}
             for x in result_db]
 
-
 # utilities
-def build_reaction_string(metabolitelist, lower_bound, upper_bound):
+def build_reaction_string(metabolitelist, lower_bound, upper_bound, universal=False):
     post_reaction_string = ""
     pre_reaction_string = ""
     for met in metabolitelist:
@@ -931,7 +948,7 @@ def build_reaction_string(metabolitelist, lower_bound, upper_bound):
             else:
                 post_reaction_string += " " + met['bigg_id']+"_"+met['compartment_bigg_id'] + " + "
 
-    if len(metabolitelist) == 1:
+    if len(metabolitelist) == 1 or universal== True:
         reaction_string = pre_reaction_string[:-2] + " &#8652; " + post_reaction_string[:-2]
     elif lower_bound <0 and upper_bound <=0:
         reaction_string = pre_reaction_string[:-2] + " &#x2192; " + post_reaction_string[:-2]
@@ -1226,23 +1243,25 @@ def search_for_universal_metabolites(query_string, session, page=None,
 
 def search_for_metabolites_by_external_id(query_string, source, session):
     """Search based on the linkout ID."""
-    sim_external_id = func.similarity(LinkOut.external_id, query_string)
+    sim_external_id = func.similarity(Synonym.synonym, query_string)
 
     query = (session
-          .query(Metabolite.bigg_id, Compartment.bigg_id, Model.bigg_id, Genome.organism, LinkOut.external_id)
+          .query(Metabolite.bigg_id, Compartment.bigg_id, Model.bigg_id, Genome.organism, Synonym.synonym)
           .join(CompartmentalizedComponent,
                 CompartmentalizedComponent.component_id == Metabolite.id)
-          .join(LinkOut,
-                LinkOut.ome_id == Metabolite.id)
+          .join(Synonym,
+                Synonym.ome_id == Metabolite.id)
+          .join(DataSource,
+                DataSource.id == Synonym.synonym_data_source_id)
           .join(Compartment,
                 Compartment.id == CompartmentalizedComponent.compartment_id)
           .join(ModelCompartmentalizedComponent,
                 ModelCompartmentalizedComponent.compartmentalized_component_id == CompartmentalizedComponent.id)
           .join(Model, Model.id == ModelCompartmentalizedComponent.model_id)
           .outerjoin(Genome)
-          .filter(LinkOut.type == 'metabolite')
-          .filter(LinkOut.external_source == source)
-          .filter(LinkOut.external_id == query_string))
+          .filter(Synonym.type == 'component')
+          .filter(DataSource.name == source)
+          .filter(Synonym.synonym == query_string))
 
     return [{'bigg_id': x[0], 'compartment_bigg_id': x[1], 'model_bigg_id': x[2], 'organism': x[3]}
             for x in query.all()]
