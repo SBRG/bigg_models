@@ -142,6 +142,7 @@ def get_application(debug=False):
         (r'/multiecoli/?$', RedirectHandler, {'url': 'http://bigg1.ucsd.edu/multiecoli'})
     ], debug=debug)
 
+
 def run(public=True):
     """Run the server"""
 
@@ -159,9 +160,11 @@ def run(public=True):
     except KeyboardInterrupt:
         print("bye!")
 
+
 def stop():
     """Stop the server"""
     tornado.ioloop.IOLoop.instance().stop()
+
 
 # -------------------------------------------------------------------------------
 # Handlers
@@ -214,6 +217,14 @@ def _get_col_name(query_arguments, columns, default_column=None,
 
 
 def safe_query(func, *args, **kwargs):
+    """Run the given function, and raise a 404 if it fails.
+
+    Arguments
+    ---------
+
+    func: The function to run. *args and **kwargs are passed to this function.
+
+    """
     session = Session()
     kwargs["session"] = session
     try:
@@ -233,7 +244,6 @@ class BaseHandler(RequestHandler):
             self.set_header('Content-type', 'application/json; charset=utf-8')
         else:
             raise Exception('Bad content type category %s' % category)
-
 
 
 class MainHandler(BaseHandler):
@@ -1126,11 +1136,29 @@ class StaticFileHandlerWithEncoding(StaticFileHandler):
     def get_content_type(self):
         """Same as the default, except that we add a utf8 encoding for XML and JSON files."""
         mime_type, encoding = mimetypes.guess_type(self.absolute_path)
-        if mime_type == 'application/xml':
+
+        # from https://github.com/tornadoweb/tornado/pull/1468
+        # per RFC 6713, use the appropriate type for a gzip compressed file
+        if encoding == "gzip":
+            return "application/gzip"
+        # As of 2015-07-21 there is no bzip2 encoding defined at
+        # http://www.iana.org/assignments/media-types/media-types.xhtml
+        # So for that (and any other encoding), use octet-stream.
+        elif encoding is not None:
+            return "application/octet-stream"
+
+        # assume utf-8 for xml and json
+        elif mime_type == 'application/xml':
             return 'application/xml; charset=utf-8'
         elif mime_type == 'application/json':
             return 'application/json; charset=utf-8'
-        return mime_type
+
+        # from https://github.com/tornadoweb/tornado/pull/1468
+        elif mime_type is not None:
+            return mime_type
+        # if mime_type not detected, use application/octet-stream
+        else:
+            return "application/octet-stream"
 
 
 if __name__ == "__main__":
