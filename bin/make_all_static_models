@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from bigg2.model_dumper import make_all_static_models
+import sys
+sys.exit(make_all_static_models())

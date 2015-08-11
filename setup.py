@@ -19,9 +19,6 @@ setup(name='BiGG 2',
                              'static/js/*', 'static/lib/*',
                              'static/lib/tablesorter/*',
                              'templates/*']},
-      entry_points={"console_scripts":
-                    ['make_all_static_models = '
-                     'bigg2.model_dumper:make_all_static_models']},
       install_requires=['Jinja2>=2.7.3',
                         'tornado>=4.0.2',
                         'pytest>=2.6.2',

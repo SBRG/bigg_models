@@ -36,7 +36,7 @@ def test_get_reaction_and_models(session):
         in result['models_containing_reaction']
     with raises(Exception):
         result = get_reaction_and_models('not_a_reaction', session)
-    
+
 
 def test_get_reactions_for_model():
     session = base.Session()
@@ -44,7 +44,7 @@ def test_get_reactions_for_model():
     assert len(result) > 5
     assert 'ADA' in [x['bigg_id'] for x in result]
     session.close()
-    
+
 
 def test_get_model_reaction(session):
     result = get_model_reaction('iAPECO1_1312', 'ADA', session)
@@ -62,7 +62,7 @@ def test_get_model_reaction(session):
     assert 'lower_bound' in result['results'][0]
     assert 'objective_coefficient' in result['results'][0]
 
-    
+
 # Models
 def test_get_models():
     session = base.Session()
@@ -86,17 +86,12 @@ def test_get_model_and_counts():
     session.close()
 
 
-def test_get_model_json_string():
-    with pytest.raises(NotFoundError):
-        get_model_json_string('R2D2')
-
-
 def test_get_model_list():
     session = base.Session()
     result = get_model_list(session)
     assert 'iAPECO1_1312' in result
     session.close()
-    
+
 
 # Metabolites
 def test_get_metabolite_list_for_reaction():
@@ -106,7 +101,7 @@ def test_get_metabolite_list_for_reaction():
     assert type(result[0]['stoichiometry']) is Decimal
     assert 'c' in [r['compartment_bigg_id'] for r in result]
     session.close()
-    
+
 
 def test_get_metabolite():
     session = base.Session()
@@ -119,7 +114,7 @@ def test_get_metabolite():
     assert {'link': 'http://www.genome.jp/dbget-bin/www_bget?cpd:C00026', 'id': 'C00026'} \
         in result['database_links']['KEGG']
     session.close()
-    
+
 
 def test_get_model_comp_metabolite(session):
     result = get_model_comp_metabolite('akg', 'c', 'iAPECO1_1312', session)
@@ -132,7 +127,7 @@ def test_get_model_comp_metabolite(session):
     # make sure models are being filtered
     result = get_model_comp_metabolite('h', 'c', 'iAPECO1_1312', session)
     assert all([r['model_bigg_id'] == 'iAPECO1_1312' for r in result['reactions']])
-    
+
 
 def test_get_model_metabolites(session):
     results = get_model_metabolites('iAPECO1_1312', session)
@@ -180,8 +175,8 @@ def test_get_model_gene(session):
 # database sources
 def test_get_database_sources(session):
     assert 'KEGGID' in get_database_sources(session)
-    
-        
+
+
 # Escher maps
 def test_escher_maps_for_reaction(session):
     maps = get_escher_maps_for_reaction('GAPD', 'iMM904', session)
@@ -193,7 +188,7 @@ def test_escher_maps_for_metabolite(session):
     maps = get_escher_maps_for_metabolite('atp', 'c', 'iMM904', session)
     assert 'iMM904.Central carbon metabolism' == maps[0]['map_name']
     assert '672110' in maps[0]['element_id']
-    
+
 
 def test_json_for_map():
     session = base.Session()
@@ -208,7 +203,7 @@ def test_json_for_map():
 def test_search_for_universal_reactions(session):
     results = search_for_universal_reactions('GAPD', session)
     assert results[0]['bigg_id'] == 'GAPD'
-    
+
 
 def test_search_for_reactions(session):
     time1 = time.time()
@@ -223,7 +218,7 @@ def test_search_for_reactions(session):
     # test name search
     results = search_for_reactions('Glyceraldehyde-3-phosphate dehydrogenase', session)
     assert 'GAPD' in [x['bigg_id'] for x in results]
-    
+
 
 def test_search_for_universal_metabolites(session):
     results = search_for_universal_metabolites('g3p', session)
@@ -244,7 +239,7 @@ def test_search_for_metabolites():
     results = search_for_metabolites('g3p', session, strict=True)
     assert results == []
     session.close()
-    
+
 
 def test_search_for_genes(session):
     results = search_for_genes('APECO1_706', session)
@@ -278,12 +273,12 @@ def test_search_for_models():
 
 def test_search_ids_fast():
     session = base.Session()
-    
+
     time1 = time.time()
     results = search_ids_fast('ga', session)
     time2 = time.time()
     print 'l = 2, search_ids_fast took %0.3f ms' % ((time2 - time1) * 1000.0)
-    
+
     time1 = time.time()
     results = search_ids_fast('gap', session)
     time2 = time.time()
