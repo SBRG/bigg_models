@@ -5,7 +5,7 @@ Installation
 ============
 
 BiGG 2 is a web front end for genome-scale models stored using the
-[OME Framework](https://github.com/sbrg/ome). 
+[OME Framework](https://github.com/sbrg/ome).
 
 To install BiGG, first, follow the OME installation instructions:
 https://github.com/SBRG/ome/blob/bigg/INSTALL.md
@@ -15,7 +15,8 @@ Then, do the following to get BiGG2 up and running:
 1. Download the code with ```git clone git@github.com:SBRG/BIGG2.git```
 2. ```cd BIGG2```
 3. Install with ```python setup.py develop``` (may need to sudo or add --user)
-4. Generate the static models by running the ```make_all_static_models``` command.
+4. Generate the PostgreSQL indices by running ```bin/make_database_indices```.
+4. Generate the static models by running ```bin/make_all_static_models```.
 5. Start the server with ```python -m bigg2.server --port=8910```
 
 Testing BiGG 2

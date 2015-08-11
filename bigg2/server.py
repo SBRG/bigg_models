@@ -146,10 +146,6 @@ def get_application(debug=False):
 def run(public=True):
     """Run the server"""
 
-    # make sure the indices are ready
-    print('Creating pg_trgm extension and indices')
-    os.system('psql -d %s -f %s' % (settings.postgres_database, join(directory, 'setup.sql')))
-
     tornado.options.parse_command_line()
     debug = options.debug
     http_server = tornado.httpserver.HTTPServer(get_application(debug=debug))
@@ -931,7 +927,7 @@ class SearchHandler(BaseHandler):
                             for x in raw_results]
 
             result = {'results': [dict(x, model_bigg_id='Universal', organism='') for x in raw_results],
-                        'results_count': queries.search_for_universal_metabolites_count(query_string, session)}
+                      'results_count': queries.search_for_universal_metabolites_count(query_string, session)}
 
         elif search_type == 'genes':
             raw_results = queries.search_for_genes(query_string, session, page,

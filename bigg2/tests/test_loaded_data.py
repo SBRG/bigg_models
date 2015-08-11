@@ -22,7 +22,7 @@ from ome import settings
 from ome.dumping.model_dumping import dump_model
 from ome.loading.model_loading.parse import convert_ids
 
-from bigg2.server import directory as bigg_root_directory
+from bigg2.server import directory as bigg_root_directory, static_model_dir
 
 
 @pytest.fixture(scope='function')
@@ -67,28 +67,20 @@ def test_sbml_input_output(session):
 
     errors = []
     model_paths = []
-    # json dumps
-    for model_file in listdir(settings.model_dump_directory):
+    # get files to test
+    for model_file in listdir(static_model_dir):
         if model_file.endswith('.json'):
             model_id = model_file[:-5]
         elif model_file.endswith('.xml'):
             model_id = model_file[:-4]
+        elif model_file.endswith('.mat'):
+            model_id = model_file[:-4]
         else:
             continue
         if model_id in published_models.keys():
-            model_paths.append(join(settings.model_dump_directory, model_file))
+            model_paths.append(join(static_model_dir, model_file))
 
-    # TODO polished sbml cannot currently be tested, because I can't read them in.
-    # for model_dir in listdir(settings.model_polished_directory):
-    #     if not model_dir.startswith(published_models.iterkeys().next().split('.')[0]):
-    #         continue
-    #     for model_file in listdir(join(settings.model_polished_directory, model_dir)):
-    #         if not model_file.startswith(published_models.iterkeys().next().split('.')[0]):
-    #             continue
-    #         if model_file.endswith('.xml'):
-    #             model_paths.append(join(settings.model_polished_directory, model_dir, model_file))
-
-    # test each model 
+    # test each model
     print 'testing {} models'.format(len(model_paths))
     error_len = len(errors)
     for model_path in model_paths:
@@ -99,15 +91,20 @@ def test_sbml_input_output(session):
         print('Testing {}'.format(model_path))
 
         if model_path.endswith('.xml'):
-            # try:
-            if True:
+            try:
                 model = read_sbml_model(model_path)
-            # except Exception as e:
-            #     errors.append('{}: {}'.format(model_path, e.message))
-            #     continue
+            except Exception as e:
+                errors.append('{}: {}'.format(model_path, e.message))
+                continue
         elif model_path.endswith('.json'):
             try:
                 model = load_json_model(model_path)
+            except Exception as e:
+                errors.append('{}: {}'.format(model_path, e.message))
+                continue
+        elif model_path.endswith('.mat'):
+            try:
+                model = load_matlab_model(model_path)
             except Exception as e:
                 errors.append('{}: {}'.format(model_path, e.message))
                 continue
@@ -261,9 +258,10 @@ def test_leading_underscores(session):
 
 
 def test_model_directories():
-    assert exists(join(bigg_root_directory, 'static', 'dumped_models', 'iJO1366.json'))
-    assert exists(join(bigg_root_directory, 'static', 'polished_models', 'iJO1366.xml'))
-    assert exists(join(bigg_root_directory, 'static', 'published_models', 'iJO1366.xml'))
+    assert exists(join(bigg_root_directory, 'static', 'models', 'iJO1366.xml'))
+    assert exists(join(bigg_root_directory, 'static', 'models', 'iJO1366_raw.xml'))
+    assert exists(join(bigg_root_directory, 'static', 'models', 'iJO1366.mat'))
+    assert exists(join(bigg_root_directory, 'static', 'models', 'iJO1366.json'))
 
 
 if __name__ == "__main__":
