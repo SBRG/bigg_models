@@ -54,16 +54,8 @@
       {% include 'comments.html' %}
       
     </div>
-    <div class="col-lg-4">
-      <div class="well">
-        <h4>Synonyms:</h4>
-        <ul class="list-unstyled">
-          {% for synonym in synonyms %}
-            <li>{{synonym['name']}}: {{synonym['synonym']}}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-  </div>
-  
+
+        <div class="col-lg-4">
+            {% include 'database_links.html' %}
+        </div>
 {% endblock %}	

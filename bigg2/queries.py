@@ -2,7 +2,7 @@ from ome.models import *
 from ome.base import Publication, PublicationModel
 from ome.loading.model_loading import parse
 from ome import settings
-
+from ome.util import find_data_source_url, read_data_source_preferences
 from sqlalchemy import func
 from sqlalchemy import desc, asc, func, or_, and_
 from collections import defaultdict
@@ -678,11 +678,9 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
                    .all())
     reaction_results = [{'bigg_id': r[0], 'gene_reaction_rule': r[1],
                          'name': r[2]} for r in reaction_db]
-    synonym_db = (session
-                    .query(Synonym.synonym, DataSource.name)
-                    .join(DataSource, DataSource.id == Synonym.synonym_data_source_id)
-                    .filter(Synonym.ome_id == result_db[6])
-                    .all())
+        
+    synonym_db = get_db_links_for_gene(gene_bigg_id, session)
+    
     return {'bigg_id': result_db[0],
             'name': result_db[1],
             'info': result_db[2],
@@ -694,7 +692,8 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
             'genome_bioproject_id': result_db[9],
             'mapped_to_genbank': result_db[10],
             'reactions': reaction_results,
-            'synonyms': synonym_db}
+            'database_links': synonym_db,
+            }
     
 
 def get_metabolite_list_for_reaction(reaction_id, session):
@@ -743,7 +742,8 @@ def get_metabolite(met_bigg_id, session):
     return {'bigg_id': result_db[0],
             'name': result_db[1],
             'formula': result_db[2],
-            'database_links': db_link_results,
+            'database_links': db_link_results, 
+            'legacy_id': db_link_results['old_id'],
             'compartments_in_models': [{'bigg_id': c[0], 'model_bigg_id': c[1], 'organism': c[2]}
                                        for c in comp_comp_db]}
 
@@ -790,6 +790,7 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id,
             'model_bigg_id': result_db[3],
             'formula': result_db[4],
             'database_links': db_link_results,
+            'legacy_id': db_link_results['old_id'],
             'reactions': [{'bigg_id': r[0], 'name': r[1], 'model_bigg_id': r[2]}
                           for r in reactions_db],
             'escher_maps': escher_maps,
@@ -854,22 +855,9 @@ def compile_db_links(results, link_type=None):
                     'CHEBI': 'ChEBI',
                     'REACTOME': 'Reactome',
                     'BIOPATH': 'BioPath'}
-                    
-    links = {'KEGGID': 'http://www.genome.jp/dbget-bin/www_bget?cpd:',
-             'UPA': 'http://www.grenoble.prabi.fr/obiwarehouse/unipathway/upc?upid=',
-             'CHEBI': 'http://www.ebi.ac.uk/chebi/searchId.do?chebiId=',
-             'REACTOME': 'http://www.reactome.org/cgi-bin/instancebrowser?ID=',
-             'BIOPATH': 'http://www.molecular-networks.com/biopath3/biopath/mols/'}
-    if link_type == 'metabolite':
-        links['METACYC'] = 'http://metacyc.org/META/NEW-IMAGE?type=COMPOUND&object='
-        links['SEED'] = 'http://seed-viewer.theseed.org/seedviewer.cgi?page=CompoundViewer&compound='
-        links['BIOPATH'] = 'http://www.molecular-networks.com/biopath3/biopath/mols/'
-        links['HMDB'] = 'http://www.hmdb.ca/metabolites/'
-    elif link_type == 'reaction':
-        links['BIOPATH'] = 'http://www.molecular-networks.com/biopath3/biopath/rxn/'
-    else:
-        links['METACYC'] = 'http://metacyc.org/META/NEW-IMAGE?object='
-
+    links = {}
+    for line in read_data_source_preferences():
+        links[line[0]] = line[1] 
     sources = defaultdict(list)
     for r in results:
         try:
@@ -893,18 +881,40 @@ def get_db_links_for_reaction(reaction_bigg_id, session):
                  .all())
     return compile_db_links(result_db, link_type='reaction')
 
-def get_db_links_for_metabolite(met_bigg_id, session):
+def get_db_links_for_gene(gene_bigg_id, session):
     result_db = (session
+                 .query(DataSource.name, Synonym.synonym)
+                 .join(Synonym, DataSource.id == Synonym.synonym_data_source_id)
+                 .join(Gene, Gene.id == Synonym.ome_id)
+                 .filter(Gene.bigg_id == gene_bigg_id)
+                 .all())
+    return compile_db_links(result_db, link_type='gene')
+   
+def get_db_links_for_metabolite(met_bigg_id, session):
+    result_db_1 = (session
                  .query(DataSource.name, Synonym.synonym)
                  .join(Synonym)
                  .join(Metabolite, Metabolite.id == Synonym.ome_id)
                  .filter(Synonym.type == 'component')
                  .filter(Metabolite.bigg_id == met_bigg_id)
                  .all())
+    result_db_2 = (session
+                   .query(DataSource.name, Synonym.synonym)
+                   .join(Synonym)
+                   .join(CompartmentalizedComponent, 
+                       CompartmentalizedComponent.id == Synonym.ome_id)
+                   .join(Metabolite, 
+                       Metabolite.id == CompartmentalizedComponent.component_id)
+                   .join(Compartment,
+                       Compartment.id == CompartmentalizedComponent.compartment_id) 
+                   .filter(Synonym.type =='compartmentalized_component')
+                   .filter(Metabolite.bigg_id == met_bigg_id)
+                   .all())
+    result_db = result_db_1 + result_db_2         
     return compile_db_links(result_db, link_type='component')
 
 def get_db_links_for_model_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, session):
-    result_db = (session
+    result_db_1 = (session
                 .query(DataSource.name, Synonym.synonym)
                 .join(Synonym)
                 .join(CompartmentalizedComponent, 
@@ -917,7 +927,15 @@ def get_db_links_for_model_metabolite(met_bigg_id, compartment_bigg_id, model_bi
                 .filter(Metabolite.bigg_id == met_bigg_id)
                 .filter(Compartment.bigg_id == compartment_bigg_id)
                 .all())
-    return compile_db_links(result_db, link_type='compartmentalized_component')
+    result_db_2 = (session
+                 .query(DataSource.name, Synonym.synonym)
+                 .join(Synonym)
+                 .join(Metabolite, Metabolite.id == Synonym.ome_id)
+                 .filter(Synonym.type == 'component')
+                 .filter(Metabolite.bigg_id == met_bigg_id)
+                 .all())
+    result_db = result_db_1 + result_db_2
+    return compile_db_links(result_db, link_type='component')
 
 def get_metabolites_for_database_id(session, query, database_source):
     result_db = (session
