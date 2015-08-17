@@ -912,9 +912,20 @@ class LicenseHandler(BaseHandler):
 
 # static files
 class StaticFileHandlerWithEncoding(StaticFileHandler):
+    # This is only to opportunisticly use a pre-compressed file
+    # (equivalent to gzip_static in nginx).
+    def get_absolute_path(self, root, path):
+        p = abspath(join(root, path))
+        # if the client accepts gzip
+        if "gzip" in self.request.headers.get('Accept-Encoding', ''):
+            if isfile(p + ".gz"):
+                self.set_header("Content-Encoding", "gzip")
+                return p + ".gz"
+        return p
+
     def get_content_type(self):
         """Same as the default, except that we add a utf8 encoding for XML and JSON files."""
-        mime_type, encoding = mimetypes.guess_type(self.absolute_path)
+        mime_type, encoding = mimetypes.guess_type(self.path)
 
         # from https://github.com/tornadoweb/tornado/pull/1468
         # per RFC 6713, use the appropriate type for a gzip compressed file
