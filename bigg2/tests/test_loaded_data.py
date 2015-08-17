@@ -15,6 +15,7 @@ from os import listdir
 from numpy.testing import assert_almost_equal
 from decimal import Decimal
 import cPickle as pickle
+import re
 
 from ome.models import *
 from ome.base import Session
@@ -165,6 +166,28 @@ def test_sbml_input_output(session):
             except ValueError:
                 print 'fix', model_path, f1, f2
 
+        # test mass balance
+        for r in model.reactions:
+            if (re.match(r'EX_.*', r.id) or re.match(r'DM_.*', r.id)
+                or re.match(r'sink_.*', r.id, re.IGNORECASE)
+                or re.match(r'.*biomass.*', r.id, re.IGNORECASE)):
+                continue
+            mass_balance = r.check_mass_balance()
+            if len(mass_balance) != 0:
+                try:
+                    published_reaction = published_model.reactions.get_by_id(r.id)
+                except KeyError:
+                    errors.append('{}: Bad mass balance in {}: {}. Not found in published model.'
+                                  .format(model_path, r.id, mass_balance))
+                else:
+                    p_mass_balance = published_reaction.check_mass_balance()
+                    if len(p_mass_balance) == 0:
+                        errors.append('{}: Bad mass balance in {}: {}. Reaction is balanced in published model.'
+                                      .format(model_path, r.id, mass_balance))
+                    else:
+                        errors.append('{}: Bad mass balance in {} ({}) and in published model ({}).'
+                                      .format(model_path, r.id, mass_balance, p_mass_balance))
+
     assert len(errors) == 0
 
 
@@ -259,7 +282,7 @@ def test_leading_underscores(session):
 
 def test_model_directories():
     assert exists(join(bigg_root_directory, 'static', 'models', 'iJO1366.xml'))
-    assert exists(join(bigg_root_directory, 'static', 'models', 'iJO1366_raw.xml'))
+    assert exists(join(bigg_root_directory, 'static', 'models', 'raw', 'iJO1366.xml'))
     assert exists(join(bigg_root_directory, 'static', 'models', 'iJO1366.mat'))
     assert exists(join(bigg_root_directory, 'static', 'models', 'iJO1366.json'))
 
