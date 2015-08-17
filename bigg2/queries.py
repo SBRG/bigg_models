@@ -6,7 +6,7 @@ from ome import settings
 from sqlalchemy import func
 from sqlalchemy import desc, asc, func, or_, and_
 from collections import defaultdict
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, isfile, getsize
 
 root_directory = abspath(dirname(__file__))
 
@@ -61,7 +61,7 @@ def _apply_order_limit_offset(query, sort_column_object=None, sort_direction='as
         elif sort_direction == 'ascending':
             direction_fn = asc
         else:
-            raise Exception('Bad sort direction %s' % sort_direction)
+            raise ValueError('Bad sort direction %s' % sort_direction)
 
         if type(sort_column_object) is list:
             query = query.order_by(*[direction_fn(x) for x in sort_column_object])
@@ -131,7 +131,7 @@ def get_universal_reactions(session, page=None, size=None, sort_column=None,
     query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
                                       page, size)
 
-    return [{'bigg_id': x[0], 'name': x[1]} for x in query.all()]
+    return [{'bigg_id': x[0], 'name': x[1]} for x in query]
 
 
 def get_model_reactions_count(model_bigg_id, session):
@@ -199,7 +199,7 @@ def get_model_reactions(model_bigg_id, session, page=None, size=None,
                                       page, size)
 
     return [{'bigg_id': x[0], 'name': x[1], 'model_bigg_id': x[2], 'organism': x[3]} 
-            for x in query.all()]
+            for x in query]
 
 
 def get_reaction_and_models(reaction_bigg_id, session):
@@ -238,7 +238,7 @@ def get_reactions_for_model(model_bigg_id, session):
                  .join(Model, Model.id == ModelReaction.model_id)
                  .outerjoin(Genome, Genome.id == Model.genome_id)
                  .filter(Model.bigg_id == model_bigg_id)
-                 .all())
+                 )
     return [{'bigg_id': x[0], 'name': x[1], 'organism': x[2]}
              for x in result_db]
 
@@ -257,8 +257,8 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
                          .join(Model, Model.id == ModelReaction.model_id)
                          .filter(Model.bigg_id == model_bigg_id)
                          .filter(Reaction.bigg_id == reaction_bigg_id)
-                         .all())
-    if model_reaction_db is None or len(model_reaction_db) == 0:
+                         )
+    if model_reaction_db.count() == 0:
         raise NotFoundError('Reaction %s not found in model %s' %(reaction_bigg_id, model_bigg_id))
 
     # metabolites
@@ -356,7 +356,7 @@ def get_universal_metabolites(session, page=None, size=None, sort_column=None,
     query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
                                       page, size)
 
-    return [{'bigg_id': x[0], 'name': x[1]} for x in query.all()]
+    return [{'bigg_id': x[0], 'name': x[1]} for x in query]
 
 
 def get_model_metabolites_count(model_bigg_id, session):
@@ -427,7 +427,7 @@ def get_model_metabolites(model_bigg_id, session, page=None, size=None, sort_col
                                       page, size)
 
     return [{'bigg_id': x[0], 'name': x[1], 'model_bigg_id': x[2], 'organism': x[3], 'compartment_bigg_id': x[4]} 
-            for x in query.all()]
+            for x in query]
 
 
 #-------------------------------------------------------------------------------
@@ -492,7 +492,7 @@ def get_models(session, page=None, size=None, sort_column=None, sort_direction='
                                       page, size)
 
     return [{'bigg_id': x[0], 'organism': x[1], 'metabolite_count': x[2], 'reaction_count': x[3], 'gene_count': x[4]} 
-            for x in query.all()]
+            for x in query]
 
 
 def get_model_list_for_reaction(reaction_bigg_id, session):
@@ -502,7 +502,7 @@ def get_model_list_for_reaction(reaction_bigg_id, session):
               .join(Reaction, Reaction.id == ModelReaction.reaction_id)
               .filter(Reaction.bigg_id == reaction_bigg_id)
               .distinct()
-              .all())
+              )
     return [x[0] for x in result]
 
 
@@ -514,11 +514,11 @@ def get_model_list_for_metabolite(metabolite_bigg_id, session):
               .join(Compartment)
               .join(Metabolite)
               .filter(Metabolite.bigg_id == metabolite_bigg_id)
-              .all())
+              )
     return [{'bigg_id': x[0], 'compartment_bigg_id': x[1]} for x in result]
 
 
-def get_model_and_counts(model_bigg_id, session):
+def get_model_and_counts(model_bigg_id, session, static_model_dir=None):
     model_db = (session
                 .query(Model, ModelCount, Genome, Publication.reference_type,
                        Publication.reference_id)
@@ -531,17 +531,29 @@ def get_model_and_counts(model_bigg_id, session):
     if model_db is None:
         raise NotFoundError("No model found with bigg_id " + model_bigg_id)
     escher_maps = get_escher_maps_for_model(model_db[0].id, session)
-    return_dict = {'bigg_id': model_db[0].bigg_id,
-                   'published_filename': model_db[0].published_filename,
-                   'organism': getattr(model_db[2], 'organism', None),
-                   'genome': getattr(model_db[2], 'bioproject_id', None),
-                   'metabolite_count': model_db[1].metabolite_count,
-                   'reaction_count': model_db[1].reaction_count,
-                   'gene_count': model_db[1].gene_count,
-                   'reference_type': model_db[3],
-                   'reference_id': model_db[4],
-                   'escher_maps': escher_maps}
-    return return_dict
+    result = {'bigg_id': model_db[0].bigg_id,
+              'published_filename': model_db[0].published_filename,
+              'organism': getattr(model_db[2], 'organism', None),
+              'genome': getattr(model_db[2], 'bioproject_id', None),
+              'metabolite_count': model_db[1].metabolite_count,
+              'reaction_count': model_db[1].reaction_count,
+              'gene_count': model_db[1].gene_count,
+              'reference_type': model_db[3],
+              'reference_id': model_db[4],
+              'escher_maps': escher_maps}
+    if static_model_dir:
+        # get filesizes
+        for ext in ("xml", "mat", "json", "xml_gz"):
+            fpath = join(static_model_dir,
+                         model_bigg_id + "." + ext.replace("_", "."))
+            byte_size = getsize(fpath) if isfile(fpath) else 0
+            if byte_size > 1048576:
+                result[ext + "_size"] = "%.1f MB" % (byte_size / 1048576.)
+            elif byte_size > 1024:
+                result[ext + "_size"] = "%.1f kB" % (byte_size / 1024.)
+            elif byte_size > 0:
+                result[ext + "_size"] = "%d B" % (byte_size)
+    return result
         
 
 
@@ -550,7 +562,7 @@ def get_model_list(session):
     model_list = (session
                   .query(Model.bigg_id)
                   .order_by(Model.bigg_id)
-                  .all())
+                  )
     list = [x[0] for x in model_list]
     list.sort()
     return list
@@ -609,8 +621,7 @@ def get_model_genes(model_bigg_id, session, page=None, size=None,
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
-            sort_column_object = columns.itervalues().next()
+            raise ValueError('Bad sort_column name: %s' % sort_column)
 
     # set up the query
     query = (session
@@ -625,7 +636,7 @@ def get_model_genes(model_bigg_id, session, page=None, size=None,
                                       page, size)
 
     return [{'bigg_id': x[0], 'name': x[1], 'model_bigg_id': x[2], 'organism': x[3]} 
-            for x in query.all()]
+            for x in query]
 
 
 def get_model_gene(gene_bigg_id, model_bigg_id, session):
@@ -663,7 +674,7 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
                    .join(Gene, Gene.id == ModelGene.gene_id)
                    .filter(Model.bigg_id == model_bigg_id)
                    .filter(Gene.bigg_id == gene_bigg_id)
-                   .all())
+                   )
     reaction_results = [{'bigg_id': r[0], 'gene_reaction_rule': r[1],
                          'name': r[2]} for r in reaction_db]
     synonym_db = (session
@@ -704,8 +715,10 @@ def get_metabolite_list_for_reaction(reaction_id, session):
                        Compartment.id == CompartmentalizedComponent.compartment_id)
                  # filter
                  .filter(Reaction.bigg_id == reaction_id)
-                 .all())
-    return [{'bigg_id': x[0], 'stoichiometry': x[1], 'compartment_bigg_id': x[2],
+                 )
+    return [{'bigg_id': x[0],
+             'stoichiometry': str(int(x[1])) if x[1] == int(x[1]) else str(x[1]),
+             'compartment_bigg_id': x[2],
              'name': x[3]} for x in result_db]
     
 def get_metabolite(met_bigg_id, session):
@@ -725,7 +738,7 @@ def get_metabolite(met_bigg_id, session):
                     .outerjoin(Genome, Genome.id == Model.genome_id)
                     .join(Metabolite)
                     .filter(Metabolite.bigg_id == met_bigg_id)
-                    .all())
+                    )
     db_link_results = get_db_links_for_metabolite(met_bigg_id, session)
 
     return {'bigg_id': result_db[0],
@@ -763,7 +776,7 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id,
                     .join(Model)
                     .filter(Metabolite.bigg_id == met_bigg_id)
                     .filter(Model.bigg_id == model_bigg_id)
-                    .all())
+                    )
     model_db = get_model_list_for_metabolite(met_bigg_id, session)
     escher_maps = get_escher_maps_for_metabolite(met_bigg_id,
                                                  compartment_bigg_id,
@@ -790,7 +803,7 @@ def get_gene_list_for_model(model_bigg_id, session):
               .join(Model)
               .outerjoin(Genome, Genome.id == Model.genome_id)
               .filter(Model.bigg_id == model_bigg_id)
-              .all())
+              )
     return [{'bigg_id': x[0], 'name': x[1], 'organism': x[2], 'model_bigg_id': x[3]}
              for x in result]
     
@@ -798,16 +811,15 @@ def get_gene_list_for_model(model_bigg_id, session):
 def get_gene_list_for_model_reaction(model_reaction_id, session):
     result_db = (session
                  .query(Gene.bigg_id, Gene.name)
-                 .join(ModelGene, ModelGene.gene_id == Gene.id)
-                 .join(GeneReactionMatrix, GeneReactionMatrix.model_gene_id == ModelGene.id)
+                 .join(ModelGene)
+                 .join(GeneReactionMatrix)
                  .filter(GeneReactionMatrix.model_reaction_id == model_reaction_id)
-                 .all())
-    return [{'bigg_id': x[0], 'name': x[1]}
-            for x in result_db]
+                 )
+    return [{'bigg_id': x[0], 'name': x[1]} for x in result_db]
 
 
 # Genomes
-def get_genome_and_models(session, bioproject_id):
+def get_genome_and_models(bioproject_id, session):
         genome_db = (session
                      .query(Genome)
                      .filter(Genome.bioproject_id == bioproject_id)
@@ -815,11 +827,11 @@ def get_genome_and_models(session, bioproject_id):
         models_db = (session
                      .query(Model)
                      .filter(Model.genome_id == genome_db.id)
-                     .all())
+                     )
         chromosomes_db = (session
                           .query(Chromosome)
                           .filter(Chromosome.genome_id == genome_db.id)
-                          .all())
+                          )
         return {'bioproject_id': genome_db.bioproject_id,
                 'organism': genome_db.organism,
                 'models': [x.bigg_id for x in models_db],
@@ -831,7 +843,7 @@ def get_database_sources(session):
     result_db = (session
                  .query(LinkOut.external_source)
                  .distinct()
-                 .all())
+                 )
     return [x[0] for x in result_db]
 
 
@@ -877,7 +889,7 @@ def get_db_links_for_reaction(reaction_bigg_id, session):
                  .join(Reaction, Reaction.id == LinkOut.ome_id)
                  .filter(LinkOut.type == 'reaction')
                  .filter(Reaction.bigg_id == reaction_bigg_id)
-                 .all())
+                 )
     return compile_db_links(result_db, link_type='reaction')
 
 def get_db_links_for_metabolite(met_bigg_id, session):
@@ -886,7 +898,7 @@ def get_db_links_for_metabolite(met_bigg_id, session):
                  .join(Metabolite, Metabolite.id == LinkOut.ome_id)
                  .filter(LinkOut.type == 'metabolite')
                  .filter(Metabolite.bigg_id == met_bigg_id)
-                 .all())
+                 )
     return compile_db_links(result_db, link_type='metabolite')
 
 
@@ -896,7 +908,7 @@ def get_metabolites_for_database_id(session, query, database_source):
                  .join(LinkOut, LinkOut.ome_id == Metabolite.id)
                  .filter(LinkOut.external_source == database_source)
                  .filter(LinkOut.external_id == query.strip())
-                 .all())
+                 )
     return [{'bigg_id': x[0], 'model_bigg_id': 'universal', 'name': x[1]}
             for x in result_db]
 
@@ -935,7 +947,7 @@ def get_escher_maps_for_model(model_id, session):
     result_db = (session
                  .query(EscherMap)
                  .filter(EscherMap.model_id == model_id)
-                 .all())
+                 )
     return [{'map_name': x.map_name, 'element_id': None} for x in result_db]
 
 def get_escher_maps_for_reaction(reaction_bigg_id, model_bigg_id, session):
@@ -952,7 +964,7 @@ def get_escher_maps_for_reaction(reaction_bigg_id, model_bigg_id, session):
                  .filter(Reaction.bigg_id == reaction_bigg_id)
                  .filter(Model.bigg_id == model_bigg_id)
                  .order_by(EscherMap.priority.desc())
-                 .all())
+                 )
     return [{'map_name': x[0], 'element_id': x[1]} for x in result_db]
 
 def get_escher_maps_for_metabolite(metabolite_bigg_id, compartment_bigg_id,
@@ -975,7 +987,7 @@ def get_escher_maps_for_metabolite(metabolite_bigg_id, compartment_bigg_id,
                  .filter(Compartment.bigg_id == compartment_bigg_id)
                  .filter(Model.bigg_id == model_bigg_id)
                  .order_by(EscherMap.priority.desc())
-                 .all())
+                 )
     return [{'map_name': x[0], 'element_id': x[1]} for x in result_db]
     
 def json_for_map(map_name, session):
@@ -1068,7 +1080,7 @@ def search_for_universal_reactions(query_string, session, page=None, size=None,
     query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
                                       page, size)
 
-    return [{'bigg_id': x[0], 'name': x[1]} for x in query.all()]
+    return [{'bigg_id': x[0], 'name': x[1]} for x in query]
 
 
 def search_for_reactions(query_string, session, page=None, size=None, sort_column=None,
@@ -1136,7 +1148,7 @@ def search_for_reactions(query_string, session, page=None, size=None, sort_colum
         query = query.filter(Model.bigg_id.in_(limit_models))
 
     return [{'bigg_id': x[0], 'model_bigg_id': x[1], 'organism': x[2], 'name': x[3]}
-            for x in query.all()]
+            for x in query]
 
 
 def search_for_universal_metabolites_count(query_string, session):
@@ -1209,7 +1221,7 @@ def search_for_universal_metabolites(query_string, session, page=None,
     query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
                                       page, size)
 
-    return [{'bigg_id': x[0], 'name': x[1]} for x in query.all()]
+    return [{'bigg_id': x[0], 'name': x[1]} for x in query]
 
 
 def search_for_metabolites_by_external_id(query_string, source, session):
@@ -1233,7 +1245,7 @@ def search_for_metabolites_by_external_id(query_string, source, session):
           .filter(LinkOut.external_id == query_string))
 
     return [{'bigg_id': x[0], 'compartment_bigg_id': x[1], 'model_bigg_id': x[2], 'organism': x[3]}
-            for x in query.all()]
+            for x in query]
 
 
 def search_for_metabolites(query_string, session, page=None, size=None,
@@ -1343,7 +1355,12 @@ def search_for_metabolites(query_string, session, page=None, size=None,
 
     return [{'bigg_id': x[0], 'compartment_bigg_id': x[1], 'model_bigg_id': x[2],
              'organism': x[3], 'name': x[4]}
-            for x in query.all()]
+            for x in query]
+
+
+def get_genome_list(session):
+    return [{'bioproject_id': x[0], 'organism': x[1]} for x in
+            session.query(Genome.bioproject_id, Genome.organism)]
 
 
 def search_for_genes_count(query_string, session, limit_models=None):
@@ -1438,7 +1455,7 @@ def search_for_genes(query_string, session, page=None, size=None, sort_column=No
         query = query.filter(Model.bigg_id.in_(limit_models))
 
     return [{'bigg_id': x[0], 'name': x[1], 'model_bigg_id': x[2], 'organism': x[3]} 
-            for x in query.all()]
+            for x in query]
 
 
 def search_for_models_count(query_string, session):
@@ -1524,7 +1541,7 @@ def search_for_models(query_string, session, page=None, size=None,
 
     return [{'bigg_id': x[0], 'organism': x[1], 'metabolite_count': x[2],
              'reaction_count': x[3], 'gene_count': x[4]}
-            for x in query.all()]
+            for x in query]
 
 
 def search_ids_fast(query_string, session, limit=None):
@@ -1567,4 +1584,4 @@ def search_ids_fast(query_string, session, limit=None):
     if limit is not None:
         query = query.limit(limit)
         
-    return [x[0] for x in query.all()]
+    return [x[0] for x in query]
