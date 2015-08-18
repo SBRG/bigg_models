@@ -16,6 +16,16 @@
       
       <h4>Formula:</h4>
       <p>{{formula}}</p>
+       <h4>Legacy Identifiers:</h4>
+      <p>
+      {% if legacy_id is none %}
+      (none)
+      {% else %}
+        {% for legacy in legacy_id %}
+            {{legacy['id']}} {%if loop.revindex0!=0%},{%endif%}
+        {% endfor %}
+      {% endif %}
+      </p>
 
       <h4><i>{{bigg_id}}</i> in BiGG models:</h4>
       <div class="panel panel-default">

@@ -287,6 +287,9 @@ class UniversalReactionDisplayHandler(BaseHandler):
         if response.error:
             raise HTTPError(404)
         results = json.loads(response.body)
+        results['reaction_string'] = queries.build_reaction_string(results['metabolites'],
+                                                                      0,0,True)
+        
         self.write(template.render(results))
         self.set_header('Content-type','text/html')
         self.finish()
