@@ -44,46 +44,12 @@
       </div>
 
       <h4>Download COBRA model from the BiGG Database:</h4>
-			COBRA model (JSON
-      {% with question_title='COBRA model: JSON format'%}
-        {% with question_text='COBRA model in JSON format can be read with COBRApy v0.3 and later and the Escher pathway map visualization tool.'%}
-          {% include 'question_mark.html' %}
-        {% endwith %}
-      {% endwith %}
-			):&nbsp;
-			<a href="/static/dumped_models/{{bigg_id}}.json" download="{{bigg_id}}.json">
-				{{bigg_id}}.json
-      </a>
+      {% include 'sbml_link.html' %}
+      <br/>
+      {% include 'json_link.html' %}
+      <br/>
+      {% include 'mat_link.html' %}
 			<br/>
-			COBRA model (SBML
-      {% with question_title='COBRA model: SBML level 2 (v1)'%}
-        {% with question_text='This file uses a version of SBML which can by read by COBRApy and the COBRA toolbox.'%}
-          {% include 'question_mark.html' %}
-        {% endwith %}
-      {% endwith %}
-			):&nbsp;
-			<a href="/static/dumped_models/{{bigg_id}}.xml" download="{{bigg_id}}.xml">
-				{{bigg_id}}.xml
-			</a>
-			<br/>
-			COBRA model (SBML with FBC v2 and MIRIAM
-      {% with question_title='COBRA model: SBML level 3 (v1) with FBC (v2)'%}
-        {% with question_text='This file is fully annotated through MIRIAM and uses the latest, unfinalized version of the FBC package (version 2). It is only readable by COBRApy v0.4 and later.'%}
-          {% include 'question_mark.html' %}
-        {% endwith %}
-      {% endwith %}
-			):&nbsp;
-			<a href="/static/polished_models/{{bigg_id}}.xml.zip" download="{{bigg_id}}.xml.zip">
-				{{bigg_id}}.xml.zip
-			</a>
-			<br/>
-			<br/>
-			{% if published_filename is not none %}
-				Published model:&nbsp;
-				<a href="/static/published_models/{{published_filename}}" download="{{published_filename}}">
-					{{published_filename}}
-				</a>
-			{% endif %}
 			<br/>
 			{% if reference_type == 'pmid' %}
 				Publication PMID:&nbsp;
