@@ -10,6 +10,16 @@
       <h4>Descriptive name: </h4>
       <p>{% if name is not none %}{{name}}{% endif %}</p>
       
+      <h4>Old Identifiers:</h4>
+      <p>
+        {% if legacy_id is none %}
+            (none)
+        {% else %}
+            {% for legacy in legacy_id %}
+                {{legacy['id']}} {%if loop.revindex0!=0%},{%endif%}
+            {% endfor %}
+        {% endif %}
+      </p>
       <h4>Model: </h4>
       <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
       

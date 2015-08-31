@@ -16,6 +16,7 @@ from collections import Counter
 import simplejson as json
 import subprocess
 import os
+from os.path import isfile
 import mimetypes
 
 from six import iteritems
@@ -168,7 +169,6 @@ def stop():
 # Handlers
 # -------------------------------------------------------------------------------
 
-
 class BiggStaticFileHandler(StaticFileHandler):
     """This is sets the Content-Type for the various model formats
 
@@ -185,7 +185,6 @@ class BiggStaticFileHandler(StaticFileHandler):
             return "application/octet-stream"
         else:
             return StaticFileHandler.get_content_type(self)
-
 
 def _possibly_compartmentalized_met_id(obj):
     if 'compartment_bigg_id' not in obj:
