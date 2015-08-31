@@ -32,6 +32,10 @@ tests can only be run after the whole database is loaded.
 Dumping and restoring the database
 ==================================
 
+The latest database dumps are available in this Dropbox folder:
+
+https://www.dropbox.com/sh/yayfmcrsrtrcypw/AACDoew92pCYlSJa8vCs5rSMa?dl=0
+
 We generally dump the database with this command:
 
 ```
