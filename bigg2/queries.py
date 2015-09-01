@@ -10,7 +10,6 @@ from os.path import abspath, dirname, join, isfile, getsize
 
 root_directory = abspath(dirname(__file__))
 
-
 #-------------------------------------------------------------------------------
 # Utils
 #-------------------------------------------------------------------------------
@@ -185,7 +184,6 @@ def get_model_reactions(model_bigg_id, session, page=None, size=None,
         except KeyError:
             print 'Bad sort_column name: %s' % sort_column
             sort_column_object = columns.itervalues().next()
-
     # set up the query
     query = (session
              .query(Reaction.bigg_id, Reaction.name, Model.bigg_id, Genome.organism)
@@ -229,7 +227,8 @@ def get_reaction_and_models(reaction_bigg_id, session):
             'database_links': db_link_results,
             'legacy_id': db_link_results['old_id'],
             'metabolites': metabolite_db,
-            'models_containing_reaction': [{'bigg_id': x[3], 'organism': x[4]}
+            'models_containing_reaction': [{'bigg_id': x[3], 'organism': x[4], 'url': 'http://%s:%d/api/%s/models/%s' % \
+                                            (api_host, options.port, api_v, url_escape(x[3], plus=False))} 
                                            for x in result_db]}
     
 def get_reactions_for_model(model_bigg_id, session):
@@ -239,8 +238,9 @@ def get_reactions_for_model(model_bigg_id, session):
                  .join(Model, Model.id == ModelReaction.model_id)
                  .outerjoin(Genome, Genome.id == Model.genome_id)
                  .filter(Model.bigg_id == model_bigg_id)
-                 )
-    return [{'bigg_id': x[0], 'name': x[1], 'organism': x[2]}
+                 .all())
+    return [{'bigg_id': x[0], 'name': x[1], 'organism': x[2], 'url': 'http://%s:%d/api/%s/models/%s/reactions/%s' % \
+            (api_host, options.port, api_v, url_escape(model_bigg_id, plus=False), url_escape(x[0], plus=False))}
              for x in result_db]
 
 
@@ -503,8 +503,9 @@ def get_model_list_for_reaction(reaction_bigg_id, session):
               .join(Reaction, Reaction.id == ModelReaction.reaction_id)
               .filter(Reaction.bigg_id == reaction_bigg_id)
               .distinct()
-              )
-    return [x[0] for x in result]
+              .all())
+    return [{'bigg_id': x[0], 'url': 'http://%s:%d/api/%s/models/%s' % \
+            (api_host, options.port, api_v, url_escape(x[0], plus=False))} for x in result]
 
 
 def get_model_list_for_metabolite(metabolite_bigg_id, session):
@@ -516,7 +517,8 @@ def get_model_list_for_metabolite(metabolite_bigg_id, session):
               .join(Metabolite)
               .filter(Metabolite.bigg_id == metabolite_bigg_id)
               )
-    return [{'bigg_id': x[0], 'compartment_bigg_id': x[1]} for x in result]
+    return [{'bigg_id': x[0], 'compartment_bigg_id': x[1], 'url': 'http://%s:%d/api/%s/models/%s' % \
+            (api_host, options.port, api_v, url_escape(x[0], plus=False))} for x in result]
 
 
 def get_model_and_counts(model_bigg_id, session, static_model_dir=None):
@@ -567,6 +569,17 @@ def get_model_list(session):
     list = [x[0] for x in model_list]
     list.sort()
     return list
+
+def get_model_json_string(model_bigg_id):
+    """Get the model JSON for download."""
+    path = join(settings.model_dump_directory,
+                model_bigg_id + '.json')
+    try:
+        with open(path, 'r') as f:
+            data = f.read()
+    except IOError as e:
+        raise NotFoundError(e.message)
+    return data
 
 
 #-------------------------------------------------------------------------------
@@ -696,6 +709,7 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
             'legacy_id': synonym_db['old_id']
             }
     
+>>>>>>> e73e7892ef9d1891a2baca8431244975e4a5d7fb
 
 def get_metabolite_list_for_reaction(reaction_id, session):
     result_db = (session
@@ -716,11 +730,10 @@ def get_metabolite_list_for_reaction(reaction_id, session):
                        Compartment.id == CompartmentalizedComponent.compartment_id)
                  # filter
                  .filter(Reaction.bigg_id == reaction_id)
-                 )
-    return [{'bigg_id': x[0],
-             'stoichiometry': str(int(x[1])) if x[1] == int(x[1]) else str(x[1]),
-             'compartment_bigg_id': x[2],
-             'name': x[3]} for x in result_db]
+                 .all())
+    return [{'bigg_id': x[0], 'stoichiometry': x[1], 'compartment_bigg_id': x[2],
+             'name': x[3], 'url': ('http://%s:%d/api/%s/models/universal/metabolites/%s' % \
+            (api_host, options.port, api_v, url_escape(x[0], plus=False)))} for x in result_db]
     
 def get_metabolite(met_bigg_id, session):
     result_db = (session
@@ -747,11 +760,13 @@ def get_metabolite(met_bigg_id, session):
             'formula': result_db[2],
             'database_links': db_link_results, 
             'legacy_id': db_link_results['old_id'],
-            'compartments_in_models': [{'bigg_id': c[0], 'model_bigg_id': c[1], 'organism': c[2]}
-                                       for c in comp_comp_db]}
+            'compartments_in_models': [{'bigg_id': c[0], 'model_bigg_id': c[1], 'organism': c[2],
+                                        'url': ('http://%s:%d/api/%s/models/%s/metabolites/%s_%s' % \
+                                        (api_host, options.port, api_v, url_escape(c[1], plus=False), url_escape(result_db[0], plus=False),url_escape(c[0], plus=False)))}
+                                       for c in comp_comp_db]
+            }
 
-def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id,
-                              session):
+def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, session):
     result_db = (session
                  .query(Metabolite.bigg_id,
                         Metabolite.name,
@@ -792,8 +807,10 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id,
             'model_bigg_id': result_db[3],
             'formula': result_db[4],
             'database_links': db_link_results,
-            'legacy_id': db_link_results['old_id'],
-            'reactions': [{'bigg_id': r[0], 'name': r[1], 'model_bigg_id': r[2]}
+            'reactions': [{'bigg_id': r[0], 'name': r[1], 'model_bigg_id': r[2], 'url': 'http://%s:%d/api/%s/models/%s/reactions/%s' % \
+                        (api_host, options.port, api_v,
+                        url_escape(result_db[3], plus=False),
+                        url_escape(result_db[0], plus=False))}
                           for r in reactions_db],
             'escher_maps': escher_maps,
             'other_models_with_metabolite': model_result}
@@ -836,7 +853,8 @@ def get_genome_and_models(bioproject_id, session):
                           )
         return {'bioproject_id': genome_db.bioproject_id,
                 'organism': genome_db.organism,
-                'models': [x.bigg_id for x in models_db],
+                'models': [{'model': x.bigg_id, 'url': 'http://%s:%d/api/%s/models/%s' % \
+                (api_host, options.port, api_v, url_escape(x.bigg_id, plus=False))} for x in models_db],
                 'chromosomes': [x.ncbi_id for x in chromosomes_db]}
 
 

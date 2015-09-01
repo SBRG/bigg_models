@@ -659,7 +659,6 @@ class GeneListHandler(PageableHandler):
                            for x in raw_results]
         result = {'results': raw_results,
                   'results_count': safe_query(queries.get_model_genes_count, model_bigg_id)}
-
         self.write(result)
         self.finish()
 
