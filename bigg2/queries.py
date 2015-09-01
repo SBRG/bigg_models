@@ -709,7 +709,6 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
             'legacy_id': synonym_db['old_id']
             }
     
->>>>>>> e73e7892ef9d1891a2baca8431244975e4a5d7fb
 
 def get_metabolite_list_for_reaction(reaction_id, session):
     result_db = (session
