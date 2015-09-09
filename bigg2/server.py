@@ -345,9 +345,7 @@ class UniversalReactionDisplayHandler(BaseHandler):
         if response.error:
             raise HTTPError(404)
         results = json.loads(response.body)
-        results['reaction_string'] = queries.build_reaction_string(results['metabolites'],
-                                                                      result['lower_bound'],
-                                                                      result['upper_bound'])
+        results['reaction_string'] = queries.build_reaction_string(results['metabolites'],0,0,True)
         self.write(template.render(results))
         self.finish()
 
@@ -436,7 +434,8 @@ class ReactionDisplayHandler(BaseHandler):
         for result in data['results']:
             result['reaction_string'] = queries.build_reaction_string(data['metabolites'],
                                                                       result['lower_bound'],
-                                                                      result['upper_bound'])
+                                                                      result['upper_bound'],
+                                                                      False)
         self.write(template.render(data))
         self.finish()
 
