@@ -34,6 +34,8 @@ def test_get_reaction_and_models(session):
     assert result['pseudoreaction'] is False
     assert {'bigg_id': 'iAPECO1_1312', 'organism': 'Escherichia coli APEC O1'} \
         in result['models_containing_reaction']
+    assert result['old_identifiers'] == ['ADA']
+    assert 'old_id' not in result['database_links']
     with raises(Exception):
         result = get_reaction_and_models('not_a_reaction', session)
 
@@ -61,7 +63,10 @@ def test_get_model_reaction(session):
     assert 'upper_bound' in result['results'][0]
     assert 'lower_bound' in result['results'][0]
     assert 'objective_coefficient' in result['results'][0]
-
+    assert result['old_identifiers'] == ['ADA']
+    assert 'old_id' not in result['database_links']
+    
+    
 
 # Models
 def test_get_models():
@@ -113,6 +118,8 @@ def test_get_metabolite():
     assert 'Escherichia coli APEC O1' in [c['organism'] for c in result['compartments_in_models']]
     assert {'link': 'http://www.genome.jp/dbget-bin/www_bget?cpd:C00026', 'id': 'C00026'} \
         in result['database_links']['KEGG']
+    assert result['old_identifiers'] == ['akg_c','akg_p','akg_e']
+    assert 'old_id' not in result['database_links']
     session.close()
 
 
@@ -124,10 +131,12 @@ def test_get_model_comp_metabolite(session):
     assert result['formula'] == 'C5H4O5'
     assert 'AKGDH' in [r['bigg_id'] for r in result['reactions']]
     assert 'iAPECO1_1312' not in [r['bigg_id'] for r in result['other_models_with_metabolite']]
+    assert result['old_identifiers'] == ['akg_c']
+    assert 'old_id' not in result['database_links']
     # make sure models are being filtered
     result = get_model_comp_metabolite('h', 'c', 'iAPECO1_1312', session)
     assert all([r['model_bigg_id'] == 'iAPECO1_1312' for r in result['reactions']])
-
+    
 
 def test_get_model_metabolites(session):
     results = get_model_metabolites('iAPECO1_1312', session)
@@ -170,6 +179,8 @@ def test_get_gene_list_for_model_reaction(session):
 def test_get_model_gene(session):
     result = get_model_gene('APECO1_706', 'iAPECO1_1312', session)
     assert result['bigg_id'] == 'APECO1_706'
+    assert result['old_identifiers'] == ['APECO1_706']
+    assert 'old_id' not in result['database_links']
 
 
 # database sources

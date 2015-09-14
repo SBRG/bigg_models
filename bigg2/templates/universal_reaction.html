@@ -23,11 +23,11 @@
 	  <p>{% if name is not none %}{{name}}{% endif %}</p>
       <h4>Old Identifiers:</h4>
       <p>
-        {% if legacy_id is none %}
+        {% if old_identifiers is none %}
             (none)
         {% else %}
-            {% for legacy in legacy_id %}
-                {{legacy['id']}} {%if loop.revindex0!=0%},{%endif%}
+            {% for id in old_identifiers %}
+                {{id}} {%if loop.revindex0!=0%},{%endif%}
             {% endfor %}
         {% endif %}
       </p>  

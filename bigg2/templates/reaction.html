@@ -22,6 +22,17 @@
       <h4>Descriptive name: </h4>
       <p>{% if name is not none %}{{name}}{% endif %}</p>
 
+      <h4>Old Identifiers:</h4>
+      <p>
+        {% if old_identifiers is none %}
+            (none)
+        {% else %}
+            {% for id in old_identifiers %}
+                {{id}} {%if loop.revindex0!=0%},{%endif%}
+            {% endfor %}
+        {% endif %}
+      </p>  
+
       <h4>Model: </h4>
       <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
 
