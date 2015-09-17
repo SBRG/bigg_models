@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import smtplib
 import tornado.ioloop
 import tornado.web
@@ -8,7 +9,7 @@ from tornado.web import (StaticFileHandler, RequestHandler, RedirectHandler,
                          asynchronous, HTTPError)
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
-from os.path import abspath, dirname, join, isfile, getsize
+from os.path import abspath, dirname, join
 from jinja2 import Environment, PackageLoader
 from sqlalchemy.orm import sessionmaker, aliased, Bundle
 from sqlalchemy import create_engine, desc, func, or_
@@ -16,8 +17,11 @@ from collections import Counter
 import simplejson as json
 import subprocess
 import os
+from os.path import isfile
 import mimetypes
 import datetime
+
+from six import iteritems
 
 from bigg2 import queries
 from bigg2.queries import NotFoundError
@@ -166,7 +170,6 @@ def stop():
 # Handlers
 # -------------------------------------------------------------------------------
 
-
 class BiggStaticFileHandler(StaticFileHandler):
     """This is sets the Content-Type for the various model formats
 
@@ -183,7 +186,6 @@ class BiggStaticFileHandler(StaticFileHandler):
             return "application/octet-stream"
         else:
             return StaticFileHandler.get_content_type(self)
-
 
 def _possibly_compartmentalized_met_id(obj):
     if 'compartment_bigg_id' not in obj:
@@ -227,89 +229,104 @@ def safe_query(func, *args, **kwargs):
         return func(*args, **kwargs)
     except queries.NotFoundError as e:
         raise HTTPError(status_code=404, reason=e.message)
+    except ValueError as e:
+        raise HTTPError(status_code=400, reason=e.message)
     finally:
         session.close()
 
 
 class BaseHandler(RequestHandler):
-    def set_content_type(self, category):
-        """Add a content type for 'html' or 'json'."""
-        if category == 'html':
-            self.set_header('Content-type', 'text/html; charset=utf-8')
-        elif category == 'json':
+    def write(self, value):
+        # note that serving a json list is a security risk
+        # This is meant to be serving public-read only data only.
+        if isinstance(value, (dict, list, tuple)):
+            value_str = json.dumps(value)
+            RequestHandler.write(self, value_str)
             self.set_header('Content-type', 'application/json; charset=utf-8')
         else:
-            raise Exception('Bad content type category %s' % category)
+            RequestHandler.write(self, value)
+
+
+class PageableHandler(BaseHandler):
+    """HTTP requests can pass in arguments for page, size,
+    columns, and the sort_column"""
+    def _get_pager_args(self, default_sort_column=None,
+                        sort_direction="ascending"):
+        query_kwargs = {
+            "page": self.get_argument('page', None),
+            "size": self.get_argument('size', None),
+        }
+
+        # determine the columns
+        column_str = self.get_argument("columns", None)
+        columns = column_str.split(",") if column_str else []
+
+        # determine which column we are sorting by
+        # These are parameters formatted as col[i] = 0 (or 1 for descending)
+        for param_name, param_value in iteritems(self.request.query_arguments):
+            if not (param_name.startswith("col[") and
+                    param_name.endswith("]")):
+                continue
+            try:
+                # get the number in col[?]
+                col_index = int(param_name[4:-1])
+                sort_direction = "ascending" if param_value[0] == "0" \
+                    else "descending"
+            except ValueError as e:
+                raise HTTPError(status_code=400,
+                                reason="could not parse %s=%s" %
+                                (param_name, param_value))
+            # convert these integers into meaningful sort params
+            try:
+                query_kwargs["sort_column"] = columns[col_index]
+            except IndexError:
+                raise HTTPError(status_code=400,
+                                reason="column #%d not found in columns" %
+                                col_index)
+            else:
+                query_kwargs["sort_direction"] = sort_direction
+
+        return query_kwargs
 
 
 class MainHandler(BaseHandler):
     def get(self):
         template = env.get_template('index.html')
         self.write(template.render())
-        self.set_content_type('html')
         self.finish()
 
 
 # reactions
-class UniversalReactionListHandler(BaseHandler):
+class UniversalReactionListHandler(PageableHandler):
     def get(self):
-        # get arguments
-        page = self.get_argument('page', None)
-        size = self.get_argument('size', None)
-        include_link_urls = (self.get_argument('include_link_urls', None) is not None)
-
-        # defaults
-        sort_column = 'bigg_id'
-        sort_direction = 'ascending'
-
-        # get the sorting column
-        columns = _parse_col_arg(self.get_argument('columns', None))
-        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns,
-                                                    sort_column, sort_direction)
+        kwargs = self._get_pager_args(default_sort_column="bigg_id")
 
         # run the queries
-        session = Session()
-        raw_results = queries.get_universal_reactions(session, page, size,
-                                                      sort_column, sort_direction)
-        if include_link_urls:
+        raw_results = safe_query(queries.get_universal_reactions, **kwargs)
+
+        if "include_link_urls" in self.request.query_arguments:
             raw_results = [dict(x, link_urls={'bigg_id': '/universal/reactions/{bigg_id}'.format(**x)})
                            for x in raw_results]
         result = {'results': [dict(x, model_bigg_id='Universal') for x in raw_results],
-                  'results_count': queries.get_universal_reactions_count(session)}
-        session.close()
+                  'results_count': safe_query(queries.get_universal_reactions_count)}
 
-        # write out the JSON
-        data = json.dumps(result)
-        self.write(data)
-        self.set_content_type('json')
+        self.write(result)
         self.finish()
 
 
 class UniversalReactionListDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self):
         template = env.get_template("list_display.html")
         dictionary = {'results': {'reactions': 'ajax'},
                       'hide_organism': True}
         self.write(template.render(dictionary))
-        self.set_content_type('html')
         self.finish()
 
 
 class UniversalReactionHandler(BaseHandler):
     def get(self, reaction_bigg_id):
-        session = Session()
-        # get the reaction object
-        try:
-            result = queries.get_reaction_and_models(reaction_bigg_id, session)
-        except NotFoundError:
-            raise HTTPError(404)
-        session.close()
-
-        data = json.dumps(result)
-        self.write(data)
-        self.set_content_type('json')
+        result = safe_query(queries.get_reaction_and_models, reaction_bigg_id)
+        self.write(result)
         self.finish()
 
 
@@ -328,125 +345,76 @@ class UniversalReactionDisplayHandler(BaseHandler):
         if response.error:
             raise HTTPError(404)
         results = json.loads(response.body)
+        results['reaction_string'] = queries.build_reaction_string(results['metabolites'],0,0,True)
         self.write(template.render(results))
-        self.set_content_type('html')
         self.finish()
 
 
-class UniversalMetaboliteListHandler(BaseHandler):
+class UniversalMetaboliteListHandler(PageableHandler):
     def get(self):
         # get arguments
-        page = self.get_argument('page', None)
-        size = self.get_argument('size', None)
-        include_link_urls = (self.get_argument('include_link_urls', None) is not None)
+        kwargs = self._get_pager_args(default_sort_column="bigg_id")
 
-        # defaults
-        sort_column = 'bigg_id'
-        sort_direction = 'ascending'
+        raw_results = safe_query(queries.get_universal_metabolites, **kwargs)
 
-        # get the sorting column
-        columns = _parse_col_arg(self.get_argument('columns', None))
-        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns,
-                                                    sort_column, sort_direction)
-
-        # run the queries
-        session = Session()
-        raw_results = queries.get_universal_metabolites(session, page, size,
-                                                        sort_column, sort_direction)
         # add links and universal
-        if include_link_urls:
+        if "include_link_urls" in self.request.query_arguments:
             raw_results = [dict(x, link_urls={'bigg_id': '/universal/metabolites/{bigg_id}'.format(**x)})
                            for x in raw_results]
         result = {'results': [dict(x, model_bigg_id='Universal') for x in raw_results],
-                  'results_count': queries.get_universal_metabolites_count(session)}
+                  'results_count': safe_query(queries.get_universal_metabolites_count)}
 
-        session.close()
-        data = json.dumps(result)
-        self.write(data)
-        self.set_content_type('json')
+        self.write(result)
         self.finish()
 
 
 class UniversalMetaboliteListDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self):
         template = env.get_template("list_display.html")
         template_data = {'results': {'metabolites': 'ajax'},
                          'hide_organism': True}
         self.write(template.render(template_data))
-        self.set_content_type('html')
         self.finish()
 
 
 class UniversalMetaboliteHandler(BaseHandler):
     def get(self, met_bigg_id):
         results = safe_query(queries.get_metabolite, met_bigg_id)
-        data = json.dumps(results)
-        self.write(data)
-        self.set_content_type('json')
+        self.write(results)
         self.finish()
 
 
 class UniversalMetaboliteDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self, met_bigg_id):
         template = env.get_template("universal_metabolite.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/models/universal/metabolites/%s' % \
-                      (options.port, api_v, url_escape(met_bigg_id, plus=False))
-        response = yield gen.Task(http_client.fetch, url_request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
+        results = safe_query(queries.get_metabolite, met_bigg_id)
         self.write(template.render(results))
-        self.set_content_type('html')
         self.finish()
 
 
-class ReactionListHandler(BaseHandler):
+class ReactionListHandler(PageableHandler):
     def get(self, model_bigg_id):
-        # get arguments
-        page = self.get_argument('page', None)
-        size = self.get_argument('size', None)
-        include_link_urls = (self.get_argument('include_link_urls', None) is not None)
+        kwargs = self._get_pager_args(default_sort_column="bigg_id")
 
-        # defaults
-        sort_column = 'bigg_id'
-        sort_direction = 'ascending'
-
-        # get the sorting column
-        columns = _parse_col_arg(self.get_argument('columns', None))
-        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns,
-                                                    sort_column, sort_direction)
-
-        # run the queries
-        session = Session()
-        raw_results = queries.get_model_reactions(model_bigg_id, session, page,
-                                                  size, sort_column,
-                                                  sort_direction)
+        raw_results = safe_query(queries.get_model_reactions, model_bigg_id,
+                                 **kwargs)
         # add the URL
-        if include_link_urls:
+        if "include_link_urls" in self.request.query_arguments:
             raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/reactions/{bigg_id}'.format(**x)})
                            for x in raw_results]
         result = {'results': raw_results,
-                  'results_count': queries.get_model_reactions_count(model_bigg_id, session)}
+                  'results_count':
+                  safe_query(queries.get_model_reactions_count, model_bigg_id)}
 
-        session.close()
-        self.write(json.dumps(result))
-        self.set_content_type('json')
+        self.write(result)
         self.finish()
 
 
 class ReactionListDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self, model_bigg_id):
         template = env.get_template("list_display.html")
         template_data = {'results': {'reactions': 'ajax'}}
         self.write(template.render(template_data))
-        self.set_content_type('html')
         self.finish()
 
 
@@ -454,35 +422,21 @@ class ReactionHandler(BaseHandler):
     def get(self, model_bigg_id, reaction_bigg_id):
         results = safe_query(queries.get_model_reaction,
                              model_bigg_id, reaction_bigg_id)
-        data = json.dumps(results)
-        self.write(data)
-        self.set_content_type('json')
+        self.write(results)
         self.finish()
 
 
 class ReactionDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self, model_bigg_id, reaction_bigg_id):
         template = env.get_template("reaction.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/models/%s/reactions/%s' % \
-                      (options.port, api_v,
-                       url_escape(model_bigg_id, plus=False),
-                       url_escape(reaction_bigg_id, plus=False))
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        data = json.loads(response.body)
+        data = safe_query(queries.get_model_reaction,
+                             model_bigg_id, reaction_bigg_id)
         for result in data['results']:
             result['reaction_string'] = queries.build_reaction_string(data['metabolites'],
                                                                       result['lower_bound'],
-                                                                      result['upper_bound'])
+                                                                      result['upper_bound'],
+                                                                      False)
         self.write(template.render(data))
-        self.set_content_type('html')
         self.finish()
 
 
@@ -491,12 +445,10 @@ class CompartmentListHandler(BaseHandler):
     def get(self):
         session = Session()
         results = [{'bigg_id': x[0], 'name': x[1]}
-                   for x in session.query(Compartment.bigg_id, Compartment.name).all()]
+                   for x in session.query(Compartment.bigg_id, Compartment.name)]
         session.close()
 
-        data = json.dumps(results)
-        self.write(data)
-        self.set_content_type('json')
+        self.write(results)
         self.finish()
 
 
@@ -516,7 +468,6 @@ class CompartmentListDisplayHandler(BaseHandler):
         results = json.loads(response.body)
         self.write(template.render({'compartments': results,
                                     'no_pager': True}))
-        self.set_content_type('html')
         self.finish()
 
 
@@ -530,9 +481,7 @@ class CompartmentHandler(BaseHandler):
         session.close()
 
         result = {'bigg_id': result_db.bigg_id, 'name': result_db.name}
-        data = json.dumps(result)
-        self.write(data)
-        self.set_content_type('json')
+        self.write(result)
         self.finish()
 
 
@@ -553,120 +502,66 @@ class CompartmentDisplayHandler(BaseHandler):
             raise HTTPError(404)
         results = json.loads(response.body)
         self.write(template.render(results))
-        self.set_content_type('html')
         self.finish()
 
 
 # Genomes
 class GenomeListHandler(BaseHandler):
     def get(self):
-        session = Session()
-        results = [{'bioproject_id': x[0], 'organism': x[1]}
-                   for x in session.query(Genome.bioproject_id, Genome.organism).all()]
-        session.close()
-
-        data = json.dumps(results)
-        self.write(data)
-        self.set_content_type('json')
+        results = safe_query(queries.get_genome_list)
+        self.write(results)
         self.finish()
 
 
 class GenomeListDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self):
         template = env.get_template("genomes.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/genomes' % (options.port, api_v)
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
+        results = safe_query(queries.get_genome_list)
         self.write(template.render({'genomes': results}))
-        self.set_content_type('html')
         self.finish()
 
 
 class GenomeHandler(BaseHandler):
     def get(self, bioproject_id):
         session = Session()
-        result = queries.get_genome_and_models(session, bioproject_id)
-        session.close()
-
-        data = json.dumps(result)
-        self.write(data)
-        self.set_content_type('json')
+        result = safe_query(queries.get_genome_and_models, bioproject_id)
+        self.write(result)
         self.finish()
 
 
 class GenomeDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self, bioproject_id):
         template = env.get_template("genome.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/genomes/%s' % \
-                      (options.port, api_v, url_escape(bioproject_id, plus=False))
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
-        self.write(template.render(results))
-        self.set_content_type('html')
+        result = safe_query(queries.get_genome_and_models, bioproject_id)
+        self.write(template.render(result))
         self.finish()
 
 
 # Models
-class ModelListHandler(BaseHandler):
+class ModelListHandler(PageableHandler):
     def get(self):
-        # get arguments
-        page = self.get_argument('page', None)
-        size = self.get_argument('size', None)
-        include_link_urls = (self.get_argument('include_link_urls', None) is not None)
-
-        # defaults
-        sort_column = 'bigg_id'
-        sort_direction = 'ascending'
-
-        # get the sorting column
-        columns = _parse_col_arg(self.get_argument('columns', None))
-        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns,
-                                                    sort_column, sort_direction)
+        kwargs = self._get_pager_args(default_sort_column="bigg_id")
 
         # run the queries
-        session = Session()
-        raw_results = queries.get_models(session, page, size, sort_column, sort_direction)
-        if include_link_urls:
+        raw_results = safe_query(queries.get_models, **kwargs)
+        if "include_link_urls" in self.request.query_arguments:
             raw_results = [dict(x, link_urls={'bigg_id': '/models/{bigg_id}'.format(**x),
                                               'metabolite_count': '/models/{bigg_id}/metabolites'.format(**x),
                                               'reaction_count': '/models/{bigg_id}/reactions'.format(**x),
                                               'gene_count': '/models/{bigg_id}/genes'.format(**x)})
                            for x in raw_results]
         result = {'results': raw_results,
-                  'results_count': queries.get_models_count(session)}
+                  'results_count': safe_query(queries.get_models_count)}
 
-        session.close()
-
-        data = json.dumps(result)
-        self.write(data)
-        self.set_content_type('json')
+        self.write(result)
         self.finish()
 
 
 class ModelsListDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self):
         template = env.get_template("list_display.html")
         template_data = {'results': {'models': 'ajax'}}
         self.write(template.render(template_data))
-        self.set_content_type('html')
         self.finish()
 
 
@@ -678,77 +573,36 @@ class ModelDownloadHandler(BaseHandler):
 
 class ModelHandler(BaseHandler):
     def get(self, model_bigg_id):
-        result = safe_query(queries.get_model_and_counts, model_bigg_id)
-        # get filesizes
-        for ext in ("xml", "mat", "json", "xml_gz"):
-            fpath = join(static_model_dir,
-                         model_bigg_id + "." + ext.replace("_", "."))
-            byte_size = getsize(fpath) if isfile(fpath) else 0
-            if byte_size > 1048576:
-                result[ext + "_size"] = "%.1f MB" % (byte_size / 1048576.)
-            elif byte_size > 1024:
-                result[ext + "_size"] = "%.1f kB" % (byte_size / 1024.)
-            elif byte_size > 0:
-                result[ext + "_size"] = "%d B" % (byte_size)
-        data = json.dumps(result)
-        self.write(data)
-        self.set_content_type('json')
+        result = safe_query(queries.get_model_and_counts, model_bigg_id,
+                            static_model_dir=static_model_dir)
+        self.write(result)
         self.finish()
 
 
 class ModelDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self, model_bigg_id):
         template = env.get_template("model.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/models/%s' % \
-                      (options.port, api_v, url_escape(model_bigg_id, plus=False))
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
-        self.write(template.render(results))
-        self.set_content_type('html')
+        result = safe_query(queries.get_model_and_counts, model_bigg_id,
+                            static_model_dir=static_model_dir)
+        self.write(template.render(result))
         self.finish()
 
 
-class MetaboliteListHandler(BaseHandler):
+class MetaboliteListHandler(PageableHandler):
     def get(self, model_bigg_id):
-        # get arguments
-        page = self.get_argument('page', None)
-        size = self.get_argument('size', None)
-        include_link_urls = (self.get_argument('include_link_urls', None) is not None)
-
-        # defaults
-        sort_column = 'bigg_id'
-        sort_direction = 'ascending'
-
-        # get the sorting column
-        columns = _parse_col_arg(self.get_argument('columns', None))
-        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns,
-                                                    sort_column, sort_direction)
+        kwargs = self._get_pager_args(default_sort_column="bigg_id")
 
         # run the queries
-        session = Session()
-        raw_results = queries.get_model_metabolites(model_bigg_id, session,
-                                                    page, size, sort_column,
-                                                    sort_direction)
+        raw_results = safe_query(queries.get_model_metabolites, model_bigg_id,
+                                 **kwargs)
         # add the URL
-        if include_link_urls:
+        if "include_link_urls" in self.request.query_arguments:
             raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/metabolites/{bigg_id}_{compartment_bigg_id}'.format(**x)})
                            for x in raw_results]
         result = {'results': raw_results,
-                  'results_count': queries.get_model_metabolites_count(model_bigg_id, session)}
+                  'results_count': safe_query(queries.get_model_metabolites_count, model_bigg_id)}
 
-        session.close()
-        data = json.dumps(result)
-
-        self.write(data)
-        self.set_content_type('json')
+        self.write(result)
         self.finish()
 
 
@@ -768,7 +622,6 @@ class MetabolitesListDisplayHandler(BaseHandler):
             raise HTTPError(404)
         dictionary = {"results": {"metabolites": json.loads(response.body)}}
         self.write(template.render(dictionary))
-        self.set_content_type('html')
         self.finish()
 
 
@@ -778,78 +631,43 @@ class MetaboliteHandler(BaseHandler):
         results = safe_query(queries.get_model_comp_metabolite,
                              met_bigg_id, compartment_bigg_id, model_bigg_id)
 
-        data = json.dumps(results)
-        self.write(data)
-        self.set_content_type('json')
+        self.write(results)
         self.finish()
 
 
 class MetaboliteDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self, model_id, met_bigg_id):
         template = env.get_template("metabolite.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/models/%s/metabolites/%s' % \
-                      (options.port, api_v,
-                       url_escape(model_id, plus=False),
-                       url_escape(met_bigg_id, plus=False))
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
+        met_bigg_id, compartment_bigg_id = split_compartment(met_bigg_id)
+        results = safe_query(queries.get_model_comp_metabolite,
+                             met_bigg_id, compartment_bigg_id, model_id)
         self.write(template.render(results))
-        self.set_content_type('html')
         self.finish()
 
 
-class GeneListHandler(BaseHandler):
+class GeneListHandler(PageableHandler):
     def get(self, model_bigg_id):
-        page = self.get_argument('page', None)
-        size = self.get_argument('size', None)
-        include_link_urls = (self.get_argument('include_link_urls', None) is not None)
+        kwargs = self._get_pager_args(default_sort_column="bigg_id")
 
-        # defaults
-        sort_column = 'bigg_id'
-        sort_direction = 'ascending'
-
-        # get the sorting column
-        columns = _parse_col_arg(self.get_argument('columns', None))
-        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns,
-                                                    sort_column, sort_direction)
-
-        # run the queries
-        session = Session()
-        raw_results = queries.get_model_genes(model_bigg_id, session, page,
-                                              size, sort_column, sort_direction)
+        raw_results = safe_query(queries.get_model_genes, model_bigg_id,
+                                 **kwargs)
 
         # add the URL
-        if include_link_urls:
+        if "include_link_urls" in self.request.query_arguments:
             raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/genes/{bigg_id}'.format(**x)})
                            for x in raw_results]
         result = {'results': raw_results,
-                  'results_count': queries.get_model_genes_count(model_bigg_id, session)}
-
-        session.close()
-        data = json.dumps(result)
-
-        self.write(data)
-        self.set_content_type('json')
+                  'results_count': safe_query(queries.get_model_genes_count, model_bigg_id)}
+        self.write(result)
         self.finish()
 
 
 class GeneListDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self, model_bigg_id):
         template = env.get_template("list_display.html")
         template_data = {'results': {'genes': 'ajax'}}
 
         self.write(template.render(template_data))
-        self.set_content_type('html')
         self.finish()
 
 
@@ -857,31 +675,16 @@ class GeneHandler(BaseHandler):
     def get(self, model_bigg_id, gene_bigg_id):
         result = safe_query(queries.get_model_gene,
                             gene_bigg_id, model_bigg_id)
-        data = json.dumps(result)
-        self.write(data)
-        self.set_content_type('json')
+        self.write(result)
         self.finish()
 
 
 class GeneDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self, model_bigg_id, gene_bigg_id):
         template = env.get_template("gene.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/models/%s/genes/%s' % \
-                      (options.port, api_v,
-                       url_escape(model_bigg_id, plus=False),
-                       url_escape(gene_bigg_id, plus=False))
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
-        self.write(template.render(results))
-        self.set_content_type('html')
+        result = safe_query(queries.get_model_gene,
+                            gene_bigg_id, model_bigg_id)
+        self.write(template.render(result))
         self.finish()
 
 
@@ -892,7 +695,7 @@ class SearchHandler(BaseHandler):
         page = self.get_argument('page', None)
         size = self.get_argument('size', None)
         search_type = self.get_argument('search_type', None)
-        include_link_urls = (self.get_argument('include_link_urls', None) is not None)
+        include_link_urls = "include_link_urls" in self.request.query_arguments
 
         # defaults
         sort_column = None
@@ -957,16 +760,11 @@ class SearchHandler(BaseHandler):
             raise HTTPError(400, 'Bad search_type %s' % search_type)
 
         session.close()
-        data = json.dumps(result)
-        self.write(data)
-
-        self.set_content_type('json')
+        self.write(result)
         self.finish()
 
 
 class SearchDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
     def get(self):
         template = env.get_template("list_display.html")
         template_data = {'results': {'models': 'ajax',
@@ -975,21 +773,17 @@ class SearchDisplayHandler(BaseHandler):
                                      'genes': 'ajax'},
                          'tablesorter_size': 20}
         self.write(template.render(template_data))
-        self.set_content_type('html')
         self.finish()
 
 
 class AdvancedSearchHandler(BaseHandler):
     def get(self):
         template = env.get_template('advanced_search.html')
-        session = Session()
-        model_list = queries.get_model_list(session)
-        database_sources = queries.get_database_sources(session)
-        session.close()
+        model_list = safe_query(queries.get_model_list)
+        database_sources = safe_query(queries.get_database_sources)
 
         self.write(template.render({'models': model_list,
                                     'database_sources': database_sources}))
-        self.set_content_type('html')
         self.finish()
 
 
@@ -1005,7 +799,6 @@ class LinkoutAdvanceSearchResultsHandler(BaseHandler):
         session.close()
 
         self.write(template.render(dictionary))
-        self.set_content_type('html')
         self.finish()
 
 
@@ -1024,7 +817,6 @@ class AdvancedSearchExternalIDHandler(BaseHandler):
 
         template = env.get_template("list_display.html")
         self.write(template.render(dictionary))
-        self.set_content_type('html')
         self.finish()
 
 
@@ -1067,7 +859,6 @@ class AdvancedSearchResultsHandler(BaseHandler):
         session.close()
         template = env.get_template("list_display.html")
         self.write(template.render(result))
-        self.set_content_type('html')
         self.finish()
 
 
@@ -1076,23 +867,18 @@ class AutocompleteHandler(BaseHandler):
         query_string = self.get_argument("query")
 
         # get the session
-        session = Session()
-        result_array = queries.search_ids_fast(query_string, session, limit=15)
-        session.close()
-
-        self.write(json.dumps(result_array))
-        self.set_content_type('json')
+        result_array = safe_query(queries.search_ids_fast, query_string, limit=15)
+        self.write(result_array)
         self.finish()
 
 
 class EscherMapJSONHandler(BaseHandler):
     def get(self, map_name):
-        session = Session()
-        map_json = queries.json_for_map(map_name, session)
-        session.close()
+        map_json = safe_query(queries.json_for_map, map_name)
 
         self.write(map_json)
-        self.set_content_type('json')
+        # need to do this because map_json is a string
+        self.set_header('Content-type', 'application/json; charset=utf-8')
         self.finish()
 
 
@@ -1115,7 +901,6 @@ class WebAPIHandler(BaseHandler):
     def get(self):
         template = env.get_template('web_api.html')
         self.write(template.render(api_host=api_host))
-        self.set_content_type('html')
         self.finish()
 
 
@@ -1123,15 +908,25 @@ class LicenseHandler(BaseHandler):
     def get(self):
         template = env.get_template('about_license_page.html')
         self.write(template.render())
-        self.set_content_type('html')
         self.finish()
 
 
 # static files
 class StaticFileHandlerWithEncoding(StaticFileHandler):
+    # This is only to opportunisticly use a pre-compressed file
+    # (equivalent to gzip_static in nginx).
+    def get_absolute_path(self, root, path):
+        p = abspath(join(root, path))
+        # if the client accepts gzip
+        if "gzip" in self.request.headers.get('Accept-Encoding', ''):
+            if isfile(p + ".gz"):
+                self.set_header("Content-Encoding", "gzip")
+                return p + ".gz"
+        return p
+
     def get_content_type(self):
         """Same as the default, except that we add a utf8 encoding for XML and JSON files."""
-        mime_type, encoding = mimetypes.guess_type(self.absolute_path)
+        mime_type, encoding = mimetypes.guess_type(self.path)
 
         # from https://github.com/tornadoweb/tornado/pull/1468
         # per RFC 6713, use the appropriate type for a gzip compressed file

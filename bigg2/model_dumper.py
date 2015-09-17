@@ -103,12 +103,16 @@ def write_static_model(bigg_id, model_polisher_path=None):
 
     print('Writing MAT')
     t = time.time()
-    cobra.io.save_matlab_model(model, join(static_dir, bigg_id + '.mat'))
+    mat_filepath = join(static_dir, bigg_id + '.mat')
+    cobra.io.save_matlab_model(model, mat_filepath)
+    system('gzip --keep --force --best ' + mat_filepath)
     print('Writing MAT finished in %.2f seconds' % (time.time() - t))
 
     print('Writing JSON')
     t = time.time()
-    cobra.io.save_json_model(model, join(static_dir, bigg_id + '.json'))
+    json_filepath = join(static_dir, bigg_id + ".json")
+    cobra.io.save_json_model(model, json_filepath)
+    system('gzip --keep --force --best ' + json_filepath)
     print('Writing JSON finished in %.2f seconds' % (time.time() - t))
 
     return success

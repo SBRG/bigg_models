@@ -10,6 +10,16 @@
       <h4>Descriptive name: </h4>
       <p>{% if name is not none %}{{name}}{% endif %}</p>
       
+      <h4>Old Identifiers:</h4>
+      <p>
+        {% if old_identifiers is none %}
+            (none)
+        {% else %}
+            {% for id in old_identifiers %}
+                {{id}} {%if loop.revindex0!=0%},{%endif%}
+            {% endfor %}
+        {% endif %}
+      </p>
       <h4>Model: </h4>
       <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
       
@@ -54,16 +64,8 @@
       {% include 'comments.html' %}
       
     </div>
-    <div class="col-lg-4">
-      <div class="well">
-        <h4>Synonyms:</h4>
-        <ul class="list-unstyled">
-          {% for synonym in synonyms %}
-            <li>{{synonym['name']}}: {{synonym['synonym']}}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-  </div>
-  
+
+        <div class="col-lg-4">
+            {% include 'database_links.html' %}
+        </div>
 {% endblock %}	
