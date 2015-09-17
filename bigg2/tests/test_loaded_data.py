@@ -1,10 +1,7 @@
-# Various tests of the BiGG database
+# -*- coding: utf-8 -*-
 
-from sqlalchemy.engine import create_engine
-from sqlalchemy.orm.session import Session
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, aliased
-from sqlalchemy import create_engine, desc, func, or_
+from sqlalchemy import desc, func, or_
 import pytest
 import sys
 from cobra.io import read_sbml_model, load_matlab_model, load_json_model
@@ -16,17 +13,31 @@ from numpy.testing import assert_almost_equal
 from decimal import Decimal
 import cPickle as pickle
 import re
+from time import time
 
 from ome.models import *
 from ome.base import Session
 from ome import settings
 from ome.dumping.model_dumping import dump_model
-from ome.loading.model_loading.parse import convert_ids
+from ome.loading.parse import convert_ids
 
-from bigg2.server import directory as bigg_root_directory, static_model_dir
+from bigg2.server import (directory as bigg_root_directory,
+                          static_model_dir)
 
 
-@pytest.fixture(scope='function')
+# Make a list of models to test
+
+DEBUG = True
+if DEBUG:
+    model_files = ['iECOK1_1307.xml']
+else:
+    model_files = [x for x in listdir(settings.model_directory)
+                   if x.endswith('.xml') or x.endswith('.mat')]
+
+
+# make the fixtures
+
+@pytest.fixture(scope='session')
 def session(request):
     """Make a session"""
     def teardown():
@@ -34,6 +45,97 @@ def session(request):
     request.addfinalizer(teardown)
 
     return Session()
+
+
+@pytest.fixture(scope='session', params=model_files)
+def pub_model(request):
+    # get a specific model. This fixture and all the tests that use it will run
+    # for every model in the model_files list.
+    model_file = request.param
+    model_path = join(settings.model_directory, model_file)
+
+    # load the file
+    start = time()
+    try:
+        if model_path.endswith('.xml'):
+            pub_model = read_sbml_model(model_path)
+        elif model_path.endswith('.mat'):
+            pub_model = load_matlab_model(model_path)
+        else:
+            raise Exception('Unrecongnized extension for model %s' % model_file)
+    except IOError:
+        raise Exception('Could not find model %s' % model_path)
+    print("Loaded %s in %.2f sec" % (model_file, time() - start))
+
+    return pub_model
+
+
+@pytest.fixture(scope='session')
+def db_model(pub_model):
+    # dump the model
+    start = time()
+    db_model = dump_model(pub_model.id)
+    print("Dumped %s in %.2f sec" % (pub_model.id, time() - start))
+    return db_model
+
+
+# model tests will run for every model in the model_files list
+
+def test_reaction_count(db_model, pub_model):
+    assert len(db_model.reactions) == len(pub_model.reactions)
+
+    # count elements. be sure to removed duplicates from the published model
+    # assert len(db_model.reactions) == len(set([x.id for x in pub_model.reactions]))
+
+
+def test_metabolite_count(db_model, pub_model):
+    assert len(db_model.reactions) == len(pub_model.reactions)
+
+    # TODO for these two models, check the metabolites cer2_24_c and
+    # cer2__24_c, cer2_24_c and cer2'_24_c
+    # if model.id != 'iMM904' and model.id != 'iND750':
+    #     dat_metabolites_len = len(model.metabolites)
+    #     pub_metabolites_len = len(set([x.id for x in published_model.metabolites]))
+    #     if dat_metabolites_len != pub_metabolites_len:
+    #         errors.append(['{} metabolites counts do not match: database {} published {}'
+    #                     .format(model_path, dat_metabolites_len, pub_metabolites_len),
+    #                     compare_sets(model.metabolites, published_model.metabolites, ignore_boundary=True)])
+
+
+def test_gene_count(db_model, pub_model):
+    # also check for merged genes
+    pub_genes_len = len(pub_model.genes)
+    db_genes_len = len(db_model.genes)
+
+    # find merged genes
+    db_merged = [(g.id, g.notes['original_bigg_ids']) for g in db_model.genes]
+    for bigg_id, originals in db_merged:
+        if len(originals) <= 0:
+            raise Exception('Missing original gene id for {} in {}'
+                            .format(bigg_id, db_model.id))
+
+    db_merged_extra = sum([len(x[1]) - 1 for x in db_merged])
+    if db_merged_extra > 0:
+        print('{} genes merged in model {}: {}'
+              .format(db_merged_extra, db_model.id, {x[0]: x[1] for x in db_merged if len(x[1]) > 1}))
+    assert db_genes_len + db_merged_extra == pub_genes_len
+
+
+id_reg = re.compile(r'[~a-zA-Z0-9_]')
+
+def test_reaction_ids(db_model):
+    assert [x.id for x in db_model.reactions if id_reg.find(x.id)] == []
+
+
+
+
+
+
+def _compare_sets(dictlist1, dictlist2, ignore_boundary=False):
+    """Find the difference between the reaction, metabolite, or gene sets."""
+    sets = [set([x.id for x in dl if (not ignore_boundary or not x.id.endswith('_b'))])
+            for dl in [dictlist1, dictlist2]]
+    return list(set.symmetric_difference(*sets))
 
 
 def test_compartment_names(session):
@@ -118,41 +220,6 @@ def test_sbml_input_output(session):
         except KeyError:
             errors.append('Could not find published model for database model %s' % model.id)
             continue
-
-        def compare_sets(dictlist1, dictlist2, ignore_boundary=False):
-            """Find the difference between the reaction, metabolite, or gene sets."""
-            sets = [set([x.id for x in dl if (not ignore_boundary or not x.id.endswith('_b'))])
-                    for dl in [dictlist1, dictlist2]]
-            return list(set.symmetric_difference(*sets))
-
-        # count elements. be sure to removed duplicates from the published model
-        dat_reactions_len = len(model.reactions)
-        pub_reactions_len = len(set([x.id for x in published_model.reactions]))
-        if dat_reactions_len != pub_reactions_len:
-            errors.append(['{} reactions counts do not match: database {} published {}'
-                           .format(model_path, dat_reactions_len, pub_reactions_len),
-                           compare_sets(model.reactions, published_model.reactions)])
-
-        # TODO for these two models, check the metabolites cer2_24_c and
-        # cer2__24_c, cer2_24_c and cer2'_24_c
-        if model.id != 'iMM904' and model.id != 'iND750':
-            dat_metabolites_len = len(model.metabolites)
-            pub_metabolites_len = len(set([x.id for x in published_model.metabolites]))
-            if dat_metabolites_len != pub_metabolites_len:
-                errors.append(['{} metabolites counts do not match: database {} published {}'
-                            .format(model_path, dat_metabolites_len, pub_metabolites_len),
-                            compare_sets(model.metabolites, published_model.metabolites, ignore_boundary=True)])
-
-        # TODO check for merged genes (e.g. model.genes.zitB,
-        # model.genes.B21_00694 in iB21_1397). For now, not checking the gene
-        # count.
-
-        # dat_genes_len = len(model.genes)
-        # pub_genes_len = len(set([x.id for x in published_model.genes]))
-        # if dat_genes_len != pub_genes_len:
-        #     errors.append(['{} genes counts do not match: database {} published {}'
-        #                    .format(model_path, dat_genes_len, pub_genes_len),
-        #                    compare_sets(model.genes, published_model.genes)])
 
         solution1 = model.optimize()
         solution2 = published_model.optimize()

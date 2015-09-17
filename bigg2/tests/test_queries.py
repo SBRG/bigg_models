@@ -38,12 +38,10 @@ def test_get_reaction_and_models(session):
         result = get_reaction_and_models('not_a_reaction', session)
 
 
-def test_get_reactions_for_model():
-    session = base.Session()
+def test_get_reactions_for_model(session):
     result = get_reactions_for_model('iAPECO1_1312', session)
     assert len(result) > 5
     assert 'ADA' in [x['bigg_id'] for x in result]
-    session.close()
 
 
 def test_get_model_reaction(session):
@@ -64,43 +62,35 @@ def test_get_model_reaction(session):
 
 
 # Models
-def test_get_models():
-    session = base.Session()
+def test_get_models(session):
     result = get_models(session)
     assert 'iAPECO1_1312' in [r['bigg_id'] for r in result]
     assert 'Escherichia coli APEC O1' in [r['organism'] for r in result]
     assert type(result[0]['metabolite_count']) is int
     assert type(result[0]['reaction_count']) is int
     assert type(result[0]['gene_count']) is int
-    session.close()
 
 
-def test_get_model_and_counts():
-    session = base.Session()
+def test_get_model_and_counts(session):
     result = get_model_and_counts('iAPECO1_1312', session)
     assert result['bigg_id'] == 'iAPECO1_1312'
     assert result['organism'] == 'Escherichia coli APEC O1'
     assert type(result['metabolite_count']) is int
     assert type(result['reaction_count']) is int
     assert type(result['gene_count']) is int
-    session.close()
 
 
-def test_get_model_list():
-    session = base.Session()
+def test_get_model_list(session):
     result = get_model_list(session)
     assert 'iAPECO1_1312' in result
-    session.close()
 
 
 # Metabolites
-def test_get_metabolite_list_for_reaction():
-    session = base.Session()
+def test_get_metabolite_list_for_reaction(session):
     result = get_metabolite_list_for_reaction('GAPD', session)
     assert 'g3p' in [r['bigg_id'] for r in result]
     assert type(result[0]['stoichiometry']) is Decimal
     assert 'c' in [r['compartment_bigg_id'] for r in result]
-    session.close()
 
 
 def test_get_metabolite():
@@ -136,11 +126,9 @@ def test_get_model_metabolites(session):
 
 
 # genes
-def test_get_gene_list_for_model():
-    session = base.Session()
+def test_get_gene_list_for_model(session):
     results = get_gene_list_for_model('iAPECO1_1312', session)
     assert 'APECO1_706' in [x['bigg_id'] for x in results]
-    session.close()
 
 
 def test_get_gene_list_for_model_reaction(session):

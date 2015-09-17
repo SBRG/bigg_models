@@ -17,9 +17,11 @@ import simplejson as json
 import subprocess
 import os
 import mimetypes
+import datetime
 
 from bigg2 import queries
 from bigg2.queries import NotFoundError
+import ome
 from ome import settings
 from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
                         CompartmentalizedComponent, ModelReaction,
@@ -27,9 +29,7 @@ from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
                         ModelCompartmentalizedComponent, ModelGene, Gene,
                         Comments, GenomeRegion, Genome)
 from ome.base import Session
-from ome.loading.model_loading.parse import split_compartment
-import ome
-import datetime
+from ome.loading.parse import split_compartment
 
 # command line options
 define("port", default= 8888, help="run on given port", type=int)
