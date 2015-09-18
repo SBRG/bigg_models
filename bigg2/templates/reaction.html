@@ -8,13 +8,13 @@
 
       {% if count > 1 %}
         <h3>
-					Reaction appears {{count}} times in {{model_bigg_id}}
-					{% with question_title='Reaction appears multiple times'%}
-						{% with question_text='This universal reaction appears multiple times in the model. However, the copies of the reaction may have differenct gene reaction rules and/or reaction bounds, so in the exported models they will be labeled as copies (e.g. ACALD_copy1 and ACALD_copy2).'%}
-							{% include 'question_mark.html' %}
-						{% endwith %}
-					{% endwith %}
-				</h3>
+          Reaction appears {{count}} times in {{model_bigg_id}}
+          {% with question_title='Reaction appears multiple times'%}
+            {% with question_text='This universal reaction appears multiple times in the model. However, the copies of the reaction have different gene reaction rules or reaction bounds, so in the exported models they will be labeled as copies (e.g. ACALD-copy1 and ACALD-copy2).'%}
+              {% include 'question_mark.html' %}
+            {% endwith %}
+          {% endwith %}
+        </h3>
       {% endif %}
 
       <hr/>
@@ -25,45 +25,43 @@
       <h4>Old Identifiers:</h4>
       <p>
         {% if old_identifiers is none %}
-            (none)
+          (none)
         {% else %}
-            {% for id in old_identifiers %}
-                {{id}} {%if loop.revindex0!=0%},{%endif%}
-            {% endfor %}
+          {{ old_identifiers | join(', ') }}
         {% endif %}
-      </p>  
+      </p>
 
       <h4>Model: </h4>
       <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
 
       <h4>Metabolites:</h4>
       <div class="panel panel-default">
-  	    <table class="table table-hover">
-	      <thead>
-  	        <tr>
-	          <th>Stoichiometry</th>
-	          <th>BiGG ID</th>
-	          <th>Name</th>
-	        </tr>
-	      </thead>
-	      <tbody>
-  	        {% for metabolite in metabolites %}
-  	          <tr class="clickable-row" href="/models/{{model_bigg_id}}/metabolites/{{metabolite['bigg_id']}}_{{metabolite['compartment_bigg_id']}}">
-  		        <td align="right" width="50px">{{metabolite['stoichiometry']}}</td>
-  		        <td>
-		          {{metabolite['bigg_id']}}_{{metabolite['compartment_bigg_id']}}
-		        </td>
-  		        <td>{{metabolite['name']}}</td>
-  	          </tr>
-  	        {% endfor %}
-	      </tbody>
-  	    </table>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Stoichiometry</th>
+              <th>BiGG ID</th>
+              <th>Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for metabolite in metabolites %}
+              <tr class="clickable-row" href="/models/{{model_bigg_id}}/metabolites/{{metabolite['bigg_id']}}_{{metabolite['compartment_bigg_id']}}">
+                <td align="right" width="50px">{{metabolite['stoichiometry']}}</td>
+                <td>
+                  {{metabolite['bigg_id']}}_{{metabolite['compartment_bigg_id']}}
+                </td>
+                <td>{{metabolite['name']}}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-      
+
       {% for result in results %}
         <hr/>
         {% if count > 1 %}
-          <h3>{{result['bigg_id']}} #{{loop.index}} in {{model_bigg_id}}</h3>
+          <h3>{{result['exported_reaction_id']}}</h3>
         {% endif %}
 
         <h4>Reaction String:</h4>
@@ -74,17 +72,17 @@
 
         <h4>Gene Reaction Rule: </h4>
         <p>{{result['gene_reaction_rule']}}</p>
-        
+
         <h4>Genes:</h4>
         <p>
-	      {% for gene in result['genes'] %}
-	          <a href="/models/{{model_bigg_id}}/genes/{{gene['bigg_id']}}">{{gene['bigg_id']}}</a>
-			  {% if gene['name'] is not none %}({{gene['name']}}){% endif %}<br>
-	      {% endfor %}
+          {% for gene in result['genes'] %}
+            <a href="/models/{{model_bigg_id}}/genes/{{gene['bigg_id']}}">{{gene['bigg_id']}}</a>
+            {% if gene['name'] is not none %}({{gene['name']}}){% endif %}<br>
+          {% endfor %}
         </p>
 
         {% if escher_maps|count > 0 %}
-	      {% include 'escher_div.html' %}
+          {% include 'escher_div.html' %}
         {% endif %}
 
       {% endfor %}
@@ -92,24 +90,24 @@
       {% include 'comments.html' %}
 
     </div>
-    
+
     <div class="col-lg-4">
       <div class="well">
         <h4>
-					Universal reaction
-					{% with question_title='Universal reaction'%}
-						{% with question_text='The BiGG Database has a list of universal reactions. Visit the universal reaction page to see all the models that contain this reaction.'%}
-							{% include 'question_mark.html' %}
-						{% endwith %}
-					{% endwith %}
-				</h4>	
-				<ul class="list-unstyled">
-					<li>
-						<a href="/universal/reactions/{{bigg_id}}">{{bigg_id}}</a>
-					</li>
-				</ul>
+          Universal reaction
+          {% with question_title='Universal reaction'%}
+            {% with question_text='The BiGG Database has a list of universal reactions. Visit the universal reaction page to see all the models that contain this reaction.'%}
+              {% include 'question_mark.html' %}
+            {% endwith %}
+          {% endwith %}
+        </h4>
+        <ul class="list-unstyled">
+          <li>
+            <a href="/universal/reactions/{{bigg_id}}">{{bigg_id}}</a>
+          </li>
+        </ul>
       </div>
-      
+
       {% include 'database_links.html' %}
 
       <div class="well">
@@ -117,19 +115,19 @@
         <ul class="list-unstyled">
           {% for model in other_models_with_reaction %}
             <li>
-	          <a href="/models/{{model['bigg_id']}}/reactions/{{bigg_id}}">
-		        {{model['bigg_id']}}
-	          </a>
+              <a href="/models/{{model['bigg_id']}}/reactions/{{bigg_id}}">
+                {{model['bigg_id']}}
+              </a>
             </li>
           {% endfor %}
         </ul>
       </div>
     </div>
-    
+
   </div>
 
   {% if escher_maps|count > 0 %}
     {% set escher_script_type = 'reaction' %}
     {% include 'escher_script.html' %}
   {% endif %}
-{% endblock %}	
+{% endblock %}

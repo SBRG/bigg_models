@@ -13,59 +13,57 @@
       <h4>Old Identifiers:</h4>
       <p>
         {% if old_identifiers is none %}
-            (none)
+          (none)
         {% else %}
-            {% for id in old_identifiers %}
-                {{id}} {%if loop.revindex0!=0%},{%endif%}
-            {% endfor %}
+          {{ old_identifiers | join(', ') }}
         {% endif %}
       </p>
       <h4>Model: </h4>
       <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
       
-	  {% if mapped_to_genbank %}
-		<h4>Position: </h4>
-		<p>Left: {{leftpos}} – Right: {{rightpos}}</p>
+      {% if mapped_to_genbank %}
+        <h4>Position: </h4>
+        <p>Left: {{leftpos}} – Right: {{rightpos}}</p>
 
-		<h4>Strand: </h4>
-		<p>{% if strand == '-' %}Minus{% elif strand == '+' %}Plus{% endif %}</p>
+        <h4>Strand: </h4>
+        <p>{% if strand == '-' %}Minus{% elif strand == '+' %}Plus{% endif %}</p>
 
-		{% if chromosome_ncbi_id is not none and genome_bioproject_id is not none %}
-			<h4>Chromosome: </h4>
-			<p><a href="/genomes/{{genome_bioproject_id}}#{{chromosome_ncbi_id}}">{{chromosome_ncbi_id}}</a></p>
-		{% endif %}
-	  {% else %}
-		<h4>Chromosome: </h4>
-		<p>Gene is not mapped to a genome annotation.</p>
-	  {% endif %}
+        {% if chromosome_ncbi_id is not none and genome_bioproject_id is not none %}
+          <h4>Chromosome: </h4>
+          <p><a href="/genomes/{{genome_bioproject_id}}#{{chromosome_ncbi_id}}">{{chromosome_ncbi_id}}</a></p>
+        {% endif %}
+      {% else %}
+        <h4>Chromosome: </h4>
+        <p>Gene is not mapped to a genome annotation.</p>
+      {% endif %}
 
       <h4> Associated reactions: </h4>
       <div class="panel panel-default">
-  	    <table class="table table-hover">
-	      <thead>
-  	        <tr>
-	          <th>BiGG ID</th>
-	          <th>Name</th>
-	          <th>Gene reaction rule</th>
-	        </tr>
-	      </thead>
-	      <tbody>
-  	        {% for reaction in reactions %}
-  	          <tr class="clickable-row" href="/models/{{model_bigg_id}}/reactions/{{reaction['bigg_id']}}">
-  		        <td>{{reaction['bigg_id']}}</td>
-  		        <td>{{reaction['name']}}</td>
-  		        <td>{{reaction['gene_reaction_rule']}}</td>
-  	          </tr>
-  	        {% endfor %}
-	      </tbody>
-  	    </table>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>BiGG ID</th>
+              <th>Name</th>
+              <th>Gene reaction rule</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for reaction in reactions %}
+              <tr class="clickable-row" href="/models/{{model_bigg_id}}/reactions/{{reaction['bigg_id']}}">
+                <td>{{reaction['bigg_id']}}</td>
+                <td>{{reaction['name']}}</td>
+                <td>{{reaction['gene_reaction_rule']}}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
       
       {% include 'comments.html' %}
       
     </div>
 
-        <div class="col-lg-4">
-            {% include 'database_links.html' %}
-        </div>
+    <div class="col-lg-4">
+      {% include 'database_links.html' %}
+    </div>
 {% endblock %}	
