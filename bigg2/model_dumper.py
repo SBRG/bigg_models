@@ -25,7 +25,7 @@ except OSError:
 def autodetect_model_polisher():
     """Return the path to ModelPolisher."""
     return abspath(join(dirname(__file__), '..', 'bin',
-                        'ModelPolisher-0.8.jar'))
+                        'ModelPolisher-0.9.jar'))
 
 
 def make_all_static_models():

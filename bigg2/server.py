@@ -126,7 +126,6 @@ def get_application(debug=False):
         (r'/advanced_search$', AdvancedSearchHandler),
         (r'/advanced_search_external_id_results$', AdvancedSearchExternalIDHandler),
         (r'/advanced_search_results$', AdvancedSearchResultsHandler),
-        (r'/linkout_advance_search_results$', LinkoutAdvanceSearchResultsHandler),
         (r'/autocomplete$', AutocompleteHandler),
         #
         # Maps
@@ -784,21 +783,6 @@ class AdvancedSearchHandler(BaseHandler):
 
         self.write(template.render({'models': model_list,
                                     'database_sources': database_sources}))
-        self.finish()
-
-
-class LinkoutAdvanceSearchResultsHandler(BaseHandler):
-    def post(self):
-        template = env.get_template("list_display.html")
-        query_string = self.get_argument('query', None)
-        external_id = self.get_argument("linkout_choice", None)
-
-        session = Session()
-        metabolite_results = queries.search_for_metabolites_by_external_id(query_string, external_id, session)
-        dictionary = {'results': {'metabolites': metabolite_results}}
-        session.close()
-
-        self.write(template.render(dictionary))
         self.finish()
 
 

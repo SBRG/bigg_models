@@ -20,14 +20,6 @@
           {{formula}}
         {% endif %}
       </p>
-      <h4>Old Identifiers:</h4>
-      <p>
-        {% if old_identifiers is none %}
-          (none)
-        {% else %}
-          {{ old_identifiers | join(', ') }}
-        {% endif %}
-      </p>
       
       <h4>Reactions: </h4>
       <div class="panel panel-default">
@@ -55,6 +47,7 @@
       {% include 'comments.html' %}
     </div>
 
+    <!-- Side bar -->
     <div class="col-lg-4">
       <div class="well">
         <h4>
@@ -72,6 +65,7 @@
         </ul>
       </div>
       
+      {% include 'old_identifiers.html' %}
       {% include 'database_links.html' %}
 
       <div class="well">

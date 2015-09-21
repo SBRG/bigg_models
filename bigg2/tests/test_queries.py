@@ -1,7 +1,8 @@
 from bigg2.queries import *
 from bigg2.queries import (_shorten_name, _get_old_ids_for_model_gene,
                            _get_old_ids_for_model_reaction,
-                           _get_old_ids_for_model_comp_metabolite)
+                           _get_old_ids_for_model_comp_metabolite,
+                           _get_gene_list_for_model_reaction)
 
 from ome import base
 
@@ -10,6 +11,7 @@ import pytest
 from pytest import raises
 import time
 import json
+from itertools import chain
 
 
 @pytest.fixture(scope='function')
@@ -86,13 +88,16 @@ def test_get_model_reaction_multiple_copies(session):
 
     assert r1['gene_reaction_rule'] == '(2180_AT1)'
     assert [x['bigg_id'] for x in r1['genes']] == ['2180_AT1']
-    assert r1['exported_reaction_id'] == 'FACOAL204-copy1'
+    assert r1['exported_reaction_id'] == 'FACOAL204_copy1'
 
     assert r2['gene_reaction_rule'] == '(22305_AT1) or (2181_AT2) or (2181_AT1) or (2180_AT1) or (22305_AT2) or (2182_AT1) or (2182_AT2)'
-    assert [x['bigg_id'] for x in r2['genes']] == ['22305_AT1', '2181_AT2', '2181_AT1', '2180_AT1', '22305_AT2', '2182_AT1', '2182_AT2']
-    # no names here
-    assert [x['name'] for x in r2['genes'] if x['name'] is not None] == []
-    assert r2['exported_reaction_id'] == 'FACOAL204-copy2'
+    assert {x['bigg_id'] for x in r2['genes']} == {'22305_AT1', '2181_AT2', '2181_AT1', '2180_AT1', '22305_AT2', '2182_AT1', '2182_AT2'}
+    # no names for these genes
+    assert (x for x in r2['genes'] if x ['bigg_id'] == '22305_AT1').next()['name'] is None
+    assert (x for x in r2['genes'] if x ['bigg_id'] == '22305_AT2').next()['name'] is None
+
+    # copy 2
+    assert r2['exported_reaction_id'] == 'FACOAL204_copy2'
 
 
 # Models
@@ -172,7 +177,7 @@ def test_get_gene_list_for_model(session):
     assert 'APECO1_706' in [x['bigg_id'] for x in results]
 
 
-def test_get_gene_list_for_model_reaction(session):
+def test__get_gene_list_for_model_reaction(session):
     mr_db = (session
              .query(ModelReaction)
              .join(Model)
@@ -181,7 +186,7 @@ def test_get_gene_list_for_model_reaction(session):
              .filter(Reaction.bigg_id == 'ATPM')
              .filter(Reaction.pseudoreaction == True)
              .first())
-    results = get_gene_list_for_model_reaction(mr_db.id, session)
+    results = _get_gene_list_for_model_reaction(mr_db.id, session)
     assert len(results) == 0
 
     mr_db = (session
@@ -192,7 +197,7 @@ def test_get_gene_list_for_model_reaction(session):
              .filter(Reaction.bigg_id == 'NTP1')
              .filter(Reaction.pseudoreaction == False)
              .first())
-    results = get_gene_list_for_model_reaction(mr_db.id, session)
+    results = _get_gene_list_for_model_reaction(mr_db.id, session)
     assert len(results) == 2
 
 
@@ -204,10 +209,13 @@ def test__get_old_ids_for_model_gene(session):
 
 
 def test_get_model_gene(session):
-    result = get_model_gene('APECO1_706', 'iAPECO1_1312', session)
-    assert result['bigg_id'] == 'APECO1_706'
-    assert result['old_identifiers'] == ['APECO1_706']
-    assert 'old_id' not in result['database_links']
+    result = get_model_gene('ECO103_2936', 'iECO103_1326', session)
+    assert result['bigg_id'] == 'ECO103_2936'
+    assert result['old_identifiers'] == ['ECO103_2936']
+    assert 'GI' in result['database_links']
+    none_links = [x for x in result['database_links'].iteritems()
+                  if any([ext['link'] is None for ext in x[1]])]
+    assert len(none_links) == 0
 
 
 # database sources
