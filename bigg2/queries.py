@@ -2,7 +2,7 @@ from ome.models import *
 from ome.base import Publication, PublicationModel
 from ome.loading.model_loading import parse
 from ome import settings
-from ome.util import make_reaction_copy_id
+from ome.util import make_reaction_copy_id, ref_str_to_tuple, ref_tuple_to_str
 
 from sqlalchemy import func
 from sqlalchemy import desc, asc, func, or_, and_
@@ -292,7 +292,8 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
                                 ModelReaction.upper_bound,
                                 ModelReaction.objective_coefficient,
                                 Reaction.pseudoreaction,
-                                ModelReaction.copy_number)
+                                ModelReaction.copy_number,
+                                ModelReaction.subsystem)
                          .join(ModelReaction, ModelReaction.reaction_id == Reaction.id)
                          .join(Model, Model.id == ModelReaction.model_id)
                          .filter(Model.bigg_id == model_bigg_id)
@@ -328,6 +329,7 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
             'objective_coefficient': result_db[6],
             'genes': gene_db,
             'copy_number': result_db[8],
+            'subsystem': result_db[9],
             'exported_reaction_id': make_reaction_copy_id(reaction_bigg_id, result_db[8])
         })
 
@@ -581,11 +583,19 @@ def get_model_and_counts(model_bigg_id, session, static_model_dir=None):
                 .first())
     if model_db is None:
         raise NotFoundError("No model found with bigg_id " + model_bigg_id)
+    # genome ref
+    if model_db[2] is None:
+        genome_ref_string = genome_name = None
+    else:
+        genome_name = model_db[2].accession_value
+        genome_ref_string = ref_tuple_to_str(model_db[2].accession_type,
+                                             genome_name)
     escher_maps = get_escher_maps_for_model(model_db[0].id, session)
     result = {'bigg_id': model_db[0].bigg_id,
               'published_filename': model_db[0].published_filename,
               'organism': getattr(model_db[2], 'organism', None),
-              'genome': getattr(model_db[2], 'bioproject_id', None),
+              'genome_name': genome_name,
+              'genome_ref_string': genome_ref_string,
               'metabolite_count': model_db[1].metabolite_count,
               'reaction_count': model_db[1].reaction_count,
               'gene_count': model_db[1].gene_count,
@@ -709,8 +719,9 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
                         Gene.rightpos,
                         Model.bigg_id,
                         Gene.strand,
-                        Chromosome.ncbi_id,
-                        Genome.bioproject_id,
+                        Chromosome.ncbi_accession,
+                        Genome.accession_type,
+                        Genome.accession_value,
                         Gene.mapped_to_genbank)
                  .join(ModelGene)
                  .join(Model)
@@ -750,9 +761,10 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
         'rightpos': result_db[3],
         'model_bigg_id': result_db[4],
         'strand': result_db[5],
-        'chromosome_ncbi_id': result_db[6],
-        'genome_bioproject_id': result_db[7],
-        'mapped_to_genbank': result_db[8],
+        'chromosome_ncbi_accession': result_db[6],
+        'genome_ref_string': ref_tuple_to_str(result_db[7], result_db[8]),
+        'genome_name': result_db[8],
+        'mapped_to_genbank': result_db[9],
         'reactions': reaction_results,
         'database_links': synonym_db,
         'old_identifiers': old_id_results
@@ -762,21 +774,25 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
 def get_metabolite(met_bigg_id, session):
     result_db = (session
                  .query(Metabolite.bigg_id,
-                        Metabolite.name,
-                        Metabolite.formula)
+                        Metabolite.name)
                  .filter(Metabolite.bigg_id == met_bigg_id)
                  .first())
     if result_db is None:
         raise NotFoundError("No Metabolite found with bigg id " + met_bigg_id)
     comp_comp_db = (session
-                    .query(Compartment.bigg_id, Model.bigg_id, Genome.organism)
+                    .query(Compartment.bigg_id,
+                           Model.bigg_id,
+                           Genome.organism,
+                           ModelCompartmentalizedComponent.formula,
+                           ModelCompartmentalizedComponent.charge)
                     .join(CompartmentalizedComponent)
                     .join(ModelCompartmentalizedComponent)
                     .join(Model)
-                    .outerjoin(Genome, Genome.id == Model.genome_id)
+                    .outerjoin(Genome)
                     .join(Metabolite)
-                    .filter(Metabolite.bigg_id == met_bigg_id)
-                    )
+                    .filter(Metabolite.bigg_id == met_bigg_id))
+    formulae = {y for y in (x[3] for x in comp_comp_db) if y is not None}
+    charges = {y for y in (x[4] for x in comp_comp_db) if y is not None}
 
     # database links and old ids
     db_link_results = _get_db_links_for_metabolite(met_bigg_id, session)
@@ -785,7 +801,8 @@ def get_metabolite(met_bigg_id, session):
     return {
         'bigg_id': result_db[0],
         'name': result_db[1],
-        'formula': result_db[2],
+        'formulae': formulae,
+        'charges': charges,
         'database_links': db_link_results,
         'old_identifiers': old_id_results,
         'compartments_in_models': [{'bigg_id': c[0], 'model_bigg_id': c[1], 'organism': c[2]}
@@ -799,7 +816,8 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, s
                         Metabolite.name,
                         Compartment.bigg_id,
                         Model.bigg_id,
-                        Metabolite.formula)
+                        ModelCompartmentalizedComponent.formula,
+                        ModelCompartmentalizedComponent.charge)
                  .join(CompartmentalizedComponent)
                  .join(Compartment)
                  .join(ModelCompartmentalizedComponent)
@@ -841,12 +859,14 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, s
             'compartment_bigg_id': result_db[2],
             'model_bigg_id': result_db[3],
             'formula': result_db[4],
+            'charge': result_db[5],
             'database_links': db_link_results,
             'old_identifiers': old_id_results,
             'reactions': [{'bigg_id': r[0], 'name': r[1], 'model_bigg_id': r[2]}
                           for r in reactions_db],
             'escher_maps': escher_maps,
             'other_models_with_metabolite': model_result}
+
 
 def get_gene_list_for_model(model_bigg_id, session):
     result = (session
@@ -860,22 +880,38 @@ def get_gene_list_for_model(model_bigg_id, session):
              for x in result]
 
 
+#---------------------------------------------------------------------
 # Genomes
-def get_genome_and_models(bioproject_id, session):
-        genome_db = (session
-                     .query(Genome)
-                     .filter(Genome.bioproject_id == bioproject_id)
-                     .first())
-        models_db = (session
-                     .query(Model)
-                     .filter(Model.genome_id == genome_db.id))
-        chromosomes_db = (session
-                          .query(Chromosome)
-                          .filter(Chromosome.genome_id == genome_db.id))
-        return {'bioproject_id': genome_db.bioproject_id,
-                'organism': genome_db.organism,
-                'models': [{'model': x.bigg_id} for x in models_db],
-                'chromosomes': [x.ncbi_id for x in chromosomes_db]}
+#---------------------------------------------------------------------
+
+def get_genome_list(session):
+    genome_db = session.query(Genome)
+    return [{'name': x.accession_value,
+             'genome_ref_string': ref_tuple_to_str(x.accession_type,
+                                                   x.accession_value),
+             'organism': x.organism}
+            for x in genome_db]
+
+
+def get_genome_and_models(genome_ref_string, session):
+    accession_type, accession_value = ref_str_to_tuple(genome_ref_string)
+    genome_db = (session
+                 .query(Genome)
+                 .filter(Genome.accession_type == accession_type)
+                 .filter(Genome.accession_value == accession_value)
+                 .first())
+    models_db = (session
+                 .query(Model)
+                 .filter(Model.genome_id == genome_db.id))
+    chromosomes_db = (session
+                      .query(Chromosome)
+                      .filter(Chromosome.genome_id == genome_db.id))
+    return {'name': genome_db.accession_value,
+            'genome_ref_string': ref_tuple_to_str(genome_db.accession_type,
+                                                  genome_db.accession_value),
+            'organism': genome_db.organism,
+            'models': [x.bigg_id for x in models_db],
+            'chromosomes': [x.ncbi_accession for x in chromosomes_db]}
 
 
 #---------------------------------------------------------------------
@@ -1450,11 +1486,6 @@ def search_for_metabolites(query_string, session, page=None, size=None,
             for x in query]
 
 
-def get_genome_list(session):
-    return [{'bioproject_id': x[0], 'organism': x[1]} for x in
-            session.query(Genome.bioproject_id, Genome.organism)]
-
-
 def search_for_genes_count(query_string, session, limit_models=None):
     """Count the search results."""
     # similarity functions
@@ -1691,3 +1722,8 @@ def get_metabolites_for_database_id(session, query, database_source):
                  .all())
     return [{'bigg_id': x[0], 'model_bigg_id': 'universal', 'name': x[1]}
             for x in result_db]
+
+
+# version
+def database_version(session):
+    return {'last_updated': str(session.query(DatabaseVersion).first().date_time)}

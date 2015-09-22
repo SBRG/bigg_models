@@ -6,20 +6,19 @@
   <link rel="stylesheet" href="/static/lib/tablesorter/theme.bigg.css">
   <h1>Genomes</h1>
   <table class="tablesorter">
-	<thead>
-	  <tr>
-		<th>BioProject ID</th>
-		<th>Organism</th>
-	  </tr>
-	</thead>
-	<tbody>
+    <thead>
+      <tr>
+        <th>Accession</th>
+        <th>Organism</th>
+      </tr>
+    </thead>
+    <tbody>
       {% for genome in genomes %}
-		<tr class ='rowlink'>  
-	      <td><a href="/genomes/{{genome['bioproject_id']}}">{{genome['bioproject_id']}}</a></td>
-		  <td>{{genome['organism']}}</td>
-		</tr>
-	  {% endfor %}
-	</tbody>
+        <tr class ='rowlink'>  
+          <td><a href="/genomes/{{genome['genome_ref_string']}}">{{genome['name']}}</a></td>
+          <td>{{genome['organism']}}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
   </table>
-
 {% endblock %}	

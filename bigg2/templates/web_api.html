@@ -1,11 +1,11 @@
 {% extends "parent_display.html" %}
 {% block title %}BiGG Web API{% endblock %}
 {% block content %}
-  <h1 class="centered">BiGG Website API</h1>
+  <h1 class="centered">BiGG Models API</h1>
   <h3 class="centered">Version 2.0</h3>
 
-  <p>The BiGG Database can be accessed using a simple web API. Here we provide
-    some examples of the API reponses. All of the following are GET requests.</p> 
+  <p>BiGG Models can be accessed using a simple web API. Here we provide some
+    examples of the API reponses. All of the following are GET requests.</p> 
 
   <p>Please be respectful when using this service and do not send more than 10
     request per second. The API is very simple, but we hope to add features
@@ -13,6 +13,11 @@
 
   <p>If you experience any unexpected behavior with the API, you can submit an error
     report at the <a href="#bottom">bottom of this page</a>.</p>
+
+  <hr/>
+
+  <pre class="get"># Get the date BiGG Models was last updated<br/>curl 'http://{{api_host}}/api/v2/database_version'</pre>
+  <pre>{"last_updated": "2015-09-22 12:01:20.553523"}</pre>
 
   <hr/>
 

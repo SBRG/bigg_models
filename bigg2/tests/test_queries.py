@@ -136,6 +136,8 @@ def test_get_metabolite(session):
     result = get_metabolite('akg', session)
     assert result['bigg_id'] == 'akg'
     assert result['name'] == '2-Oxoglutarate'
+    assert result['formulae'] == ['C5H4O5']
+    assert result['charges'] == [0]
     assert 'c' in [c['bigg_id'] for c in result['compartments_in_models']]
     assert 'iAPECO1_1312' in [c['model_bigg_id'] for c in result['compartments_in_models']]
     assert 'Escherichia coli APEC O1' in [c['organism'] for c in result['compartments_in_models']]
@@ -156,6 +158,7 @@ def test_get_model_comp_metabolite(session):
     assert result['name'] == '2-Oxoglutarate'
     assert result['compartment_bigg_id'] == 'c'
     assert result['formula'] == 'C5H4O5'
+    assert result['charge'] == 0
     assert 'AKGDH' in [r['bigg_id'] for r in result['reactions']]
     assert 'iAPECO1_1312' not in [r['bigg_id'] for r in result['other_models_with_metabolite']]
     assert result['old_identifiers'] == ['akg_c']
@@ -333,3 +336,7 @@ def test_search_ids_fast(session):
     # organism
     results = search_ids_fast('Escherichia coli', session)
     assert 'Escherichia coli APEC O1' in results
+
+
+def test_database_version(session):
+    assert '201' in database_version(session)['last_updated']

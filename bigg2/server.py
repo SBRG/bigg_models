@@ -138,6 +138,9 @@ def get_application(debug=False):
         (r'/web_api$', WebAPIHandler),
         (r'/license$', LicenseHandler),
         #
+        # Version
+        (r'/api/%s/database_version$' % api_v, APIVersionHandler),
+        #
         # Static/Download
         (r'/static/(.*)$', StaticFileHandlerWithEncoding, {'path': join(directory, 'static')}),
         #
@@ -521,17 +524,16 @@ class GenomeListDisplayHandler(BaseHandler):
 
 
 class GenomeHandler(BaseHandler):
-    def get(self, bioproject_id):
-        session = Session()
-        result = safe_query(queries.get_genome_and_models, bioproject_id)
+    def get(self, genome_ref_string):
+        result = safe_query(queries.get_genome_and_models, genome_ref_string)
         self.write(result)
         self.finish()
 
 
 class GenomeDisplayHandler(BaseHandler):
-    def get(self, bioproject_id):
+    def get(self, genome_ref_string):
         template = env.get_template("genome.html")
-        result = safe_query(queries.get_genome_and_models, bioproject_id)
+        result = safe_query(queries.get_genome_and_models, genome_ref_string)
         self.write(template.render(result))
         self.finish()
 
@@ -892,6 +894,13 @@ class LicenseHandler(BaseHandler):
     def get(self):
         template = env.get_template('about_license_page.html')
         self.write(template.render())
+        self.finish()
+
+
+class APIVersionHandler(BaseHandler):
+    def get(self):
+        result = safe_query(queries.database_version)
+        self.write(result)
         self.finish()
 
 

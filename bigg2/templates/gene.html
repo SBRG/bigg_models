@@ -1,5 +1,5 @@
 {% extends "parent_display.html" %}
-{% block title %}BiGG: {{bigg_id}}{% endblock %}
+{% block title %}BiGG Gene: {{bigg_id}}{% endblock %}
 {% block content %}
   <div class="row">
     <div class="col-lg-8">
@@ -20,10 +20,8 @@
         <h4>Strand: </h4>
         <p>{% if strand == '-' %}Minus{% elif strand == '+' %}Plus{% endif %}</p>
 
-        {% if chromosome_ncbi_id is not none and genome_bioproject_id is not none %}
-          <h4>Chromosome: </h4>
-          <p><a href="/genomes/{{genome_bioproject_id}}#{{chromosome_ncbi_id}}">{{chromosome_ncbi_id}}</a></p>
-        {% endif %}
+        <h4>Chromosome: </h4>
+        <p><a href="/genomes/{{genome_ref_string}}#{{chromosome_ncbi_accession}}">{{chromosome_ncbi_accession}}</a></p>
       {% else %}
         <h4>Chromosome: </h4>
         <p>Gene is not mapped to a genome annotation.</p>

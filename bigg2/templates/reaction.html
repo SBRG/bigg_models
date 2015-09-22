@@ -1,5 +1,5 @@
 {% extends "parent_display.html" %}
-{% block title %}BiGG: {{bigg_id}}{% endblock %}
+{% block title %}BiGG Reaction: {{bigg_id}} in {{model_bigg_id}}{% endblock %}
 {% block content %}
   <div class="row">
     <div class="col-lg-8">
@@ -24,6 +24,9 @@
 
       <h4>Model: </h4>
       <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
+
+      <h4>Subsystem: </h4>
+      <p>{% if subsystem is not none %}{{subsystem}}{% endif %}</p>
 
       <h4>Metabolites:</h4>
       <div class="panel panel-default">
@@ -88,7 +91,7 @@
         <h4>
           Universal reaction
           {% with question_title='Universal reaction'%}
-            {% with question_text='The BiGG Database has a list of universal reactions. Visit the universal reaction page to see all the models that contain this reaction.'%}
+            {% with question_text='BiGG Models has a list of universal reactions. Visit the universal reaction page to see all the models that contain this reaction.'%}
               {% include 'question_mark.html' %}
             {% endwith %}
           {% endwith %}

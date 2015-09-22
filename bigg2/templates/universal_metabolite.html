@@ -1,5 +1,5 @@
 {% extends "parent_display.html" %}
-{% block title %}BiGG: {{bigg_id}}{% endblock %}
+{% block title %}BiGG Metabolite: {{bigg_id}}{% endblock %}
 {% block content %}
 
   <div class="row">
@@ -14,9 +14,12 @@
       <h4>Descriptive name:</h4> 
       <p>{% if name is not none %}{{name}}{% endif %}</p>
       
-      <h4>Formula:</h4>
-      <p>{{formula}}</p>
-
+      <h4>Formulae: </h4>
+      <p>{{ formulae | join(',') }}</p>
+      
+      <h4>Charges: </h4>
+      <p>{{ charges | join(',') }}</p>
+      
       <h4><i>{{bigg_id}}</i> in BiGG models:</h4>
       <div class="panel panel-default">
         <table class="table table-hover">
