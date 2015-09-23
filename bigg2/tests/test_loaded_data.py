@@ -21,6 +21,7 @@ from ome.base import Session
 from ome import settings
 from ome.dumping.model_dumping import dump_model
 from ome.loading.parse import convert_ids, remove_boundary_metabolites
+from ome.util import load_tsv
 
 from bigg2.server import (directory as bigg_root_directory,
                           static_model_dir)
@@ -29,11 +30,12 @@ from bigg2.server import (directory as bigg_root_directory,
 # Make a list of models to test
 
 DEBUG = False
+STRICT_MASS_BALANCE = False
+
 if DEBUG:
-    model_files = ['RECON1.xml']
+    model_files = ['iJO1366.xml']
 else:
-    model_files = [x for x in listdir(settings.model_directory)
-                   if x.endswith('.xml') or x.endswith('.mat')]
+    model_files = [x[0] for x in load_tsv(settings.model_genome)]
 
 
 # make the fixtures
@@ -75,7 +77,8 @@ def pub_model(request):
 def db_model(pub_model):
     # dump the model
     start = time()
-    db_model = dump_model(pub_model.id)
+    # take out special characters from model bigg_id
+    db_model = dump_model(pub_model.id.replace('.', '_'))
     print("Dumped %s in %.2f sec" % (pub_model.id, time() - start))
     return db_model
 
@@ -236,6 +239,10 @@ def test_optimize(db_model, pub_model):
 
 # mass balance
 
+def _filtered_mass_balance(mb):
+    return {k: v for k, v in mb.iteritems() if abs(v) > 1e-6}
+
+
 def test_mass_balance(db_model, pub_model):
     errors = []
 
@@ -245,22 +252,36 @@ def test_mass_balance(db_model, pub_model):
             or re.match(r'sink_.*', r.id, re.IGNORECASE)
             or re.match(r'.*biomass.*', r.id, re.IGNORECASE)):
             continue
-        mass_balance = r.check_mass_balance()
+        # filter out very low numbers
+        mass_balance = _filtered_mass_balance(r.check_mass_balance())
 
+        # check database reaction mass balance
         if len(mass_balance) != 0:
+            # look for original reaction
             try:
                 pub_reaction = pub_model.reactions.get_by_id(r.notes['original_bigg_ids'][0])
             except KeyError:
-                errors.append('{}: Bad mass balance in {}: {}. Not found in pub model.'
+                errors.append('{}: Bad mass balance in {} ({}). Not found in pub model.'
                                 .format(db_model.id, r.id, mass_balance))
             else:
-                pub_mass_balance = pub_reaction.check_mass_balance()
-                if len(pub_mass_balance) == 0:
-                    errors.append('{}: Bad mass balance in {}: {}. Reaction is balanced in published model.'
-                                    .format(db_model.id, r.id, mass_balance))
+                # check for models where formula do not load
+                if all(x.formula == '' for x in pub_reaction.metabolites):
+                    if STRICT_MASS_BALANCE:
+                        # if strict, then warn even if the reaction may have
+                        # been unbalanced in the original model
+                        errors.append('{}: Bad mass balance in {} ({}). No formulas in published model.'
+                                      .format(db_model.id, r.id, mass_balance))
                 else:
-                    errors.append('{}: Bad mass balance in {} ({}) and in published model ({}).'
-                                    .format(db_model.id, r.id, mass_balance, pub_mass_balance))
+                    # check mass balance in pub model
+                    pub_mass_balance = _filtered_mass_balance(pub_reaction.check_mass_balance())
+                    if len(pub_mass_balance) == 0:
+                        errors.append('{}: Bad mass balance in {} ({}). Reaction is balanced in published model.'
+                                        .format(db_model.id, r.id, mass_balance))
+                    elif STRICT_MASS_BALANCE:
+                        # if strict, then warn even if the reaction may have
+                        # been unbalanced in the original model
+                        errors.append('{}: Bad mass balance in {} ({}) and in published model ({}).'
+                                        .format(db_model.id, r.id, mass_balance, pub_mass_balance))
 
     assert len(errors) == 0
 
@@ -286,13 +307,25 @@ def test_mass_balance_iAPECO1_1312_PSUDS(session):
     assert res_db.one().formula == 'C9H13N2O9P'
 
 
-def test_recon1_gene_names(session):
+def test_akg_iECIAI1_1343(session):
     res_db = (session
-              .query(Gene)
-              .join(ModelGene)
-              .filter(Gene.bigg_id == '4967_AT1')
-              .filter(Model.bigg_id == 'RECON1'))
-    assert ('4967_AT1', 'OGDH') in ((g.bigg_id, g.name) for g in res_db)
+              .query(ModelCompartmentalizedComponent)
+              .join(Model)
+              .join(CompartmentalizedComponent)
+              .join(Component)
+              .join(Compartment)
+              .filter(Model.bigg_id == 'iECIAI1_1343')
+              .filter(Component.bigg_id == 'akg')
+              .filter(Compartment.bigg_id == 'p'))
+    assert res_db.one().formula is None
+
+# def test_recon1_gene_names(session):
+#     res_db = (session
+#               .query(Gene)
+#               .join(ModelGene)
+#               .filter(Gene.bigg_id == '4967_AT1')
+#               .filter(Model.bigg_id == 'RECON1'))
+#     assert ('4967_AT1', 'OGDH') in ((g.bigg_id, g.name) for g in res_db)
 
 
 def test_dad_2(session):

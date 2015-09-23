@@ -12,6 +12,7 @@ from itertools import chain
 
 root_directory = abspath(dirname(__file__))
 
+
 #-------------------------------------------------------------------------------
 # Utils
 #-------------------------------------------------------------------------------
@@ -791,8 +792,8 @@ def get_metabolite(met_bigg_id, session):
                     .outerjoin(Genome)
                     .join(Metabolite)
                     .filter(Metabolite.bigg_id == met_bigg_id))
-    formulae = {y for y in (x[3] for x in comp_comp_db) if y is not None}
-    charges = {y for y in (x[4] for x in comp_comp_db) if y is not None}
+    formulae = list({y for y in (x[3] for x in comp_comp_db) if y is not None})
+    charges = list({y for y in (x[4] for x in comp_comp_db) if y is not None})
 
     # database links and old ids
     db_link_results = _get_db_links_for_metabolite(met_bigg_id, session)
@@ -815,6 +816,7 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, s
                  .query(Metabolite.bigg_id,
                         Metabolite.name,
                         Compartment.bigg_id,
+                        Compartment.name,
                         Model.bigg_id,
                         ModelCompartmentalizedComponent.formula,
                         ModelCompartmentalizedComponent.charge)
@@ -857,9 +859,10 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, s
     return {'bigg_id': result_db[0],
             'name': result_db[1],
             'compartment_bigg_id': result_db[2],
-            'model_bigg_id': result_db[3],
-            'formula': result_db[4],
-            'charge': result_db[5],
+            'compartment_name': result_db[3],
+            'model_bigg_id': result_db[4],
+            'formula': result_db[5],
+            'charge': result_db[6],
             'database_links': db_link_results,
             'old_identifiers': old_id_results,
             'reactions': [{'bigg_id': r[0], 'name': r[1], 'model_bigg_id': r[2]}
@@ -915,37 +918,18 @@ def get_genome_and_models(genome_ref_string, session):
 
 
 #---------------------------------------------------------------------
-# external database links and old IDs
+# old IDs
 #---------------------------------------------------------------------
-
-def get_database_sources(session):
-    # for advanced search
-    result_db = (session
-                 .query(DataSource.name)
-                 .distinct())
-    return [x[0] for x in result_db]
-
 
 def _compile_db_links(results):
     """Return links for the results that have a url_prefix."""
-    pretty_names = {'KEGGID': 'KEGG',
-                    'CASNUMBER': 'CAS',
-                    'METACYC': 'MetaCyc',
-                    'CHEBI': 'ChEBI',
-                    'REACTOME': 'Reactome',
-                    'BIOPATH': 'BioPath',
-                    'GeneID': 'NCBI Gene'}
     links = {}
     sources = defaultdict(list)
     for data_source_name, url_prefix, synonym in results:
         if url_prefix is None:
             continue
-        try:
-            name = pretty_names[data_source_name]
-        except KeyError:
-            name = data_source_name
         link = url_prefix + synonym
-        sources[name].append({'link': link, 'id': synonym})
+        sources[data_source_name].append({'link': link, 'id': synonym})
     return sources
 
 
@@ -1712,18 +1696,59 @@ def search_ids_fast(query_string, session, limit=None):
 
 
 # advanced search by external database ID
-def get_metabolites_for_database_id(session, query, database_source):
+
+def get_database_sources(session):
+    # for advanced search
     result_db = (session
-                 .query(Metabolite.bigg_id, Metabolite.name)
-                 .join(Synonym, Synonym.ome_id == Metabolite.id)
-                 .join(DataSource, DataSource.id == Synonym.synonym_data_source_id)
+                 .query(DataSource.name)
+                 .distinct()
+                 .order_by(DataSource.name))
+    return [x[0] for x in result_db]
+
+
+def get_metabolites_for_database_id(session, query, database_source):
+    met_db = (session
+              .query(Metabolite.bigg_id, Metabolite.name)
+              .join(Synonym, Synonym.ome_id == Metabolite.id)
+              .join(DataSource, DataSource.id == Synonym.data_source_id)
+              .filter(DataSource.name == database_source)
+              .filter(Synonym.synonym == query.strip()))
+    comp_comp_db = (session
+                    .query(Metabolite.bigg_id, Metabolite.name)
+                    .join(CompartmentalizedComponent)
+                    .join(Synonym, Synonym.ome_id == CompartmentalizedComponent.id)
+                    .join(DataSource, DataSource.id == Synonym.data_source_id)
+                    .filter(DataSource.name == database_source)
+                    .filter(Synonym.synonym == query.strip()))
+    return [{'bigg_id': x[0], 'model_bigg_id': 'universal', 'name': x[1]}
+            for x in chain(met_db, comp_comp_db)]
+
+
+def get_reactions_for_database_id(session, query, database_source):
+    result_db = (session
+                 .query(Reaction.bigg_id, Reaction.name)
+                 .join(Synonym, Synonym.ome_id == Reaction.id)
+                 .join(DataSource, DataSource.id == Synonym.data_source_id)
                  .filter(DataSource.name == database_source)
-                 .filter(Synonym.synonym == query.strip())
-                 .all())
+                 .filter(Synonym.synonym == query.strip()))
     return [{'bigg_id': x[0], 'model_bigg_id': 'universal', 'name': x[1]}
             for x in result_db]
 
 
+def get_genes_for_database_id(session, query, database_source):
+    result_db = (session
+                 .query(Gene.bigg_id, Model.bigg_id, Gene.name)
+                 .join(Synonym, Synonym.ome_id == Gene.id)
+                 .join(DataSource)
+                 .join(ModelGene)
+                 .join(Model)
+                 .filter(DataSource.name == database_source)
+                 .filter(Synonym.synonym == query.strip()))
+    return [{'bigg_id': x[0], 'model_bigg_id': x[1], 'name': x[2]}
+            for x in result_db]
+
+
 # version
+
 def database_version(session):
     return {'last_updated': str(session.query(DatabaseVersion).first().date_time)}

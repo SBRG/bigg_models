@@ -25,6 +25,9 @@
       <h4>Model: </h4>
       <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
 
+      <h4>Reaction:</h4>
+      <p>{{results[0]['reaction_string']}}</p>
+
       <h4>Subsystem: </h4>
       <p>{% if subsystem is not none %}{{subsystem}}{% endif %}</p>
 
@@ -57,9 +60,6 @@
         {% if count > 1 %}
           <h3>{{result['exported_reaction_id']}}</h3>
         {% endif %}
-
-        <h4>Reaction String:</h4>
-        <p>{{result['reaction_string']}}</p>
 
         <h4>Default bounds:</h4>
         <p>({{result['lower_bound']}}, {{result['upper_bound']}})</p>

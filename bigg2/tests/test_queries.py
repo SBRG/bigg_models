@@ -2,7 +2,8 @@ from bigg2.queries import *
 from bigg2.queries import (_shorten_name, _get_old_ids_for_model_gene,
                            _get_old_ids_for_model_reaction,
                            _get_old_ids_for_model_comp_metabolite,
-                           _get_gene_list_for_model_reaction)
+                           _get_gene_list_for_model_reaction,
+                           _get_metabolite_list_for_reaction)
 
 from ome import base
 
@@ -74,30 +75,30 @@ def test_get_model_reaction(session):
     assert 'old_id' not in result['database_links']
 
 
-def test_get_model_reaction_multiple_copies(session):
-    # this reaction should have two copies
-    res = get_model_reaction('RECON1', 'FACOAL204', session)
-    assert len(res['results']) == 2
-    this_copy = res['results'][0]['copy_number']
-    if this_copy == 1:
-        r1 = res['results'][0]
-        r2 = res['results'][1]
-    else:
-        r1 = res['results'][1]
-        r2 = res['results'][0]
+# def test_get_model_reaction_multiple_copies(session):
+#     # this reaction should have two copies
+#     res = get_model_reaction('RECON1', 'FACOAL204', session)
+#     assert len(res['results']) == 2
+#     this_copy = res['results'][0]['copy_number']
+#     if this_copy == 1:
+#         r1 = res['results'][0]
+#         r2 = res['results'][1]
+#     else:
+#         r1 = res['results'][1]
+#         r2 = res['results'][0]
 
-    assert r1['gene_reaction_rule'] == '(2180_AT1)'
-    assert [x['bigg_id'] for x in r1['genes']] == ['2180_AT1']
-    assert r1['exported_reaction_id'] == 'FACOAL204_copy1'
+#     assert r1['gene_reaction_rule'] == '(2180_AT1)'
+#     assert [x['bigg_id'] for x in r1['genes']] == ['2180_AT1']
+#     assert r1['exported_reaction_id'] == 'FACOAL204_copy1'
 
-    assert r2['gene_reaction_rule'] == '(22305_AT1) or (2181_AT2) or (2181_AT1) or (2180_AT1) or (22305_AT2) or (2182_AT1) or (2182_AT2)'
-    assert {x['bigg_id'] for x in r2['genes']} == {'22305_AT1', '2181_AT2', '2181_AT1', '2180_AT1', '22305_AT2', '2182_AT1', '2182_AT2'}
-    # no names for these genes
-    assert (x for x in r2['genes'] if x ['bigg_id'] == '22305_AT1').next()['name'] is None
-    assert (x for x in r2['genes'] if x ['bigg_id'] == '22305_AT2').next()['name'] is None
+#     assert r2['gene_reaction_rule'] == '(22305_AT1) or (2181_AT2) or (2181_AT1) or (2180_AT1) or (22305_AT2) or (2182_AT1) or (2182_AT2)'
+#     assert {x['bigg_id'] for x in r2['genes']} == {'22305_AT1', '2181_AT2', '2181_AT1', '2180_AT1', '22305_AT2', '2182_AT1', '2182_AT2'}
+#     # no names for these genes
+#     assert (x for x in r2['genes'] if x ['bigg_id'] == '22305_AT1').next()['name'] is None
+#     assert (x for x in r2['genes'] if x ['bigg_id'] == '22305_AT2').next()['name'] is None
 
-    # copy 2
-    assert r2['exported_reaction_id'] == 'FACOAL204_copy2'
+#     # copy 2
+#     assert r2['exported_reaction_id'] == 'FACOAL204_copy2'
 
 
 # Models
@@ -126,7 +127,7 @@ def test_get_model_list(session):
 
 # Metabolites
 def test_get_metabolite_list_for_reaction(session):
-    result = get_metabolite_list_for_reaction('GAPD', session)
+    result = _get_metabolite_list_for_reaction('GAPD', session)
     assert 'g3p' in [r['bigg_id'] for r in result]
     assert type(result[0]['stoichiometry']) is Decimal
     assert 'c' in [r['compartment_bigg_id'] for r in result]
@@ -137,7 +138,7 @@ def test_get_metabolite(session):
     assert result['bigg_id'] == 'akg'
     assert result['name'] == '2-Oxoglutarate'
     assert result['formulae'] == ['C5H4O5']
-    assert result['charges'] == [0]
+    assert result['charges'] == [0, -2]
     assert 'c' in [c['bigg_id'] for c in result['compartments_in_models']]
     assert 'iAPECO1_1312' in [c['model_bigg_id'] for c in result['compartments_in_models']]
     assert 'Escherichia coli APEC O1' in [c['organism'] for c in result['compartments_in_models']]
@@ -158,7 +159,7 @@ def test_get_model_comp_metabolite(session):
     assert result['name'] == '2-Oxoglutarate'
     assert result['compartment_bigg_id'] == 'c'
     assert result['formula'] == 'C5H4O5'
-    assert result['charge'] == 0
+    assert result['charge'] == -2
     assert 'AKGDH' in [r['bigg_id'] for r in result['reactions']]
     assert 'iAPECO1_1312' not in [r['bigg_id'] for r in result['other_models_with_metabolite']]
     assert result['old_identifiers'] == ['akg_c']
@@ -207,7 +208,7 @@ def test__get_gene_list_for_model_reaction(session):
 def test__get_old_ids_for_model_gene(session):
     res = _get_old_ids_for_model_gene('APECO1_706', 'iAPECO1_1312', session)
     assert res == ['APECO1_706']
-    res = _get_old_ids_for_model_gene('TM0846', 'iIJ478', session)
+    res = _get_old_ids_for_model_gene('TM0846', 'iLJ478', session)
     assert res == ['TM0846', 'TM_0846']
 
 
@@ -337,6 +338,18 @@ def test_search_ids_fast(session):
     results = search_ids_fast('Escherichia coli', session)
     assert 'Escherichia coli APEC O1' in results
 
+
+# advanced search by external database ID
+
+# get_metabolites_for_database_id
+
+# get_reactions_for_database_id
+
+def test_get_genes_for_database_id(session):
+    assert ({'bigg_id': 'b0241', 'model_bigg_id': 'iJO1366', 'name': 'phoE'} in
+            get_genes_for_database_id(session, 'b0241', 'old_id'))
+
+# version
 
 def test_database_version(session):
     assert '201' in database_version(session)['last_updated']

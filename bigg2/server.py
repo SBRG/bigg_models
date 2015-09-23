@@ -796,8 +796,16 @@ class AdvancedSearchExternalIDHandler(BaseHandler):
         metabolites = queries.get_metabolites_for_database_id(session,
                                                               query_string,
                                                               database_source)
+        reactions = queries.get_reactions_for_database_id(session,
+                                                          query_string,
+                                                          database_source)
+        genes = queries.get_genes_for_database_id(session,
+                                                  query_string,
+                                                  database_source)
         session.close()
-        dictionary = {'results': {'metabolites': metabolites},
+        dictionary = {'results': {'metabolites': metabolites,
+                                  'reactions': reactions,
+                                  'genes': genes},
                       'no_pager': True,
                       'hide_organism': True}
 
