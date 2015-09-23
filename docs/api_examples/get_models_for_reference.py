@@ -33,14 +33,14 @@ def escape_for_file(s):
 def main():
     # check arguments
     if len(argv) != 3:
-        print(usage_str) 
+        print(usage_str)
         exit()
     if argv[1] not in ['pmid', 'doi']:
-        print(usage_str) 
+        print(usage_str)
         exit()
 
     ref_type, ref = argv[1:3]
-    
+
     # get the models
     models_r = requests.get(make_url('/models', api=True))
     results = models_r.json()
@@ -52,6 +52,10 @@ def main():
         model = model_r.json()
         if model['reference_type'] == ref_type and model['reference_id'] == ref:
             download_list.append(bigg_id)
+
+    print ', '.join(download_list)
+    import sys
+    sys.exit()
 
     if len(download_list) == 0:
         print('No matching models were found')
@@ -71,7 +75,7 @@ def main():
         zip_file.writestr('%s.xml' % bigg_id, sbml.encode('utf8'))
     zip_file.close()
     print('Wrote %s' % output)
-            
+
 
 if __name__ == '__main__':
     main()

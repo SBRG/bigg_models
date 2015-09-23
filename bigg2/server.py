@@ -19,11 +19,13 @@ import subprocess
 import os
 from os.path import isfile
 import mimetypes
+import datetime
 
 from six import iteritems
 
 from bigg2 import queries
 from bigg2.queries import NotFoundError
+import ome
 from ome import settings
 from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
                         CompartmentalizedComponent, ModelReaction,
@@ -31,9 +33,7 @@ from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
                         ModelCompartmentalizedComponent, ModelGene, Gene,
                         Comments, GenomeRegion, Genome)
 from ome.base import Session
-from ome.loading.model_loading.parse import split_compartment
-import ome
-import datetime
+from ome.loading.parse import split_compartment
 
 # command line options
 define("port", default= 8888, help="run on given port", type=int)
@@ -126,7 +126,6 @@ def get_application(debug=False):
         (r'/advanced_search$', AdvancedSearchHandler),
         (r'/advanced_search_external_id_results$', AdvancedSearchExternalIDHandler),
         (r'/advanced_search_results$', AdvancedSearchResultsHandler),
-        (r'/linkout_advance_search_results$', LinkoutAdvanceSearchResultsHandler),
         (r'/autocomplete$', AutocompleteHandler),
         #
         # Maps
@@ -138,6 +137,9 @@ def get_application(debug=False):
         # Pages
         (r'/web_api$', WebAPIHandler),
         (r'/license$', LicenseHandler),
+        #
+        # Version
+        (r'/api/%s/database_version$' % api_v, APIVersionHandler),
         #
         # Static/Download
         (r'/static/(.*)$', StaticFileHandlerWithEncoding, {'path': join(directory, 'static')}),
@@ -522,17 +524,16 @@ class GenomeListDisplayHandler(BaseHandler):
 
 
 class GenomeHandler(BaseHandler):
-    def get(self, bioproject_id):
-        session = Session()
-        result = safe_query(queries.get_genome_and_models, bioproject_id)
+    def get(self, genome_ref_string):
+        result = safe_query(queries.get_genome_and_models, genome_ref_string)
         self.write(result)
         self.finish()
 
 
 class GenomeDisplayHandler(BaseHandler):
-    def get(self, bioproject_id):
+    def get(self, genome_ref_string):
         template = env.get_template("genome.html")
-        result = safe_query(queries.get_genome_and_models, bioproject_id)
+        result = safe_query(queries.get_genome_and_models, genome_ref_string)
         self.write(template.render(result))
         self.finish()
 
@@ -787,21 +788,6 @@ class AdvancedSearchHandler(BaseHandler):
         self.finish()
 
 
-class LinkoutAdvanceSearchResultsHandler(BaseHandler):
-    def post(self):
-        template = env.get_template("list_display.html")
-        query_string = self.get_argument('query', None)
-        external_id = self.get_argument("linkout_choice", None)
-
-        session = Session()
-        metabolite_results = queries.search_for_metabolites_by_external_id(query_string, external_id, session)
-        dictionary = {'results': {'metabolites': metabolite_results}}
-        session.close()
-
-        self.write(template.render(dictionary))
-        self.finish()
-
-
 class AdvancedSearchExternalIDHandler(BaseHandler):
     def post(self):
         query_string = self.get_argument('query', '')
@@ -810,8 +796,16 @@ class AdvancedSearchExternalIDHandler(BaseHandler):
         metabolites = queries.get_metabolites_for_database_id(session,
                                                               query_string,
                                                               database_source)
+        reactions = queries.get_reactions_for_database_id(session,
+                                                          query_string,
+                                                          database_source)
+        genes = queries.get_genes_for_database_id(session,
+                                                  query_string,
+                                                  database_source)
         session.close()
-        dictionary = {'results': {'metabolites': metabolites},
+        dictionary = {'results': {'metabolites': metabolites,
+                                  'reactions': reactions,
+                                  'genes': genes},
                       'no_pager': True,
                       'hide_organism': True}
 
@@ -908,6 +902,13 @@ class LicenseHandler(BaseHandler):
     def get(self):
         template = env.get_template('about_license_page.html')
         self.write(template.render())
+        self.finish()
+
+
+class APIVersionHandler(BaseHandler):
+    def get(self):
+        result = safe_query(queries.database_version)
+        self.write(result)
         self.finish()
 
 

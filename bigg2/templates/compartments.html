@@ -1,11 +1,9 @@
 {% extends "parent_display.html" %}
 {% block title %}BiGG: Compartments{% endblock %}
 {% block content %}
-  <!-- TableSorter -->
   <script src="/static/lib/tablesorter/jquery.tablesorter.min.js"></script>
-  <link rel="stylesheet" href="/static/lib/tablesorter/theme.bigg.css">
   <script src="/static/js/tablesorter_normal.js"></script>
-
+  <link rel="stylesheet" href="/static/lib/tablesorter/theme.bigg.css">
   <h1>Compartments</h1>
   <table class="myTable tablesorter">
     <thead>
@@ -23,5 +21,4 @@
       {% endfor %}
     </tbody>
   </table>
-
 {% endblock %}
