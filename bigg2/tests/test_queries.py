@@ -143,8 +143,8 @@ def test_get_metabolite(session):
     assert 'iAPECO1_1312' in [c['model_bigg_id'] for c in result['compartments_in_models']]
     assert 'Escherichia coli APEC O1' in [c['organism'] for c in result['compartments_in_models']]
     assert ({'link': 'http://identifiers.org/kegg.compound/C00026', 'id': 'C00026'}
-            in result['database_links']['KEGG'])
-    assert result['old_identifiers'] == [u'akg[c]', u'akg_c', u'akg_e', u'akg_p', u'akg_m', u'akg_x', u'akg_r', u'akg_n', u'akg_h']
+            in result['database_links']['KEGGID'])
+    assert set(result['old_identifiers']) == {'akg[c]', 'akg_c', 'akg_e', 'akg_p', 'akg_m', 'akg_x', 'akg_r', 'akg_n', 'akg_h'}
     assert 'old_id' not in result['database_links']
 
 
@@ -209,7 +209,7 @@ def test__get_old_ids_for_model_gene(session):
     res = _get_old_ids_for_model_gene('APECO1_706', 'iAPECO1_1312', session)
     assert res == ['APECO1_706']
     res = _get_old_ids_for_model_gene('TM0846', 'iLJ478', session)
-    assert res == ['TM0846', 'TM_0846']
+    assert set(res) == {'TM0846', 'TM_0846'}
 
 
 def test_get_model_gene(session):
