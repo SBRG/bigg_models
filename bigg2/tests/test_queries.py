@@ -160,7 +160,9 @@ def test_get_model_comp_metabolite(session):
     assert result['compartment_bigg_id'] == 'c'
     assert result['formula'] == 'C5H4O5'
     assert result['charge'] == -2
-    assert 'AKGDH' in [r['bigg_id'] for r in result['reactions']]
+    reaction_bigg_ids = [r['bigg_id'] for r in result['reactions']]
+    assert 'AKGDH' in reaction_bigg_ids
+    assert 'EX_akg_e' not in reaction_bigg_ids
     assert 'iAPECO1_1312' not in [r['bigg_id'] for r in result['other_models_with_metabolite']]
     assert result['old_identifiers'] == ['akg_c']
     assert 'old_id' not in result['database_links']

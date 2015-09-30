@@ -28,9 +28,6 @@
       <h4>Reaction:</h4>
       <p>{{results[0]['reaction_string']}}</p>
 
-      <h4>Subsystem: </h4>
-      <p>{% if subsystem is not none %}{{subsystem}}{% endif %}</p>
-
       <h4>Metabolites:</h4>
       <div class="panel panel-default">
         <table class="table table-hover">
@@ -63,6 +60,9 @@
 
         <h4>Default bounds:</h4>
         <p>({{result['lower_bound']}}, {{result['upper_bound']}})</p>
+
+        <h4>Subsystem: </h4>
+        <p>{% if result['subsystem'] is not none %}{{result['subsystem']}}{% endif %}</p>
 
         <h4>Gene Reaction Rule: </h4>
         <p>{{result['gene_reaction_rule']}}</p>

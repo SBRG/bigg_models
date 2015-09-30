@@ -819,7 +819,9 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, s
                         Compartment.name,
                         Model.bigg_id,
                         ModelCompartmentalizedComponent.formula,
-                        ModelCompartmentalizedComponent.charge)
+                        ModelCompartmentalizedComponent.charge,
+                        CompartmentalizedComponent.id,
+                        Model.id)
                  .join(CompartmentalizedComponent)
                  .join(Compartment)
                  .join(ModelCompartmentalizedComponent)
@@ -834,13 +836,11 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, s
     reactions_db = (session
                     .query(Reaction.bigg_id, Reaction.name, Model.bigg_id)
                     .join(ReactionMatrix)
-                    .join(CompartmentalizedComponent)
-                    .join(Metabolite)
                     .join(ModelReaction)
                     .join(Model)
-                    .filter(Metabolite.bigg_id == met_bigg_id)
-                    .filter(Model.bigg_id == model_bigg_id)
-                    )
+                    .filter(ReactionMatrix.compartmentalized_component_id == result_db[7])
+                    .filter(Model.id == result_db[8])
+                    .distinct())
     model_db = get_model_list_for_metabolite(met_bigg_id, session)
     escher_maps = get_escher_maps_for_metabolite(met_bigg_id,
                                                  compartment_bigg_id,
