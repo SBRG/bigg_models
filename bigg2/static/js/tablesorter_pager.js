@@ -8,8 +8,8 @@ $(function() {
 
     var table_list = ['reactions', 'metabolites', 'models', 'genes'],
         all_columns = {reactions: ['bigg_id', 'name', 'model_bigg_id', 'organism'],
-                       metabolites: ['bigg_id', 'name', 'model_bigg_id', 'organism'], 
-                       models: ['bigg_id', 'organism', 'metabolite_count', 'reaction_count', 'gene_count'], 
+                       metabolites: ['bigg_id', 'name', 'model_bigg_id', 'organism'],
+                       models: ['bigg_id', 'organism', 'metabolite_count', 'reaction_count', 'gene_count'],
                        genes: ['bigg_id', 'name', 'model_bigg_id', 'organism']},
         all_column_names = {reactions: ['BiGG ID', 'Name', 'Model', 'Organism'],
                             metabolites: ['BiGG ID', 'Name', 'Model', 'Organism'],
@@ -18,7 +18,7 @@ $(function() {
     for (var i = 0; i < table_list.length; i++) {
         var type = table_list[i],
             selector = '.' + type + '-tablesorter';
-        
+
         $(selector)
             .tablesorter({
                 widthFixed: true,
@@ -36,9 +36,9 @@ $(function() {
                 // the filterList to the url into an "fcol" array.
                 // So a sortList = [[2,0],[3,0]] becomes "&col[2]=0&col[3]=0" in the url
                 // and a filterList = [[2,Blue],[3,13]] becomes "&fcol[2]=Blue&fcol[3]=13" in the url
-                ajaxUrl: ('/api/v2' + window.location.pathname + 
-                          '?query=' + get_parameter_by_name('query') + 
-                          '&page={page}&size={size}&{sortList:col}' + 
+                ajaxUrl: ('/api/v2' + window.location.pathname +
+                          '?query=' + get_parameter_by_name('query') +
+                          '&page={page}&size={size}&{sortList:col}' +
                           '&include_link_urls'),
 
                 // modify the url after all processing has been applied
@@ -75,9 +75,9 @@ $(function() {
                  ]
                  OR
                  return [ total_rows, $rows (jQuery object; optional), headers (array; optional) ]
-                 
+
                  */
-                    // rows in 
+                    // rows in
                     var results = data.results,
                         // total number of rows (required)
                         total = data.results_count,
@@ -109,13 +109,13 @@ $(function() {
                                     this_val = this_val + '_' + this_row['compartment_bigg_id'];
                                 // make links
                                 if ('link_urls' in this_row && col in this_row['link_urls'])
-                                    this_val = ('<a href="' + this_row['link_urls'][col] + '">' + 
+                                    this_val = ('<a href="' + this_row['link_urls'][col] + '">' +
                                                 this_val + '</a>');
                                 row.push(this_val === null ? '' : this_val);
                             }
                         });
                         // add new row array to rows array
-                        rows.push(row); 
+                        rows.push(row);
                     }
 
                     return [total, rows, column_names];

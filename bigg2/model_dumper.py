@@ -1,26 +1,19 @@
 from bigg2.server import static_model_dir as static_dir
 
-from os.path import join, isdir, abspath, dirname
-from os import makedirs, system
-from subprocess import call
-import time
-
-import cobra
-
 from ome.base import Session
 from ome.models import Model
 from ome.dumping.model_dumping import dump_model
 from ome import settings
 
+from os.path import join, isdir, abspath, dirname
+from os import makedirs, system
+from subprocess import call
+import time
+import shutil
+import cobra
+
 # DEBUG means test with one model
 DEBUG = False
-
-# make the directories
-try:
-    makedirs(join(static_dir, 'raw'))
-except OSError:
-    pass
-
 
 def autodetect_model_polisher():
     """Return the path to ModelPolisher."""
@@ -30,6 +23,18 @@ def autodetect_model_polisher():
 
 def make_all_static_models():
     """Write static models for all models in the database."""
+    # delete static model dir
+    try:
+        shutil.rmtree(static_dir)
+    except OSError:
+        pass
+
+    # make the directories
+    try:
+        makedirs(join(static_dir, 'raw'))
+    except OSError:
+        pass
+
     failed_models = []
     polisher_path = autodetect_model_polisher()
     session = Session()

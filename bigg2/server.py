@@ -250,13 +250,19 @@ class BaseHandler(RequestHandler):
 
 
 class PageableHandler(BaseHandler):
-    """HTTP requests can pass in arguments for page, size,
-    columns, and the sort_column"""
-    def _get_pager_args(self, default_sort_column=None,
-                        sort_direction="ascending"):
+    """HTTP requests can pass in arguments for page, size, columns, and the
+    sort_column.
+
+    TODO test this class.
+
+    """
+
+    def _get_pager_args(self, default_sort_column=None, sort_direction="ascending"):
         query_kwargs = {
             "page": self.get_argument('page', None),
             "size": self.get_argument('size', None),
+            "sort_column": default_sort_column,
+            "sort_direction": sort_direction
         }
 
         # determine the columns

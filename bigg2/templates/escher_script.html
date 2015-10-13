@@ -1,6 +1,6 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
-<script src="//escher.github.io/escher-1.1.0.js"></script>
-<link rel="stylesheet" href="//escher.github.io/builder-1.1.0.css"/>
+<script src="//escher.github.io/escher-1.3.0.js"></script>
+<link rel="stylesheet" href="//escher.github.io/builder-1.3.0.css"/>
 <script>
 
  // Set up map and styles
@@ -9,11 +9,13 @@
      zoom_element_type,
      map_sel = d3.select('#map');
  d3.json('/escher_map_json/{{escher_maps[0]['map_name']}}', function(e, data) {
-     d3.text('/static/css/builder-embed-1.1.0.css', function(e, css) {
+     d3.text('/static/css/builder-embed-1.3.0.css', function(e, css) {
          if (e) console.warn(e);
-         var options = { menu: 'zoom',
-                         scroll_behavior: 'none',
-                         enable_editing: false
+         var options = {
+             menu: 'zoom',
+             scroll_behavior: 'none',
+             enable_editing: false,
+             use_3d_transform: true
          };
          if (has_data) {
              if ('{{escher_script_type}}' == 'reaction') {
