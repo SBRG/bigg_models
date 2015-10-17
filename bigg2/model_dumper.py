@@ -18,7 +18,7 @@ DEBUG = False
 def autodetect_model_polisher():
     """Return the path to ModelPolisher."""
     return abspath(join(dirname(__file__), '..', 'bin',
-                        'ModelPolisher-0.9.jar'))
+                        'ModelPolisher-1.0.jar'))
 
 
 def make_all_static_models():
@@ -91,10 +91,10 @@ def write_static_model(bigg_id, model_polisher_path=None):
                    '--dbname=%s' % settings.postgres_database,
                    '--input=%s' % raw_sbml_filepath,
                    '--output=%s' % static_dir,
-                   '--compress-output=false',
+                   '--compression-type=NONE',
+                   '--check-mass-balance=true',
                    '--omit-generic-terms=false',
                    '--log-level=INFO']
-                   # '--log-file=model_polisher_%s.log' % bigg_id]
         polish_result = call(command)
         print('Polishing finished in %.2f seconds' % (time.time() - t))
         if polish_result == 0:
