@@ -1,35 +1,40 @@
 from bigg2.server import static_model_dir as static_dir
 
-from os.path import join, isdir, abspath, dirname
-from os import makedirs, system
-from subprocess import call
-import time
-
-import cobra
-
 from ome.base import Session
 from ome.models import Model
 from ome.dumping.model_dumping import dump_model
 from ome import settings
 
+from os.path import join, isdir, abspath, dirname
+from os import makedirs, system
+from subprocess import call
+import time
+import shutil
+import cobra
+
 # DEBUG means test with one model
 DEBUG = False
-
-# make the directories
-try:
-    makedirs(join(static_dir, 'raw'))
-except OSError:
-    pass
-
 
 def autodetect_model_polisher():
     """Return the path to ModelPolisher."""
     return abspath(join(dirname(__file__), '..', 'bin',
-                        'ModelPolisher-0.9.jar'))
+                        'ModelPolisher-1.0.jar'))
 
 
 def make_all_static_models():
     """Write static models for all models in the database."""
+    # delete static model dir
+    try:
+        shutil.rmtree(static_dir)
+    except OSError:
+        pass
+
+    # make the directories
+    try:
+        makedirs(join(static_dir, 'raw'))
+    except OSError:
+        pass
+
     failed_models = []
     polisher_path = autodetect_model_polisher()
     session = Session()
@@ -86,10 +91,10 @@ def write_static_model(bigg_id, model_polisher_path=None):
                    '--dbname=%s' % settings.postgres_database,
                    '--input=%s' % raw_sbml_filepath,
                    '--output=%s' % static_dir,
-                   '--compress-output=false',
+                   '--compression-type=NONE',
+                   '--check-mass-balance=true',
                    '--omit-generic-terms=false',
                    '--log-level=INFO']
-                   # '--log-file=model_polisher_%s.log' % bigg_id]
         polish_result = call(command)
         print('Polishing finished in %.2f seconds' % (time.time() - t))
         if polish_result == 0:
