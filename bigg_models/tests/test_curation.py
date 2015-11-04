@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy.orm import sessionmaker, aliased
 from sqlalchemy import create_engine, desc, func, or_
 import sys
-from bigg2.curation import * 
+from bigg_models.curation import *
 from ome import base,models
 from ome.models import *
 from ome.base import GenomeRegion
@@ -21,7 +21,7 @@ def connection(request):
     #request.addfinalizer(base.Base.metadata.drop_all())
     #request.addfinalizer(base.omics_database.genome_data.drop())
     return connection
-    
+
 @pytest.fixture
 def db_session(request, connection):
     trans = connection.begin()
@@ -38,9 +38,9 @@ def test_addGene(db_session):
     strand = "+"
     ncbiID = "AE000512.1"
     try: chromosome = session.query(Chromosome).filter(Chromosome.ncbi_id == ncbiID).one()
-    except: 
+    except:
         print "genbank file does not exist in database"
-    gene = addGene(longName, locusId, name, leftpos, rightpos, ncbiID, strand) 
+    gene = addGene(longName, locusId, name, leftpos, rightpos, ncbiID, strand)
     assert session.query(Gene).filter(Gene.long_name == longName).filter(Gene.locus_id ==locusId)\
                                 .filter(Gene.name == name).filter(Gene.leftpos == leftpos)\
                                 .filter(Gene.rightpos == rightpos).filter(Gene.strand == strand)\
@@ -56,7 +56,7 @@ def test_updateGene(db_session):
         assert session.query(Gene).filter(Gene.id == geneId).first().__dict__[key] == geneDict[key]
     for key in genomeRegionDict.keys():
         assert session.query(Gene).filter(Gene.id == geneId).first().__dict__[key] == genomeRegionDict[key]
-    
+
 def test_deleteGene(db_session):
     geneId = 1904410
     deleteGene(geneId)
@@ -111,7 +111,7 @@ def test_updateReaction(db_session):
     updateReaction(reactionId, reactionDict)
     for key in reactionDict.keys():
         assert session.query(Reaction).filter(Reaction.id == reactionId).first().__dict__[key] == reactionDict[key]
-        
+
 def test_deleteReaction(db_session):
     reactionId = 1
     deleteReaction(reactionId)
@@ -132,7 +132,7 @@ def test_updateModel():
     updateModel(modelId, modelDict)
     for key in modelDict.keys():
         assert session.query(Model).filter(Model.id == modelId).first().__dict__[key] == modelDict[key]
-               
+
 def test_deleteModel():
     modelId = 1
     deleteModel(modelId)
@@ -180,7 +180,7 @@ def test_addModelGene(db_session):
     geneId = 1
     addModelGene(modelId, geneId)
     assert session.query(ModelGene).filter(ModelGene.model_id == modelId).filter(ModelGene.gene_id == geneId).count() == 1
-    
+
 def test_deleteModelGene(db_session):
     modelId = 1
     geneId = 1
@@ -209,8 +209,8 @@ def test_deleteCompartment():
     compartmentId = 1
     deleteCompartment(compartmentId)
     assert session.query(Compartment).filter(Compartment.id == compartmentId).count() == 0
-    
+
 if name = '__main__':
     #test_addGene()
-    
+
 """

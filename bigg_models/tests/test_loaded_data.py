@@ -23,8 +23,8 @@ from ome.dumping.model_dumping import dump_model
 from ome.loading.parse import convert_ids, remove_boundary_metabolites
 from ome.util import load_tsv
 
-from bigg2.server import (directory as bigg_root_directory,
-                          static_model_dir)
+from bigg_models.server import (directory as bigg_root_directory,
+                                static_model_dir)
 
 
 # Make a list of models to test

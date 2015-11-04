@@ -23,8 +23,8 @@ import datetime
 
 from six import iteritems
 
-from bigg2 import queries
-from bigg2.queries import NotFoundError
+from bigg_models import queries
+from bigg_models.queries import NotFoundError
 import ome
 from ome import settings
 from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
@@ -41,7 +41,7 @@ define("password", default= "", help="password to email", type=str)
 define('debug', default=False, help='Start server in debug mode')
 
 # set up jinja2 template location
-env = Environment(loader=PackageLoader('bigg2', 'templates'),
+env = Environment(loader=PackageLoader('bigg_models', 'templates'),
                   extensions=['jinja2.ext.with_'])
 
 # root directory
@@ -155,7 +155,7 @@ def run(public=True):
     tornado.options.parse_command_line()
     debug = options.debug
     http_server = tornado.httpserver.HTTPServer(get_application(debug=debug))
-    print('serving BiGG 2 on port %d' % options.port)
+    print('serving BiGG Models on port %d' % options.port)
     http_server.listen(options.port, None if public else "localhost")
     try:
         tornado.ioloop.IOLoop.instance().start()

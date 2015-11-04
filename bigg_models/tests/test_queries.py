@@ -1,10 +1,9 @@
-from bigg2.queries import *
-from bigg2.queries import (_shorten_name, _get_old_ids_for_model_gene,
-                           _get_old_ids_for_model_reaction,
-                           _get_old_ids_for_model_comp_metabolite,
-                           _get_gene_list_for_model_reaction,
-                           _get_metabolite_list_for_reaction)
-
+from bigg_models.queries import *
+from bigg_models.queries import (_shorten_name, _get_old_ids_for_model_gene,
+                                 _get_old_ids_for_model_reaction,
+                                 _get_old_ids_for_model_comp_metabolite,
+                                 _get_gene_list_for_model_reaction,
+                                 _get_metabolite_list_for_reaction)
 from ome import base
 
 from decimal import Decimal

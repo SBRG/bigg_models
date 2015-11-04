@@ -1,0 +1,1 @@
+* * * * * /Users/dbuser/bigg_production/bigg_models/bigg_models/check_running.sh 2>> /Users/dbuser/bigg_production/bigg_models/bigg_models/output.log

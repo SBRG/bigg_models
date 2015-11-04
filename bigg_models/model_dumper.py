@@ -1,4 +1,4 @@
-from bigg2.server import static_model_dir as static_dir
+from bigg_models.server import static_model_dir as static_dir
 
 from ome.base import Session
 from ome.models import Model
