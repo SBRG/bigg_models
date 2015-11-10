@@ -2,7 +2,7 @@
   <h4>External database links</h4>
   <ul class="list-unstyled">
     {% for source, values in database_links.iteritems() %}
-      <li><span class="light">{{source}}:</span>
+      <li><span class="light">{{ source }}:</span>
         {% for value in values %}
           <a href="{{ value['link'] }}" target="_blank">{{ value['id'] }}</a>{% if loop.revindex0 != 0 %},{% endif %}
         {% endfor %}

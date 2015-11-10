@@ -11,6 +11,7 @@ from collections import defaultdict
 from ome.base import *
 from ome.models import *
 from ome.components import *
+from ome.util import get_or_create
 
 
 # MetaNetX files to download
@@ -39,14 +40,18 @@ files = {
 # translation table for MetaNetX databases to those already in BiGG Models
 # see https://github.com/SBRG/bigg_models_data/blob/master/data-source-prefs.txt
 db_translation = {
-    'kegg': 'KEGGID',
-    'metacyc': 'METACYC',
-    'chebi': 'CHEBI',
-    'seed': 'SEED',
-    'reactome': 'REACTOME',
-    'hmdb': 'HMDB',
-    'lipidmaps': 'LIPIDMAPS',
-    'upa': 'UPA',
+    'metabolite': {
+        'kegg': 'kegg.compound',
+        'metacyc': lambda x: ('biocyc', 'META:%s' % x),
+        'seed': 'seed.compound',
+        'upa': 'unipathway.compound',
+        'chebi': lambda x: ('chebi', 'CHEBI:%s' % x),
+    },
+    'reaction': {
+        'kegg': 'kegg.reaction',
+        'metacyc': lambda x: ('biocyc', 'META:%s' % x),
+        'reactome': lambda x: ('reactome', 'REACT_%s' % x),
+    },
 }
 
 # directory to store the MetaNetX files
@@ -150,22 +155,13 @@ def update_synonyms(xref_dict, ref_type, session, data_source_dict):
 
                 for val in values:
                     # add the Synonym
-                    synonym_db = (session
-                                  .query(Synonym)
-                                  .filter(Synonym.ome_id == object_db.id)
-                                  .filter(Synonym.data_source_id == data_source_db.id)
-                                  .filter(Synonym.synonym == val)
-                                  .first())
-                    if synonym_db is None:
-                        synonym_db = Synonym(ome_id=object_db.id,
-                                             type=object_synonym_type,
-                                             data_source_id=data_source_db.id,
-                                             synonym=val)
-                        session.add(synonym_db)
-                        session.commit()
-                        stats['not_found'] += 1
-                    else:
-                        stats['found'] += 1
+                    synonym_db, exists = get_or_create(session, Synonym,
+                                                       ome_id=object_db.id,
+                                                       type=object_synonym_type,
+                                                       data_source_id=data_source_db.id,
+                                                       synonym=val)
+                    if exists: stats['found'] += 1
+                    else: stats['not_found'] += 1
 
     print 'New %s synonyms: %d' % (ref_type, stats['not_found'])
 
@@ -201,9 +197,12 @@ def parse_xref(file_key):
             else:
                 # look for the db in the translation dict
                 try:
-                    ref_tr = db_translation[ref]
-                except KeyError:
-                    ref_tr = ref
+                    ref_tr, val = db_translation[ref_type](ref)
+                except TypeError:
+                    try:
+                        ref_tr = db_translation[ref_type][ref]
+                    except KeyError:
+                        ref_tr = ref
                 metanetx_to_ref[split_line[1]][ref_tr].append(val)
 
     # make the dictionary

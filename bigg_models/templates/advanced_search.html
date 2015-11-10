@@ -18,8 +18,8 @@
   <form action="/advanced_search_external_id_results" method="post">
     <select class="form-control" name="database_source" style="width: 200px">
       <option>-- Select external DB --</option>
-      {% for id in database_sources %}
-        <option>{{id}}</option>
+      {% for id, name in database_sources %}
+        <option value="{{ id }}">{{name}}</option>
       {% endfor %}
     </select>
     <input id="linkout-search" type="text" name="query" class="form-control" placeholder="Database ID" style="width: 100%; margin-top: 20px;"></input> 

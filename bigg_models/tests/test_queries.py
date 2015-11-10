@@ -225,7 +225,7 @@ def test_get_model_gene(session):
 
 # database sources
 def test_get_database_sources(session):
-    assert 'KEGGID' in get_database_sources(session)
+    assert ('kegg.compound', 'KEGG Compound') in get_database_sources(session)
 
 
 # Escher maps
