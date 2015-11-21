@@ -343,18 +343,19 @@ class UniversalReactionDisplayHandler(BaseHandler):
     @gen.coroutine
     def get(self, reaction_bigg_id):
         template = env.get_template("universal_reaction.html")
-        http_client = AsyncHTTPClient()
-        url_request = ('http://localhost:%d/api/%s/models/universal/reactions/%s' %
-                       (options.port, api_v, url_escape(reaction_bigg_id, plus=False)))
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
-        results['reaction_string'] = queries.build_reaction_string(results['metabolites'],0,0,True)
-        self.write(template.render(results))
+        result = safe_query(queries.get_reaction_and_models, reaction_bigg_id)
+        # http_client = AsyncHTTPClient()
+        # url_request = ('http://localhost:%d/api/%s/models/universal/reactions/%s' %
+        #                (options.port, api_v, url_escape(reaction_bigg_id, plus=False)))
+        # request = tornado.httpclient.HTTPRequest(url=url_request,
+        #                                          connect_timeout=20.0,
+        #                                          request_timeout=20.0)
+        # response = yield gen.Task(http_client.fetch, request)
+        # if response.error:
+        #     raise HTTPError(404)
+        # results = json.loads(response.body)
+        result['reaction_string'] = queries.build_reaction_string(result['metabolites'], 0, 0, True)
+        self.write(template.render(result))
         self.finish()
 
 

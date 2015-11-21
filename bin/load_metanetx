@@ -11,7 +11,7 @@ from collections import defaultdict
 from ome.base import *
 from ome.models import *
 from ome.components import *
-from ome.util import get_or_create
+from ome.util import get_or_create, get_or_create_data_source
 
 
 # MetaNetX files to download
@@ -41,16 +41,21 @@ files = {
 # see https://github.com/SBRG/bigg_models_data/blob/master/data-source-prefs.txt
 db_translation = {
     'metabolite': {
+        'biopath': 'biopath.molecule',
+        'chebi': lambda val: ('chebi', 'CHEBI:%s' % val),
         'kegg': 'kegg.compound',
-        'metacyc': lambda x: ('biocyc', 'META:%s' % x),
+        'metacyc': lambda val: ('biocyc', 'META:%s' % val),
         'seed': 'seed.compound',
+        'umbbd': 'umbbd.compound',
         'upa': 'unipathway.compound',
-        'chebi': lambda x: ('chebi', 'CHEBI:%s' % x),
     },
     'reaction': {
+        'biopath': 'biopath.reaction',
         'kegg': 'kegg.reaction',
         'metacyc': lambda x: ('biocyc', 'META:%s' % x),
         'reactome': lambda x: ('reactome', 'REACT_%s' % x),
+        # 'seed': # could not find a good url prefix for seed reactions
+        'upa': 'unipathway.reaction',
     },
 }
 
@@ -72,15 +77,11 @@ def main():
     # database session
     session = Session()
 
-    # get the data sources
-    data_sources_db = session.query(DataSource)
-    data_source_dict = { d.name: d for d in data_sources_db }
-
     # Update chemicals
-    update_synonyms(parse_xref('chem_xref'), 'metabolite', session, data_source_dict)
+    update_synonyms(parse_xref('chem_xref', 'metabolite'), 'metabolite', session)
 
     # Update reactions
-    update_synonyms(parse_xref('reac_xref'), 'reaction', session, data_source_dict)
+    update_synonyms(parse_xref('reac_xref', 'reaction'), 'reaction', session)
 
     # Update compartments
     # TODO compartment synonyms
@@ -101,7 +102,7 @@ def download_file(filename):
         print('Already downloaded %s' % filename)
 
 
-def update_synonyms(xref_dict, ref_type, session, data_source_dict):
+def update_synonyms(xref_dict, ref_type, session):
     """Use MetaNetX files to add Reaction or Metabolite synonyms."""
 
     warned = set()
@@ -145,20 +146,14 @@ def update_synonyms(xref_dict, ref_type, session, data_source_dict):
 
         for object_db in objects_db:
             for ref, values in ref_dict.iteritems():
-                try:
-                    data_source_db = data_source_dict[ref]
-                except KeyError:
-                    if ref not in warned:
-                        print 'WARNING: data source not found: %s' % ref
-                        warned.add(ref)
-                    continue
+                data_source_id = get_or_create_data_source(session, ref)
 
                 for val in values:
                     # add the Synonym
                     synonym_db, exists = get_or_create(session, Synonym,
                                                        ome_id=object_db.id,
                                                        type=object_synonym_type,
-                                                       data_source_id=data_source_db.id,
+                                                       data_source_id=data_source_id,
                                                        synonym=val)
                     if exists: stats['found'] += 1
                     else: stats['not_found'] += 1
@@ -166,7 +161,7 @@ def update_synonyms(xref_dict, ref_type, session, data_source_dict):
     print 'New %s synonyms: %d' % (ref_type, stats['not_found'])
 
 
-def parse_xref(file_key):
+def parse_xref(file_key, ref_type):
     """Read an xref file and generate a dict like this:
 
     { bigg_id: { external_db_tranlated: [values] } }
@@ -196,17 +191,22 @@ def parse_xref(file_key):
                 bigg_to_metanetx[val] = split_line[1]
             else:
                 # look for the db in the translation dict
-                try:
-                    ref_tr, val = db_translation[ref_type](ref)
-                except TypeError:
-                    try:
-                        ref_tr = db_translation[ref_type][ref]
-                    except KeyError:
-                        ref_tr = ref
+                trans = db_translation[ref_type].get(ref, None)
+                if trans is None:
+                    # no translation
+                    ref_tr = ref
+                elif hasattr(trans, '__call__'):
+                    # if it's a function
+                    ref_tr, val = trans(val)
+                else:
+                    # translation
+                    ref_tr = trans
                 metanetx_to_ref[split_line[1]][ref_tr].append(val)
 
-    # make the dictionary
-    return { bigg: dict(metanetx_to_ref[mnx]) for bigg, mnx in bigg_to_metanetx.iteritems() }
+    # make the dictionary and add metanetx ref
+    mnx_ref_id = 'mnx.chemical' if ref_type == 'metabolite' else 'mnx.equation'
+    return { bigg: dict(metanetx_to_ref[mnx], **{ mnx_ref_id: [mnx] })
+             for bigg, mnx in bigg_to_metanetx.iteritems() }
 
 
 if __name__ == '__main__':
