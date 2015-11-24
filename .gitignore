@@ -14,3 +14,4 @@ bigg_models/static/models
 *.log
 .cache/
 temp_data/
+*.swp

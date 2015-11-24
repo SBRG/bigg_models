@@ -72,25 +72,25 @@ def get_application(debug=False):
         (r'/(?:models/)?universal/reactions/?$', UniversalReactionListDisplayHandler),
         #
         (r'/api/%s/(?:models/)?universal/reactions/([^/]+)/?$' % api_v, UniversalReactionHandler),
-        (r'/(?:models/)?universal/reactions/([^/]+)/?$', UniversalReactionDisplayHandler),
+        (r'/(?:models/)?universal/reactions/([^/]+)/?$', UniversalReactionHandler),
         #
         (r'/api/%s/(?:models/)?universal/metabolites/?$' % api_v, UniversalMetaboliteListHandler),
         (r'/(?:models/)?universal/metabolites/?$', UniversalMetaboliteListDisplayHandler),
         #
         (r'/api/%s/(?:models/)?universal/metabolites/([^/]+)/?$' % api_v, UniversalMetaboliteHandler),
-        (r'/(?:models/)?universal/metabolites/([^/]+)/?$', UniversalMetaboliteDisplayHandler),
+        (r'/(?:models/)?universal/metabolites/([^/]+)/?$', UniversalMetaboliteHandler),
         #
         (r'/api/%s/compartments/?$' % api_v, CompartmentListHandler),
-        (r'/compartments/?$', CompartmentListDisplayHandler),
+        (r'/compartments/?$', CompartmentListHandler),
         #
         (r'/api/%s/compartments/([^/]+)/?$' % api_v, CompartmentHandler),
-        (r'/compartments/([^/]+)/?$', CompartmentDisplayHandler),
+        (r'/compartments/([^/]+)/?$', CompartmentHandler),
         #
         (r'/api/%s/genomes/?$' % api_v, GenomeListHandler),
         (r'/genomes/?$', GenomeListDisplayHandler),
         #
         (r'/api/%s/genomes/([^/]+)/?$' % api_v, GenomeHandler),
-        (r'/genomes/([^/]+)/?$', GenomeDisplayHandler),
+        (r'/genomes/([^/]+)/?$', GenomeHandler),
         #
         # By model
         #
@@ -98,7 +98,7 @@ def get_application(debug=False):
         (r'/models/?$', ModelsListDisplayHandler),
         #
         (r'/api/%s/models/([^/]+)/?$' % api_v, ModelHandler),
-        (r'/models/([^/]+)/?$', ModelDisplayHandler),
+        (r'/models/([^/]+)/?$', ModelHandler),
         #
         (r'/(?:api/%s/)?models/([^/]+)/download/?$' % api_v, ModelDownloadHandler),
         #
@@ -112,10 +112,10 @@ def get_application(debug=False):
         (r'/models/([^/]+)/metabolites/?$', MetabolitesListDisplayHandler),
         #
         (r'/api/%s/models/([^/]+)/metabolites/([^/]+)/?$' % api_v, MetaboliteHandler),
-        (r'/models/([^/]+)/metabolites/([^/]+)/?$', MetaboliteDisplayHandler),
+        (r'/models/([^/]+)/metabolites/([^/]+)/?$', MetaboliteHandler),
         #
         (r'/api/%s/models/([^/]+)/genes/([^/]+)/?$' % api_v, GeneHandler),
-        (r'/models/([^/]+)/genes/([^/]+)/?$', GeneDisplayHandler),
+        (r'/models/([^/]+)/genes/([^/]+)/?$', GeneHandler),
         #
         (r'/api/%s/models/([^/]+)/genes/?$' % api_v, GeneListHandler),
         (r'/models/([^/]+)/genes/?$', GeneListDisplayHandler),
@@ -248,6 +248,19 @@ class BaseHandler(RequestHandler):
         else:
             RequestHandler.write(self, value)
 
+    def return_result(self, result):
+        """Returns result as either rendered HTML or JSON
+
+        This is suitable for cases where the template takes exactly the same
+        result as the JSON api. This function will serve JSON if the request
+        URI starts with JSON, otherwise it will render the objects template
+        with the data"""
+        if self.request.uri.startswith("/api"):
+            self.write(result)
+        else:
+            self.write(self.template.render(result))
+        self.finish()
+
 
 class PageableHandler(BaseHandler):
     """HTTP requests can pass in arguments for page, size, columns, and the
@@ -332,31 +345,11 @@ class UniversalReactionListDisplayHandler(BaseHandler):
 
 
 class UniversalReactionHandler(BaseHandler):
+    template = env.get_template("universal_reaction.html")
+
     def get(self, reaction_bigg_id):
         result = safe_query(queries.get_reaction_and_models, reaction_bigg_id)
-        self.write(result)
-        self.finish()
-
-
-class UniversalReactionDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
-    def get(self, reaction_bigg_id):
-        template = env.get_template("universal_reaction.html")
-        result = safe_query(queries.get_reaction_and_models, reaction_bigg_id)
-        # http_client = AsyncHTTPClient()
-        # url_request = ('http://localhost:%d/api/%s/models/universal/reactions/%s' %
-        #                (options.port, api_v, url_escape(reaction_bigg_id, plus=False)))
-        # request = tornado.httpclient.HTTPRequest(url=url_request,
-        #                                          connect_timeout=20.0,
-        #                                          request_timeout=20.0)
-        # response = yield gen.Task(http_client.fetch, request)
-        # if response.error:
-        #     raise HTTPError(404)
-        # results = json.loads(response.body)
-        result['reaction_string'] = queries.build_reaction_string(result['metabolites'], 0, 0, True)
-        self.write(template.render(result))
-        self.finish()
+        self.return_result(result)
 
 
 class UniversalMetaboliteListHandler(PageableHandler):
@@ -387,18 +380,11 @@ class UniversalMetaboliteListDisplayHandler(BaseHandler):
 
 
 class UniversalMetaboliteHandler(BaseHandler):
+    template = env.get_template("universal_metabolite.html")
+
     def get(self, met_bigg_id):
         results = safe_query(queries.get_metabolite, met_bigg_id)
-        self.write(results)
-        self.finish()
-
-
-class UniversalMetaboliteDisplayHandler(BaseHandler):
-    def get(self, met_bigg_id):
-        template = env.get_template("universal_metabolite.html")
-        results = safe_query(queries.get_metabolite, met_bigg_id)
-        self.write(template.render(results))
-        self.finish()
+        self.return_result(results)
 
 
 class ReactionListHandler(PageableHandler):
@@ -451,36 +437,19 @@ class ReactionDisplayHandler(BaseHandler):
 
 # Compartments
 class CompartmentListHandler(BaseHandler):
+    template = env.get_template("compartments.html")
+
     def get(self):
         session = Session()
         results = [{'bigg_id': x[0], 'name': x[1]}
                    for x in session.query(Compartment.bigg_id, Compartment.name)]
         session.close()
-
-        self.write(results)
-        self.finish()
-
-
-class CompartmentListDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
-    def get(self):
-        template = env.get_template("compartments.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/compartments' % (options.port, api_v)
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
-        self.write(template.render({'compartments': results,
-                                    'no_pager': True}))
-        self.finish()
+        self.return_result(results)
 
 
 class CompartmentHandler(BaseHandler):
+    template = env.get_template("compartment.html")
+
     def get(self, compartment_bigg_id):
         session = Session()
         result_db = (session
@@ -490,28 +459,7 @@ class CompartmentHandler(BaseHandler):
         session.close()
 
         result = {'bigg_id': result_db.bigg_id, 'name': result_db.name}
-        self.write(result)
-        self.finish()
-
-
-class CompartmentDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
-    def get(self, compartment_bigg_id):
-        template = env.get_template("compartment.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/compartments/%s' % \
-                      (options.port, api_v,
-                       url_escape(compartment_bigg_id, plus=False))
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        results = json.loads(response.body)
-        self.write(template.render(results))
-        self.finish()
+        self.return_result(result)
 
 
 # Genomes
@@ -531,18 +479,11 @@ class GenomeListDisplayHandler(BaseHandler):
 
 
 class GenomeHandler(BaseHandler):
+    template = env.get_template("genome.html")
+
     def get(self, genome_ref_string):
         result = safe_query(queries.get_genome_and_models, genome_ref_string)
-        self.write(result)
-        self.finish()
-
-
-class GenomeDisplayHandler(BaseHandler):
-    def get(self, genome_ref_string):
-        template = env.get_template("genome.html")
-        result = safe_query(queries.get_genome_and_models, genome_ref_string)
-        self.write(template.render(result))
-        self.finish()
+        self.return_result(result)
 
 
 # Models
@@ -580,20 +521,12 @@ class ModelDownloadHandler(BaseHandler):
 
 
 class ModelHandler(BaseHandler):
+    template = env.get_template("model.html")
+
     def get(self, model_bigg_id):
         result = safe_query(queries.get_model_and_counts, model_bigg_id,
                             static_model_dir=static_model_dir)
-        self.write(result)
-        self.finish()
-
-
-class ModelDisplayHandler(BaseHandler):
-    def get(self, model_bigg_id):
-        template = env.get_template("model.html")
-        result = safe_query(queries.get_model_and_counts, model_bigg_id,
-                            static_model_dir=static_model_dir)
-        self.write(template.render(result))
-        self.finish()
+        self.return_result(result)
 
 
 class MetaboliteListHandler(PageableHandler):
@@ -634,23 +567,13 @@ class MetabolitesListDisplayHandler(BaseHandler):
 
 
 class MetaboliteHandler(BaseHandler):
+    template = env.get_template("metabolite.html")
+
     def get(self, model_bigg_id, comp_met_id):
         met_bigg_id, compartment_bigg_id = split_compartment(comp_met_id)
         results = safe_query(queries.get_model_comp_metabolite,
                              met_bigg_id, compartment_bigg_id, model_bigg_id)
-
-        self.write(results)
-        self.finish()
-
-
-class MetaboliteDisplayHandler(BaseHandler):
-    def get(self, model_id, met_bigg_id):
-        template = env.get_template("metabolite.html")
-        met_bigg_id, compartment_bigg_id = split_compartment(met_bigg_id)
-        results = safe_query(queries.get_model_comp_metabolite,
-                             met_bigg_id, compartment_bigg_id, model_id)
-        self.write(template.render(results))
-        self.finish()
+        self.return_result(results)
 
 
 class GeneListHandler(PageableHandler):
@@ -680,20 +603,12 @@ class GeneListDisplayHandler(BaseHandler):
 
 
 class GeneHandler(BaseHandler):
+    template = env.get_template("gene.html")
+
     def get(self, model_bigg_id, gene_bigg_id):
         result = safe_query(queries.get_model_gene,
                             gene_bigg_id, model_bigg_id)
-        self.write(result)
-        self.finish()
-
-
-class GeneDisplayHandler(BaseHandler):
-    def get(self, model_bigg_id, gene_bigg_id):
-        template = env.get_template("gene.html")
-        result = safe_query(queries.get_model_gene,
-                            gene_bigg_id, model_bigg_id)
-        self.write(template.render(result))
-        self.finish()
+        self.return_result(result)
 
 
 class SearchHandler(BaseHandler):
