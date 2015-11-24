@@ -16,3 +16,4 @@ bigg2/static/published_models/
 .#*
 *.log
 .cache/
+*.swp
