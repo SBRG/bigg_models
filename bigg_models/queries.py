@@ -1287,6 +1287,17 @@ def search_for_reactions(query_string, session, page=None, size=None, sort_colum
             for x in query]
 
 
+def reaction_with_hash(hash, session):
+    """Find the reaction with the given hash."""
+    res = (session
+           .query(Reaction.bigg_id, Reaction.name)
+           .filter(Reaction.reaction_hash == hash)
+           .first())
+    if res is None:
+        raise NotFoundError
+    return {'bigg_id': res[0], 'model_bigg_id': 'universal', 'name': res[1]}
+
+
 def search_for_universal_metabolites_count(query_string, session):
     """Count the search results."""
     # similarity functions

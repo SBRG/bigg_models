@@ -33,7 +33,7 @@ from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
                         ModelCompartmentalizedComponent, ModelGene, Gene,
                         Comments, GenomeRegion, Genome)
 from ome.base import Session
-from ome.loading.parse import split_compartment
+from ome.loading.parse import split_compartment, hash_metabolite_dictionary
 
 # command line options
 define("port", default= 8888, help="run on given port", type=int)
@@ -122,6 +122,7 @@ def get_application(debug=False):
         #
         # Search
         (r'/api/%s/search$' % api_v, SearchHandler),
+        (r'/api/%s/search_reaction_with_stoichiometry$' % api_v, ReactionWithStoichHandler),
         (r'/search$', SearchDisplayHandler),
         (r'/advanced_search$', AdvancedSearchHandler),
         (r'/advanced_search_external_id_results$', AdvancedSearchExternalIDHandler),
@@ -684,6 +685,23 @@ class SearchHandler(BaseHandler):
 
         session.close()
         self.write(result)
+        self.finish()
+
+
+class ReactionWithStoichHandler(BaseHandler):
+    def get(self):
+        metabolite_dict = {k: float(v[0]) for k, v in
+                           self.request.query_arguments.iteritems()}
+        hash = hash_metabolite_dictionary(metabolite_dict)
+        session = Session()
+        try:
+            results = {'results': [queries.reaction_with_hash(hash, session)],
+                       'results_count': 1}
+        except NotFoundError:
+            results = {'results': [],
+                       'results_count': 0}
+        session.close()
+        self.write(results)
         self.finish()
 
 
