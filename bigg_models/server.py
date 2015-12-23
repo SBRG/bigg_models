@@ -35,6 +35,17 @@ from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
 from ome.base import Session
 from ome.loading.parse import split_compartment, hash_metabolite_dictionary
 
+
+# sbml validator
+try:
+    import cobra_sbml_validator
+except ImportError:
+    print('COBRA SBML Validator not installed')
+    HAS_SBML_VALIDATOR = False
+else:
+    HAS_SBML_VALIDATOR = True
+
+
 # command line options
 define("port", default= 8888, help="run on given port", type=int)
 define("password", default= "", help="password to email", type=str)
@@ -63,7 +74,7 @@ api_host = 'bigg.ucsd.edu'
 # -------------------------------------------------------------------------------
 
 def get_application(debug=False):
-    return tornado.web.Application([
+    routes = [
         (r'/', MainHandler),
         #
         # Universal
@@ -147,7 +158,17 @@ def get_application(debug=False):
         #
         # redirects
         (r'/multiecoli/?$', RedirectHandler, {'url': 'http://bigg1.ucsd.edu/multiecoli'})
-    ], debug=debug)
+    ]
+
+    # SBML validator
+    if HAS_SBML_VALIDATOR:
+        routes += [
+            (r'/sbml_validator/?$', RedirectHandler, {'url': '/sbml_validator/app'}),
+            (r'/sbml_validator/app$', cobra_sbml_validator.ValidatorFormHandler),
+            (r'/sbml_validator/upload$', cobra_sbml_validator.Upload)
+        ]
+
+    return tornado.web.Application(routes, debug=debug)
 
 
 def run(public=True):
