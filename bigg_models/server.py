@@ -23,7 +23,7 @@ import datetime
 
 from six import iteritems
 
-from bigg_models import queries
+from bigg_models import queries, __api_version__ as api_v
 from bigg_models.queries import NotFoundError
 import ome
 from ome import settings
@@ -59,8 +59,7 @@ env = Environment(loader=PackageLoader('bigg_models', 'templates'),
 directory = abspath(dirname(__file__))
 static_model_dir = join(directory, "static", "models")
 
-# api version
-api_v = 'v2'
+# host
 api_host = 'bigg.ucsd.edu'
 
 # content types
@@ -855,7 +854,7 @@ class SubmitErrorHandler(BaseHandler):
 class WebAPIHandler(BaseHandler):
     def get(self):
         template = env.get_template('web_api.html')
-        self.write(template.render(api_host=api_host))
+        self.write(template.render(api_v=api_v, api_host=api_host))
         self.finish()
 
 
