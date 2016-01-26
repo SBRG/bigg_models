@@ -162,9 +162,10 @@ def get_application(debug=False):
     # SBML validator
     if HAS_SBML_VALIDATOR:
         routes += [
-            (r'/sbml_validator/?$', RedirectHandler, {'url': '/sbml_validator/app'}),
-            (r'/sbml_validator/app$', cobra_sbml_validator.ValidatorFormHandler),
-            (r'/sbml_validator/upload$', cobra_sbml_validator.Upload)
+            (r'/validator/?$', RedirectHandler, {'url': '/validator/app'}),
+            (r'/sbml_validator/?$', RedirectHandler, {'url': '/validator/app'}),
+            (r'/validator/app$', cobra_sbml_validator.ValidatorFormHandler),
+            (r'/validator/upload$', cobra_sbml_validator.Upload)
         ]
 
     return tornado.web.Application(routes, debug=debug)
