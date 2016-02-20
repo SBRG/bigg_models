@@ -1,5 +1,6 @@
-#!/bin/bash
-source /Users/dbuser/bigg_production/env_production/bin/activate
+#!/bin/sh
+
+source /Users/dbuser/bigg_server/env/bin/activate
 
 if ps -A | grep -v grep | grep 'python -m bigg_models.server --port=8888'; then
     echo Running;

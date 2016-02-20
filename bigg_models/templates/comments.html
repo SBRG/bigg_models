@@ -1,47 +1,11 @@
 <hr class="section-break">
-
-<!-- Collapsible comment box -->
 <h3>
-  <a data-toggle="collapse" href="#comment-collapse" aria-expanded="false"
-     aria-controls="comment-collapse">
+  <a href="https://github.com/SBRG/bigg_models/issues/new" target="_blank" id="comment-link">
     Report an error on this page
   </a>
   {% with question_title='Reporting errors'%}
-    {% with question_text='Please help improve the quality of the BiGG database by reporting any issues you find.'%}
+    {% with question_text='You will need an account on GitHub to report the error. If you prefer not to sign up for GitHub, please send your report to Zachary King <zaking@ucsd.edu>.'%}
       {% include 'question_mark.html' %}
     {% endwith %}
   {% endwith %} 
 </h3>
-<div id="comment-collapse" class="collapse">
-  <div class="well">
-
-    <!-- The comment form -->
-    <form id="errorform">
-      <div class="form-group">
-        <h4>Email Address</h4>
-        <input type="email" class="form-control" name="email" placeholder="Enter email">    
-      </div>
-      <h4>
-        Choose a type  
-        {% with question_title='Reporting errors'%}
-          {% with question_text='Website Bugs will be fixed as soon as possible. Model Issues will be resolved quickly if they are very simple (e.g. misnamed genes). Model issues that change the nature of the model cannot be fixed immediately; these will be stored in our database so they can be referenced when the next version of the model is being built.'%}
-            {% include 'question_mark.html' %}
-          {% endwith %}
-        {% endwith %} 
-      </h4>
-      <select name="type">
-        <option value="bug">Website Bug</option>
-        <option value="reconstruction">Model Issue</option>
-      </select>
-      <h4>Please describe the error</h4>
-      <div class="form-inline" role="form">
-        <textarea class="form-control" name="comments" rows="3" style="width: 100%;" placeholder="Comments"></textarea>
-        <br/><br/>
-        <button class="btn btn-default" id="submit" type="submit" value="Submit">Submit</button>
-        <br/><br/>
-	      <div id="message-container"></div>
-      </div>
-    </form>
-
-  </div>
-</div>

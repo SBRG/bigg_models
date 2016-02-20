@@ -6,7 +6,7 @@
 .project
 env/
 gurobi.log
-BiGG_2.egg-info/
+*.egg-info/
 docs/schema/
 crontab.txt
 bigg_models/static/models
