@@ -2,13 +2,21 @@
 # -*- coding: utf-8 -*-
 
 from bigg2.model_dumper import make_all_static_models
-import sys
-from ome import settings
-import subprocess
 from bigg2.server import static_model_dir as static_dir
+from ome import settings
 
-make_all_static_models()
+import subprocess
+import sys
+from os.path import join
+from shutil import move
+from tempfile import mkdtemp
 
-subprocess.call([settings.java, '-jar', 'ModelFix.jar', static_dir, static_dir ])
+# make_all_static_models()
+
+# get raw out of the way
+tmp = mkdtemp()
+move(join(static_dir, 'raw'), tmp)
+subprocess.call([ settings.java, '-jar', 'ModelFix.jar', static_dir, static_dir ])
+move(join(tmp, 'raw'), static_dir)
 
 sys.exit(0)
