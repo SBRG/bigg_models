@@ -3,4 +3,12 @@
 
 from bigg2.model_dumper import make_all_static_models
 import sys
-sys.exit(make_all_static_models())
+from ome import settings
+import subprocess
+from bigg2.server import static_model_dir as static_dir
+
+make_all_static_models()
+
+subprocess.call([settings.java, '-jar', 'ModelFix.jar', static_dir, static_dir ])
+
+sys.exit(0)
