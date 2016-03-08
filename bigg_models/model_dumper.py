@@ -18,7 +18,7 @@ DEBUG = False
 def autodetect_model_polisher():
     """Return the path to ModelPolisher."""
     return abspath(join(dirname(__file__), '..', 'bin',
-                        'ModelPolisher-1.0.jar'))
+                        'ModelPolisher-1.2.jar'))
 
 
 def make_all_static_models():
@@ -53,10 +53,12 @@ def make_all_static_models():
 
 
 def write_static_model(bigg_id, model_polisher_path=None):
-    """write out static files for a model with the given bigg ID
+    """Write out static files for a model with the given BiGG ID.
 
     This will output compressed and uncompressed SBML L3 + FBCv2, JSON,
-    and MAT files"""
+    and MAT files.
+
+    """
     success = True
     print('Dumping model')
     t = time.time()
