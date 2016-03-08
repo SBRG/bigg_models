@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import smtplib
 import tornado.ioloop
 import tornado.web
@@ -31,7 +32,7 @@ from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
                         CompartmentalizedComponent, ModelReaction,
                         ReactionMatrix, GeneReactionMatrix,
                         ModelCompartmentalizedComponent, ModelGene, Gene,
-                        Comments, GenomeRegion, Genome)
+                        GenomeRegion, Genome)
 from ome.base import Session
 from ome.loading.parse import split_compartment, hash_metabolite_dictionary
 
@@ -141,9 +142,6 @@ def get_application(debug=False):
         #
         # Maps
         (r'/escher_map_json/([^/]+)$', EscherMapJSONHandler),
-        #
-        # Comments
-        (r'/submiterror$', SubmitErrorHandler),
         #
         # Pages
         (r'/web_api$', WebAPIHandler),
@@ -834,21 +832,6 @@ class EscherMapJSONHandler(BaseHandler):
         # need to do this because map_json is a string
         self.set_header('Content-type', 'application/json; charset=utf-8')
         self.finish()
-
-
-class SubmitErrorHandler(BaseHandler):
-    def post(self):
-        session = Session()
-        useremail = self.get_argument("email", "empty")
-        comments = self.get_argument("comments", "empty")
-        type = self.get_argument("type", "empty")
-        weburl = self.get_argument("url", "empty")
-        now = datetime.datetime.now()
-        commentobject = Comments(email=useremail, text=comments,
-                                 date_created=now, type=type, url=weburl)
-        session.add(commentobject)
-        session.commit()
-        session.close()
 
 
 class WebAPIHandler(BaseHandler):
