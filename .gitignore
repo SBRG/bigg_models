@@ -15,3 +15,4 @@ bigg_models/static/models
 .cache/
 temp_data/
 *.swp
+TAGS

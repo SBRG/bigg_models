@@ -1,3 +1,6 @@
+from bigg_models.version import (__version__ as version,
+                                 __api_version__ as api_version)
+
 from ome.models import *
 from ome.base import Publication, PublicationModel
 from ome.loading.model_loading import parse
@@ -592,7 +595,7 @@ def get_model_and_counts(model_bigg_id, session, static_model_dir=None):
         genome_ref_string = ref_tuple_to_str(model_db[2].accession_type,
                                              genome_name)
     escher_maps = get_escher_maps_for_model(model_db[0].id, session)
-    result = {'bigg_id': model_db[0].bigg_id,
+    result = {'model_bigg_id': model_db[0].bigg_id,
               'published_filename': model_db[0].published_filename,
               'organism': getattr(model_db[2], 'organism', None),
               'genome_name': genome_name,
@@ -1763,4 +1766,8 @@ def get_genes_for_database_id(session, query, database_source):
 # version
 
 def database_version(session):
-    return {'last_updated': str(session.query(DatabaseVersion).first().date_time)}
+    return {
+        'last_updated': str(session.query(DatabaseVersion).first().date_time),
+        'bigg_models_version': version,
+        'api_version': api_version,
+    }

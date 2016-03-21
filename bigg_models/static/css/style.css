@@ -1,12 +1,12 @@
 body {
-  font-size: 19px;
+  font-size: 19px !important;
   color: #444444;
   height: 100%;
   width: 100%;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: normal;
 }
 h1 {
@@ -64,7 +64,7 @@ span.pseudoreaction {
   height: 60px;
   background-color: #0099FF;
   z-index: 10;
-} 
+}
 #nav-title {
   width: 100%;
 }
@@ -78,7 +78,7 @@ span.pseudoreaction {
   text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 10px;
 }
 
-.light { 
+.light {
   color: #999999;
 }
 p {
@@ -138,9 +138,9 @@ td:target {
 }
 .escher-map {
   margin-bottom: 10px;
-  width: 100%; 
-  height: 500px; 
-  border: 1px solid #DDD; 
+  width: 100%;
+  height: 500px;
+  border: 1px solid #DDD;
   border-radius: 4px;
 }
 .centered {
@@ -171,7 +171,7 @@ td:target {
 
 #loading-model{
   clear:both;
-  
+
   margin-top: 100px;
 }
 .btn-group-vertical{
@@ -212,22 +212,22 @@ td:target {
   transition: opacity 1s;
 }
 .carousel .one {
-  
-  background: url(f21.png) no-repeat center center fixed; 
+
+  background: url(f21.png) no-repeat center center fixed;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
   background-size: cover;
 }
 .carousel .two {
-  background: url(f22.png) no-repeat center center fixed; 
+  background: url(f22.png) no-repeat center center fixed;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
   background-size: cover;
 }
 .carousel .three {
-  background: url(f23.png) no-repeat center center fixed; 
+  background: url(f23.png) no-repeat center center fixed;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;

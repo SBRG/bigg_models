@@ -4,22 +4,18 @@
     <title>{% block title %}BiGG Models{% endblock %}</title>
 
     <title>BiGG Models</title>
-    <!-- Bootstrap and jQuery UI -->
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
 
+    <!-- Bootstrap and jQuery -->
     <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
-    <script src="//code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-
-    <!-- Custom Google Web Font -->
-    <link hrel="stylesheet" ref="http://fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic">
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css"/>
 
     <!-- BiGG styles and js -->
-    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
     <script src="/static/js/script.js"></script>
     <script src="/static/js/question_mark.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css"/>
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/static/assets/favicon.ico">
 
@@ -30,8 +26,8 @@
 
     {% include 'analytics.html' %}
   </head>
-  <body>		
-    {% block navbar %}	
+  <body>
+    {% block navbar %}
       <div id="nav-title-background">
         <div class="container">
           <div id="nav-title">
@@ -77,10 +73,10 @@
             </ul>
 
           </div>
-        </div>			
+        </div>
       </div>
 
-    {% endblock %}	
+    {% endblock %}
 
     <div class="container">
       <div class="row">

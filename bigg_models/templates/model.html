@@ -1,10 +1,10 @@
 {% extends "parent_display.html" %}
-{% block title %}BiGG Model: {{bigg_id}}{% endblock %}
+{% block title %}BiGG Model: {{model_bigg_id}}{% endblock %}
 {% block content %}
 
   <div class="row">
     <div class="col-lg-8">
-      <h1><span class="light">Model: </span>{{bigg_id}}</h1>
+      <h1><span class="light">Model: </span>{{model_bigg_id}}</h1>
       <hr>
       {% if organism is not none %}
         <h4>Organism: </h4>
@@ -30,13 +30,13 @@
             </tr>
           </thead>
           <tbody>
-            <tr class="clickable-row" href="/models/{{bigg_id}}/metabolites">
+            <tr class="clickable-row" href="/models/{{model_bigg_id}}/metabolites">
               <td>Metabolites</td><td>{{metabolite_count}}</td>
             </tr>
-            <tr class="clickable-row" href="/models/{{bigg_id}}/reactions">
+            <tr class="clickable-row" href="/models/{{model_bigg_id}}/reactions">
               <td>Reactions</td><td>{{reaction_count}}</td>
             </tr>
-            <tr class="clickable-row" href="/models/{{bigg_id}}/genes">
+            <tr class="clickable-row" href="/models/{{model_bigg_id}}/genes">
               <td>Genes</td><td>{{gene_count}}</td>
             </tr>
           </tbody>

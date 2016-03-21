@@ -4,6 +4,9 @@ from bigg_models.queries import (_shorten_name, _get_old_ids_for_model_gene,
                                  _get_old_ids_for_model_comp_metabolite,
                                  _get_gene_list_for_model_reaction,
                                  _get_metabolite_list_for_reaction)
+from bigg_models.version import (__version__ as version,
+                                 __api_version__ as api_version)
+
 from ome import base
 
 from decimal import Decimal
@@ -112,7 +115,7 @@ def test_get_models(session):
 
 def test_get_model_and_counts(session):
     result = get_model_and_counts('iAPECO1_1312', session)
-    assert result['bigg_id'] == 'iAPECO1_1312'
+    assert result['model_bigg_id'] == 'iAPECO1_1312'
     assert result['organism'] == 'Escherichia coli APEC O1'
     assert type(result['metabolite_count']) is int
     assert type(result['reaction_count']) is int
@@ -142,7 +145,7 @@ def test_get_metabolite(session):
     assert 'iAPECO1_1312' in [c['model_bigg_id'] for c in result['compartments_in_models']]
     assert 'Escherichia coli APEC O1' in [c['organism'] for c in result['compartments_in_models']]
     assert ({'link': 'http://identifiers.org/kegg.compound/C00026', 'id': 'C00026'}
-            in result['database_links']['KEGGID'])
+            in result['database_links']['KEGG Compound'])
     assert set(result['old_identifiers']) == {'akg[c]', 'akg_c', 'akg_e', 'akg_p', 'akg_m', 'akg_x', 'akg_r', 'akg_n', 'akg_h'}
     assert 'old_id' not in result['database_links']
 
@@ -217,7 +220,7 @@ def test_get_model_gene(session):
     result = get_model_gene('ECO103_2936', 'iECO103_1326', session)
     assert result['bigg_id'] == 'ECO103_2936'
     assert result['old_identifiers'] == ['ECO103_2936']
-    assert 'GI' in result['database_links']
+    assert 'NCBI GI' in result['database_links']
     none_links = [x for x in result['database_links'].iteritems()
                   if any([ext['link'] is None for ext in x[1]])]
     assert len(none_links) == 0
@@ -348,9 +351,12 @@ def test_search_ids_fast(session):
 
 def test_get_genes_for_database_id(session):
     assert ({'bigg_id': 'b0241', 'model_bigg_id': 'iJO1366', 'name': 'phoE'} in
-            get_genes_for_database_id(session, 'b0241', 'old_id'))
+            get_genes_for_database_id(session, 'b0241', 'old_bigg_id'))
 
 # version
 
 def test_database_version(session):
-    assert '201' in database_version(session)['last_updated']
+    res = database_version(session)
+    assert '201' in res['last_updated']
+    assert res['bigg_models_version'] == version
+    assert res['api_version'] == api_version
