@@ -1,0 +1,70 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from ome.base import Session
+from bigg_models.queries import (get_universal_reactions, get_reaction_and_models,
+                                 get_universal_metabolites, get_metabolite)
+
+from os.path import abspath, dirname, join
+from os import makedirs
+import logging
+import json
+
+logging.basicConfig(level=logging.INFO)
+
+logging.info('Making namespace downloads')
+
+# get directory
+directory = abspath(join(dirname(__file__), '..', 'bigg_models', 'static', 'namespace'))
+try:
+    makedirs(directory)
+except OSError:
+    pass
+
+# get sessions
+session = Session()
+
+# get the reactions
+logging.info('Querying for reactions')
+reactions = {
+    'header': ['bigg_id', 'name', 'model_list', 'database_links'],
+    'lines': [],
+}
+for reaction in get_universal_reactions(session):
+    res = get_reaction_and_models(reaction['bigg_id'], session)
+    reactions['lines'].append([
+        res['bigg_id'],
+        res['name'] if res['name'] else '',
+        ', '.join([x['bigg_id'] for x in res['models_containing_reaction']]),
+        json.dumps(dict(res['database_links'])),
+    ])
+
+logging.info('Querying for metabolites')
+metabolites = {
+    'header': ['bigg_id', 'universal_bigg_id', 'name', 'model_list', 'database_links'],
+    'lines': [],
+}
+for metabolite in get_universal_metabolites(session):
+    res = get_metabolite(metabolite['bigg_id'], session)
+    compartments = set([x['bigg_id'] for x in res['compartments_in_models']])
+    models_for_compartment = {c: [r['model_bigg_id'] for r in res['compartments_in_models'] if r['bigg_id'] == c]
+                              for c in compartments}
+    for comp in compartments:
+        metabolites['lines'].append([
+            res['bigg_id'] + '_' + comp,
+            res['bigg_id'],
+            res['name'] if res['name'] else '',
+            ', '.join(models_for_compartment[comp]),
+            json.dumps(dict(res['database_links'])),
+        ])
+
+logging.info('Saving files')
+for filename, data in [('bigg_models_reactions.txt', reactions),
+                       ('bigg_models_metabolites.txt', metabolites)]:
+    with open(join(directory, filename), 'w') as f:
+        f.write('\t'.join(data['header']) + '\n')
+        f.write('\n'.join(['\t'.join(line) for line in data['lines']]))
+
+session.close()
+
+logging.info('Done making namespace downloads')

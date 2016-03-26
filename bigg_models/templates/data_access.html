@@ -1,10 +1,32 @@
 {% extends "parent_display.html" %}
 {% block title %}BiGG Web API{% endblock %}
 {% block content %}
-  <h1 class="centered">BiGG Models API {{ api_v }}</h1><br/>
+  <h1 class="centered">Data Access</h1><br/>
 
-  <p>BiGG Models can be accessed using a simple web API. Here we provide some
-    examples of the API reponses. All of the following are GET requests.</p> 
+  <h2>Download reaction and metabolite namespaces</h2><br/>
+
+  <p>The reaction and metabolite IDs in BiGG Models are available in the
+  following tab-separated text files. The column names are the same as those
+  used in COBRApy and in the Web API (below).</p>
+
+  <ul>
+    <li>
+      <a href="/static/namespace/bigg_models_reactions.txt">bigg_models_reactions.txt</a>
+    </li>
+    <li>
+      <a href="/static/namespace/bigg_models_metabolites.txt">bigg_models_metabolites.txt</a>
+    </li>
+  </ul>
+
+  <br/>
+
+  <h2>Programmatic access with the BiGG Models API</h2><br/>
+
+  <p>BiGG Models can be accessed using a simple web API. Here we provide
+    examples of the API reponses. All of the following are GET requests. Some
+    general function that take advantage of this API will be collected in the
+    <a href="https://github.com/SBRG/bigg_tools">BiGG Tools</a> project.</p>
+
 
   <p>Please be respectful when using this service and do not send more than 10
     request per second. The API is very simple, but we hope to add features
@@ -15,8 +37,10 @@
 
   <hr/>
 
-  <pre class="get"># Get the date BiGG Models was last updated<br/>curl 'http://{{api_host}}/api/v2/database_version'</pre>
-  <pre>{"last_updated": "2015-09-22 12:01:20.553523"}</pre>
+  <pre class="get"># Get the version and the date BiGG Models was last updated<br/>curl 'http://{{api_host}}/api/v2/database_version'</pre>
+  <pre>{"bigg_models_version": "1.1.0",
+ "api_version": "v2",
+ "last_updated": "2016-03-21 17:24:11.138365"}</pre>
 
   <hr/>
 
@@ -28,7 +52,7 @@
               "metabolite_count": 1944,
               "gene_count": 1313,
               "reaction_count": 2737},
- 
+
              {"bigg_id": "iND750",
               "organism": "Saccharomyces cerevisiae S288c",
               "metabolite_count": 1061,
@@ -37,7 +61,7 @@
 
              ... ]
 }</pre>
-	
+
   <pre class="get"># Get model details<br/>curl 'http://{{api_host}}/api/v2/models/iND750'</pre>
   <pre>{"organism": "Saccharomyces cerevisiae S288c",
  "genome": "PRJNA43747",
@@ -46,8 +70,16 @@
  "reaction_count": 1266,
  "reference_type": "pmid",
  "reference_id": "15197165"}</pre>
-  
-  <pre class="get"># Download a model in JSON format<br/>curl 'http://{{api_host}}/api/v2/models/iND750/download'</pre>
+
+  <pre class="get"># Download a model in JSON format
+curl 'http://{{api_host}}/api/v2/models/iND750/download'</pre>
+  <pre># Returns the whole model</pre>
+
+  <pre class="get"># Download a model in another format
+curl 'http://{{api_host}}/static/models/iND750.xml'
+curl 'http://{{api_host}}/static/models/iND750.xml.gz'
+curl 'http://{{api_host}}/static/models/iND750.mat'
+curl 'http://{{api_host}}/static/models/iND750.json'</pre>
   <pre># Returns the whole model</pre>
 
   <pre class="get"># Get a list of model reactions<br/>curl 'http://{{api_host}}/api/v2/models/iND750/reactions'</pre>
@@ -92,7 +124,7 @@
  "escher_maps": [],
  "other_models_with_reaction": ["iAPECO1_1312", "iSB619", ... ],
  "count": 1,
- "results": [   
+ "results": [
   {"gene_reaction_rule": "(YJL052W) or (YGR192C) or (YJR009C)",
    "lower_bound": -1000,
    "upper_bound": 999999,
@@ -108,9 +140,9 @@
 
   <pre class="get">curl 'http://{{api_host}}/api/v2/models/iND750/metabolites'</pre>
 	<pre>[{"bigg_id": "10fthf",
-  "model_bigg_id": "iND750", 
-  "compartment_bigg_id": "c", 
-  "name": "10-Formyltetrahydrofolate", 
+  "model_bigg_id": "iND750",
+  "compartment_bigg_id": "c",
+  "name": "10-Formyltetrahydrofolate",
   "organism": "Saccharomyces cerevisiae S288c"},
 
  ...
@@ -149,12 +181,12 @@
   </pre>
 
   <pre class="get">curl 'http://{{api_host}}/api/v2/models/iMM904/genes'</pre>
-	<pre> [{"bigg_id": "Q0045", 
-  "organism": "Saccharomyces cerevisiae S288c", 
-  "model_bigg_id": "iMM904", 
+	<pre> [{"bigg_id": "Q0045",
+  "organism": "Saccharomyces cerevisiae S288c",
+  "model_bigg_id": "iMM904",
   "name": "Q0045"},
 
-  ... 
+  ...
 ]</pre>
   <pre class="get">curl 'http://{{api_host}}/api/v2/models/iMM904/genes/Q0045'</pre>
 	<pre>{"bigg_id": "Q0045",
@@ -165,7 +197,7 @@
  "reactions": [{"bigg_id": "",
 		        "name": "",
 		        "gene_reaction_rule": ""}]
-}</pre> 
+}</pre>
 
   <hr/>
 	<h3>Universal database</h3>
@@ -182,13 +214,13 @@
  "pseudoreaction": false,
  "models_containing_reaction": [
    {"organism": "Escherichia coli APEC O1", "bigg_id": "iAPECO1_1312"},
-	  
+
    ...
  ],
  "metabolites": [{"stoichiometry": -1.0, "bigg_id": "adn", "compartment_bigg_id": "c", "name": "Adenosine"},
-                 {"stoichiometry": -1.0, "bigg_id": "h2o", "compartment_bigg_id": "c", "name": "H2O"}, 
-                 {"stoichiometry": -1.0, "bigg_id": "h", "compartment_bigg_id": "c", "name": "H+"}, 
-                 {"stoichiometry": 1.0, "bigg_id": "ins", "compartment_bigg_id": "c", "name": "Inosine"}, 
+                 {"stoichiometry": -1.0, "bigg_id": "h2o", "compartment_bigg_id": "c", "name": "H2O"},
+                 {"stoichiometry": -1.0, "bigg_id": "h", "compartment_bigg_id": "c", "name": "H+"},
+                 {"stoichiometry": 1.0, "bigg_id": "ins", "compartment_bigg_id": "c", "name": "Inosine"},
                  {"stoichiometry": 1.0, "bigg_id": "nh4", "compartment_bigg_id": "c", "name": "Ammonium"}],
 }</pre>
 
@@ -238,7 +270,7 @@
      ...
     ]
 }</pre>
-	
+
 	<pre class="get">curl 'http://{{api_host}}/api/v2/search?query=gapA&search_type=genes'</pre>
 	<pre>{"results_count": 55,
  "results": [
@@ -253,7 +285,7 @@
  "results": [{"bigg_id": "iJO1366",
               "organism": "Escherichia coli str. K-12 substr. MG1655",
               "metabolite_count": 1866,
-              "gene_count": 1367, 
+              "gene_count": 1367,
               "reaction_count": 2644}]}
 }</pre>
 
@@ -261,4 +293,4 @@
     {% include 'comments.html' %}
   </div>
 
-{% endblock %}	
+{% endblock %}

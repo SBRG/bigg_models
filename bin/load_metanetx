@@ -181,9 +181,9 @@ def parse_xref(file_key, ref_type):
         for line in f.readlines():
             if line.strip().startswith('#') or line.strip() == '':
                 continue
-            split_line = line.split('\t')
+            split_line = [x.strip() for x in line.split('\t')]
             try:
-                ref, val = check_2(split_line[0].split(':', 1))
+                ref, val = check_2([x.strip() for x in split_line[0].split(':', 1)])
             except Exception:
                 print line
                 continue

@@ -21,5 +21,6 @@ setup(name='BiGG Models',
                                     'templates/*']},
       install_requires=['Jinja2>=2.7.3',
                         'tornado>=4.0.2',
-                        'pytest>=2.6.2',
-                        'ome==0.0.1-bigg'])
+                        'pytest>=2.6.4',
+                        'ome>=0.1.0',
+                        'python-libsbml>=5.12.1'])

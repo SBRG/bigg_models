@@ -7,7 +7,6 @@ from ome.loading.model_loading import parse
 from ome import settings
 from ome.util import make_reaction_copy_id, ref_str_to_tuple, ref_tuple_to_str
 
-from sqlalchemy import func
 from sqlalchemy import desc, asc, func, or_, and_
 from collections import defaultdict
 from os.path import abspath, dirname, join, isfile, getsize
@@ -251,14 +250,18 @@ def get_reaction_and_models(reaction_bigg_id, session):
     # metabolites
     metabolite_db = _get_metabolite_list_for_reaction(reaction_bigg_id, session)
 
-    return {'bigg_id': result_db[0][0],
-            'name': result_db[0][1],
-            'pseudoreaction': result_db[0][2],
-            'database_links': db_link_results,
-            'old_identifiers': old_id_results,
-            'metabolites': metabolite_db,
-            'models_containing_reaction': [{'bigg_id': x[3], 'organism': x[4]}
-                                           for x in result_db]}
+    reaction_string = build_reaction_string(metabolite_db, -1000, 1000, False)
+    return {
+        'bigg_id': result_db[0][0],
+        'name': result_db[0][1],
+        'pseudoreaction': result_db[0][2],
+        'database_links': db_link_results,
+        'old_identifiers': old_id_results,
+        'metabolites': metabolite_db,
+        'reaction_string': reaction_string,
+        'models_containing_reaction': [{'bigg_id': x[3], 'organism': x[4]}
+                                       for x in result_db],
+    }
 
 
 def get_reactions_for_model(model_bigg_id, session):
@@ -325,7 +328,10 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
     result_list = []
     for result_db in model_reaction_db:
         gene_db = _get_gene_list_for_model_reaction(result_db[2], session)
-
+        reaction_string = build_reaction_string(metabolite_db,
+                                                result_db[4],
+                                                result_db[5],
+                                                False)
         result_list.append({
             'gene_reaction_rule': result_db[3],
             'lower_bound': result_db[4],
@@ -334,7 +340,8 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
             'genes': gene_db,
             'copy_number': result_db[8],
             'subsystem': result_db[9],
-            'exported_reaction_id': make_reaction_copy_id(reaction_bigg_id, result_db[8])
+            'exported_reaction_id': make_reaction_copy_id(reaction_bigg_id, result_db[8]),
+            'reaction_string': reaction_string,
         })
 
     return {

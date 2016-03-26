@@ -78,6 +78,15 @@ span.pseudoreaction {
   text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 10px;
 }
 
+/* fix nav padding */
+.nav>li>a {
+  padding: 10px 12px;
+}
+.navbar-nav>li>a {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
 .light {
   color: #999999;
 }

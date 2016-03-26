@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 
-import smtplib
+from bigg_models import queries, __api_version__ as api_v
+from bigg_models.queries import NotFoundError
+
+from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
+                        CompartmentalizedComponent, ModelReaction,
+                        ReactionMatrix, GeneReactionMatrix,
+                        ModelCompartmentalizedComponent, ModelGene, Gene,
+                        GenomeRegion, Genome)
+from ome.base import Session
+from ome.loading.parse import split_compartment, hash_metabolite_dictionary
+
 import tornado.ioloop
 import tornado.web
 import tornado.httpserver
@@ -10,32 +20,13 @@ from tornado.web import (StaticFileHandler, RequestHandler, RedirectHandler,
                          asynchronous, HTTPError)
 from tornado.httpclient import AsyncHTTPClient
 from tornado import gen
-from os.path import abspath, dirname, join
-from jinja2 import Environment, PackageLoader
-from sqlalchemy.orm import sessionmaker, aliased, Bundle
-from sqlalchemy import create_engine, desc, func, or_
-from collections import Counter
-import simplejson as json
-import subprocess
+
 import os
-from os.path import isfile
+from os.path import abspath, dirname, join, isfile
+from jinja2 import Environment, PackageLoader
+import subprocess
 import mimetypes
-import datetime
-
-from six import iteritems
-
-from bigg_models import queries, __api_version__ as api_v
-from bigg_models.queries import NotFoundError
-import ome
-from ome import settings
-from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
-                        CompartmentalizedComponent, ModelReaction,
-                        ReactionMatrix, GeneReactionMatrix,
-                        ModelCompartmentalizedComponent, ModelGene, Gene,
-                        GenomeRegion, Genome)
-from ome.base import Session
-from ome.loading.parse import split_compartment, hash_metabolite_dictionary
-
+import json
 
 # sbml validator
 try:
@@ -45,7 +36,6 @@ except ImportError:
     HAS_SBML_VALIDATOR = False
 else:
     HAS_SBML_VALIDATOR = True
-
 
 # command line options
 define("port", default= 8888, help="run on given port", type=int)
@@ -144,7 +134,8 @@ def get_application(debug=False):
         (r'/escher_map_json/([^/]+)$', EscherMapJSONHandler),
         #
         # Pages
-        (r'/web_api$', WebAPIHandler),
+        (r'/web_api$', RedirectHandler, {'url': '/data_access'}),
+        (r'/data_access$', WebAPIHandler),
         (r'/license$', LicenseHandler),
         #
         # Version
@@ -190,23 +181,6 @@ def stop():
 # -------------------------------------------------------------------------------
 # Handlers
 # -------------------------------------------------------------------------------
-
-class BiggStaticFileHandler(StaticFileHandler):
-    """This is sets the Content-Type for the various model formats
-
-    This is mainly for testing. In production, the /static path should be
-    handled by nginx or apache"""
-    def get_content_type(self):
-        path = self.absolute_path
-        # need to fix type for gzip files until tornado patched
-        # https://github.com/tornadoweb/tornado/pull/1468
-        if path.endswith(".xml.gz"):
-            return "application/gzip"
-        # mat needs to be binary
-        elif path.endswith(".mat"):
-            return "application/octet-stream"
-        else:
-            return StaticFileHandler.get_content_type(self)
 
 def _possibly_compartmentalized_met_id(obj):
     if 'compartment_bigg_id' not in obj:
@@ -273,8 +247,11 @@ class BaseHandler(RequestHandler):
         This is suitable for cases where the template takes exactly the same
         result as the JSON api. This function will serve JSON if the request
         URI starts with JSON, otherwise it will render the objects template
-        with the data"""
+        with the data
+
+        """
         if self.request.uri.startswith("/api"):
+
             self.write(result)
         else:
             self.write(self.template.render(result))
@@ -303,7 +280,7 @@ class PageableHandler(BaseHandler):
 
         # determine which column we are sorting by
         # These are parameters formatted as col[i] = 0 (or 1 for descending)
-        for param_name, param_value in iteritems(self.request.query_arguments):
+        for param_name, param_value in self.request.query_arguments.iteritems():
             if not (param_name.startswith("col[") and
                     param_name.endswith("]")):
                 continue
@@ -356,7 +333,7 @@ class UniversalReactionListHandler(PageableHandler):
 
 class UniversalReactionListDisplayHandler(BaseHandler):
     def get(self):
-        template = env.get_template("list_display.html")
+        template = env.get_template('list_display.html')
         dictionary = {'results': {'reactions': 'ajax'},
                       'hide_organism': True}
         self.write(template.render(dictionary))
@@ -364,7 +341,7 @@ class UniversalReactionListDisplayHandler(BaseHandler):
 
 
 class UniversalReactionHandler(BaseHandler):
-    template = env.get_template("universal_reaction.html")
+    template = env.get_template('universal_reaction.html')
 
     def get(self, reaction_bigg_id):
         result = safe_query(queries.get_reaction_and_models, reaction_bigg_id)
@@ -444,12 +421,7 @@ class ReactionDisplayHandler(BaseHandler):
     def get(self, model_bigg_id, reaction_bigg_id):
         template = env.get_template("reaction.html")
         data = safe_query(queries.get_model_reaction,
-                             model_bigg_id, reaction_bigg_id)
-        for result in data['results']:
-            result['reaction_string'] = queries.build_reaction_string(data['metabolites'],
-                                                                      result['lower_bound'],
-                                                                      result['upper_bound'],
-                                                                      False)
+                          model_bigg_id, reaction_bigg_id)
         self.write(template.render(data))
         self.finish()
 
@@ -527,7 +499,7 @@ class ModelListHandler(PageableHandler):
 
 class ModelsListDisplayHandler(BaseHandler):
     def get(self):
-        template = env.get_template("list_display.html")
+        template = env.get_template('list_display.html')
         template_data = {'results': {'models': 'ajax'}}
         self.write(template.render(template_data))
         self.finish()
@@ -535,8 +507,11 @@ class ModelsListDisplayHandler(BaseHandler):
 
 class ModelDownloadHandler(BaseHandler):
     def get(self, model_bigg_id):
-        extension = self.get_argument("format", "json")
-        self.redirect("/static/models/%s.%s" % (model_bigg_id, extension))
+        with open(join(directory, 'static', 'models', '%s.json' % model_bigg_id)) as f:
+            json_str = f.read()
+        self.write(json_str)
+        self.set_header('Content-type', 'application/json; charset=utf-8')
+        self.finish()
 
 
 class ModelHandler(BaseHandler):
@@ -836,7 +811,7 @@ class EscherMapJSONHandler(BaseHandler):
 
 class WebAPIHandler(BaseHandler):
     def get(self):
-        template = env.get_template('web_api.html')
+        template = env.get_template('data_access.html')
         self.write(template.render(api_v=api_v, api_host=api_host))
         self.finish()
 
@@ -862,10 +837,10 @@ class StaticFileHandlerWithEncoding(StaticFileHandler):
     def get_absolute_path(self, root, path):
         p = abspath(join(root, path))
         # if the client accepts gzip
-        if "gzip" in self.request.headers.get('Accept-Encoding', ''):
-            if isfile(p + ".gz"):
-                self.set_header("Content-Encoding", "gzip")
-                return p + ".gz"
+        if 'gzip' in self.request.headers.get('Accept-Encoding', ''):
+            if isfile(p + '.gz'):
+                self.set_header('Content-Encoding', 'gzip')
+                return p + '.gz'
         return p
 
     def get_content_type(self):
@@ -874,13 +849,13 @@ class StaticFileHandlerWithEncoding(StaticFileHandler):
 
         # from https://github.com/tornadoweb/tornado/pull/1468
         # per RFC 6713, use the appropriate type for a gzip compressed file
-        if encoding == "gzip":
-            return "application/gzip"
+        if encoding == 'gzip':
+            return 'application/gzip'
         # As of 2015-07-21 there is no bzip2 encoding defined at
         # http://www.iana.org/assignments/media-types/media-types.xhtml
         # So for that (and any other encoding), use octet-stream.
         elif encoding is not None:
-            return "application/octet-stream"
+            return 'application/octet-stream'
 
         # assume utf-8 for xml and json
         elif mime_type == 'application/xml':
@@ -893,8 +868,8 @@ class StaticFileHandlerWithEncoding(StaticFileHandler):
             return mime_type
         # if mime_type not detected, use application/octet-stream
         else:
-            return "application/octet-stream"
+            return 'application/octet-stream'
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     run()
