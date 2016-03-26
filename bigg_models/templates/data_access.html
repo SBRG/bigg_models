@@ -27,7 +27,6 @@
     general function that take advantage of this API will be collected in the
     <a href="https://github.com/SBRG/bigg_tools">BiGG Tools</a> project.</p>
 
-
   <p>Please be respectful when using this service and do not send more than 10
     request per second. The API is very simple, but we hope to add features
     (including batch requests) over time.</p>
@@ -35,16 +34,27 @@
   <p>If you experience any unexpected behavior with the API, you can submit an error
     report at the <a href="#bottom">bottom of this page</a>.</p>
 
-  <hr/>
+  <hr/><h3>Database version</h3>
 
   <pre class="get"># Get the version and the date BiGG Models was last updated<br/>curl 'http://{{api_host}}/api/v2/database_version'</pre>
   <pre>{"bigg_models_version": "1.1.0",
  "api_version": "v2",
  "last_updated": "2016-03-21 17:24:11.138365"}</pre>
 
-  <hr/>
+  <hr/><h3>Download models</h3>
 
-  <h3>Models, reactions, metabolites, and genes</h3>
+  <pre class="get"># Download a model in JSON format<br/>curl 'http://{{api_host}}/api/v2/models/iND750/download'</pre>
+  <pre># Returns the whole model as a JSON string</pre>
+
+  <pre class="get"># Download models in other formats. These are not JSON responses, so the URLs look a little different.
+curl -O 'http://{{api_host}}/static/models/iMM904.xml.gz'
+curl -O 'http://{{api_host}}/static/models/iMM904.xml'
+curl -O 'http://{{api_host}}/static/models/iMM904.json'
+curl -O 'http://{{api_host}}/static/models/iMM904.mat'</pre>
+  <pre># Saves the model to the current directory in the given format</pre>
+
+  <hr/><h3>Models, reactions, metabolites, and genes</h3>
+
   <pre class="get"># Get a list of models<br/>curl 'http://{{api_host}}/api/v2/models'</pre>
   <pre>{"results_count": 76,
  "results": [{"bigg_id": "iAPECO1_1312",
@@ -199,8 +209,6 @@ curl 'http://{{api_host}}/static/models/iND750.json'</pre>
 		        "gene_reaction_rule": ""}]
 }</pre>
 
-  <hr/>
-	<h3>Universal database</h3>
 	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/reactions'</pre>
 	<pre>[{"bigg_id": "12DGR120tipp", "name": "_1,2 diacylglycerol transport via flipping (periplasm to cytoplasm, n-C12:0)"},
  {"bigg_id": "12DGR140tipp", "name": "_1,2 diacylglycerol transport via flipping (periplasm to cytoplasm, n-C14:0)"},
@@ -260,8 +268,8 @@ curl 'http://{{api_host}}/static/models/iND750.json'</pre>
  ]
 }</pre>
 
-  <hr/>
-	<h3>Search</h3>
+  <hr/><h3>Search</h3>
+
   <pre class="get">curl 'http://{{api_host}}/api/v2/search?query=g3p&search_type=metabolites'</pre>
 	<pre>{"results_count": 10,
  "results": [

@@ -2,5 +2,5 @@
 # -*- coding: utf-8 -*-
 
 from bigg_models.model_dumper import make_all_static_models
-import sys
-sys.exit(make_all_static_models())
+
+make_all_static_models()
