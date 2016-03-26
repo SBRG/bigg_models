@@ -1,0 +1,10 @@
+#!/bin/sh
+
+source $BIGG/env/bin/activate
+
+if ps -A | grep -v grep | grep 'python -m bigg_models.server --port=8888'; then
+    echo Running;
+else
+    python -m bigg_models.server --port=8888 --log-file-prefix=$BIGG'/bigg_models.log'
+fi
+exit

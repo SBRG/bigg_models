@@ -4,7 +4,7 @@
 import os
 from os.path import join
 
-from bigg2.server import directory
+from bigg_models.server import directory
 from ome import settings
 
 # make sure the indices are ready

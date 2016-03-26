@@ -1,0 +1,16 @@
+{% if json_size %}
+JSON
+{% with question_title='MAT' %}
+    {% with question_text='COBRA models in JSON are primarily used by the Escher pathway map visualization tool. They can also be loaded by COBRApy v0.3 and later.' %}
+      {% include 'question_mark.html' %}
+    {% endwith %}
+{% endwith %}
+:&nbsp;
+<a href="/static/models/{{model_bigg_id}}.json"
+    download="{{model_bigg_id}}.json"
+    data-toggle="tooltip"
+    data-trigger="hover"
+    data-title="{{json_size}}"
+    >
+    {{model_bigg_id}}.json</a>
+{% endif %}

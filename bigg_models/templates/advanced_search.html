@@ -1,0 +1,107 @@
+{% extends "parent_display.html" %}
+{% block title %}BiGG Advanced Search{% endblock %}
+{% block content %}
+
+  <h1 class="centered">Advanced Search</h1>
+
+  <hr/>
+  <h2>
+    Search Metabolites by External IDs
+    {% with question_title='Search Metabolites by External IDs'%}
+      {% with question_text='You can search for metabolites in the BiGG Database by entering an identifier from an external database. Use the dropdown menu to choose the external database, and enter the identifier in the Database ID box.'%}
+        {% include 'question_mark.html' %}
+      {% endwith %}
+    {% endwith %}
+  </h2>
+  <br/>
+
+  <form action="/advanced_search_external_id_results" method="post">
+    <select class="form-control" name="database_source" style="width: 200px">
+      <option>-- Select external DB --</option>
+      {% for id, name in database_sources %}
+        <option value="{{ id }}">{{name}}</option>
+      {% endfor %}
+    </select>
+    <input id="linkout-search" type="text" name="query" class="form-control" placeholder="Database ID" style="width: 100%; margin-top: 20px;"></input> 
+    <input id="linkout-submit" type="submit" class="btn btn-default" style="margin-top: 20px">   
+  </form>
+
+  <hr/>
+  <h2>
+    Search by Keyword
+    {% with question_title='Search by Keyword'%}
+      {% with question_text='You can search for reactions, metabolites, and genes in specific models by entering keywords in the input box below. You must choose at least one model, category, and keyword.'%}
+        {% include 'question_mark.html' %}
+      {% endwith %}
+    {% endwith %}
+  </h2>
+  <br/>
+  
+  <form action="/advanced_search_results" method="post">
+
+    <div class="panel panel-primary" >
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <span class="fa fa-check"></span> Choose Models
+        </h3>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <div class="checkbox advanced-selection">
+            {% for m in models %}
+              <label>
+                <input id="{{m}}" name="{{m}}" type="checkbox" />
+                {{m}}
+              </label>
+              <br/>
+            {% endfor %}
+          </div>
+          
+        </div>
+      </div>
+      
+    </div>
+
+    <div class="panel panel-primary" >
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <span class="fa fa-check"></span> Choose Categories
+        </h3>
+      </div>
+
+      <div class="panel-body">
+        <div class="form-group">
+          <div class="checkbox advanced-selection">
+            {% for type in ['reactions', 'metabolites', 'genes'] %}
+              <label>
+                <input name="include_{{type}}" type="checkbox" />
+                {{type.capitalize()}}
+              </label>
+              <br/>
+            {% endfor %}
+          </div>
+          
+        </div>
+      </div>
+      
+    </div>
+    <h3>Choose keywords:</h3>
+    <div id="alert-container"></div>
+    <input id="search" type="text" name="query" class="form-control" placeholder="Separate with commas: e.g. GAPD, PGI"></input>
+    <input id="submitSearch" type="submit" class="btn btn-default" style="margin-top: 20px;">
+  </form>
+
+  <script>
+   $(document).ready(function () {
+       $("#submitSearch").click(function(event) { 
+           if (!$("#search").val()) {
+               $('#alert-container').html('<div class="alert alert-warning alert-dismissible" role="alert"> ' +
+                                          '<button type="button" class="close" data-dismiss="alert" aria-label="Close"> ' +
+                                          '<span aria-hidden="true">&times;</span></button>Please provide a keyword.</div>');
+               event.preventDefault();
+               return;
+           }
+       });
+   });     
+  </script>
+{% endblock %}

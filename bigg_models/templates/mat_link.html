@@ -1,0 +1,16 @@
+{% if mat_size %}
+MAT
+{% with question_title='MAT' %}
+    {% with question_text='This file is primarily for use with the COBRA toolbox. It can also be read by cobrapy.' %}
+      {% include 'question_mark.html' %}
+    {% endwith %}
+{% endwith %}
+:&nbsp;
+<a href="/static/models/{{model_bigg_id}}.mat"
+    download="{{model_bigg_id}}.mat"
+    data-toggle="tooltip"
+    data-trigger="hover"
+    data-title="{{mat_size}}"
+    >
+    {{model_bigg_id}}.mat</a>
+{% endif %}

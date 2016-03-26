@@ -1,0 +1,170 @@
+body, html {
+  height: 100%;
+  width: 100%;
+}
+
+#bigg1-alert {
+  right: 20px;
+  left: 20px;
+  position: absolute;
+  top: 20px;
+  font-size: 16px;
+  padding: 8px 35px 8px 35px; 
+  z-index: 20;
+}
+
+.lead {
+  font-size: 19px;
+  font-weight: 300;
+}
+
+.intro-header {
+  padding-top: 50px; /* If you're making other pages, make sure there is 50px of padding to make sure the navbar doesn't overlap content! */
+  padding-bottom: 50px;
+  background: url() no-repeat center center;
+  background-size: cover;
+  background-color: #0099FF;
+  text-align: center;
+}
+.intro-header h1, .intro-header .lead {
+  color: #EFF8FF;
+}
+.intro-header .thumbnail h3 {
+  font-weight: bold;
+  margin: 10px 0 10px 0;
+}
+
+.intro-message {
+  position: relative;
+  padding-top: 15%;
+  padding-bottom: 20%;
+}
+
+h1.title {
+  font-size: 60px;
+  text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 10px;
+}
+
+.intro-divider {
+  width: 400px;
+  border-top: 1px solid #f8f8f8;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.intro-message > h3 {
+  text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.6);
+}
+
+@media (max-width: 767px) {
+  .intro-message {
+	  padding-bottom: 15%;
+  }
+
+  .intro-message > h1 {
+	  font-size: 3em;
+  }
+
+  ul.intro-social-buttons > li {
+	  display: block;
+	  margin-bottom: 20px;
+	  padding: 0;
+  }
+
+  ul.intro-social-buttons > li:last-child {
+	  margin-bottom: 0;
+  }
+
+  .intro-divider {
+	  width: 100%;
+  }
+}
+
+.network-name {
+  text-transform: uppercase;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 2px;
+}
+
+.content-section-a {
+  background-color: #f8f8f8;
+  padding: 50px 0;
+}
+
+.content-section-b {
+  border-top: 1px solid #e7e7e7;
+  border-bottom: 1px solid #e7e7e7;
+  padding: 50px 0;
+}
+
+.section-heading {
+  margin-bottom: 30px;
+}
+
+.section-heading-spacer {
+  border-top: 3px solid #e7e7e7;
+  width: 200px;
+  float: left;
+}
+
+.banner {
+  color: #428bca;
+}
+ul.banner-social-buttons {
+  margin-top: 0;
+  float: right;
+}
+
+@media (max-width: 1199px) {
+  ul.banner-social-buttons {
+	  float: left;
+	  margin-top: 15px;
+  }	
+}
+
+
+p.copyright {
+  margin: 15px 0 0;
+}
+
+/* autocomplete */
+.ui-autocomplete-loading {
+  background: #fff url('/static/assets/ajax-loader.gif') no-repeat right center;
+}
+.ui-menu-item {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: #444444;
+}
+
+.intro-divider {
+  margin-bottom: 30px;
+}
+.form-control {
+  margin-bottom: 20px;
+}
+.desc-section {
+  padding: 30px;
+}
+#escher-section {
+  background-color: #FCFCFC;
+  border-top: 1px solid #D4D4D4;
+  border-bottom: 1px solid #D4D4D4;
+}
+footer {
+  background-color: #FCFCFC;
+  border-top: 1px solid #D4D4D4;
+  padding: 50px 0;
+}
+.footer-image {
+  margin: 0 auto 20px auto;
+  max-width: 80%;
+}
+
+@media (min-width: 992px) {
+  #bigg-models-github {
+    margin-top: 30px;
+  }
+}
+
+

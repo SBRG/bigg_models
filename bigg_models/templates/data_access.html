@@ -1,0 +1,304 @@
+{% extends "parent_display.html" %}
+{% block title %}BiGG Web API{% endblock %}
+{% block content %}
+  <h1 class="centered">Data Access</h1><br/>
+
+  <h2>Download reaction and metabolite namespaces</h2><br/>
+
+  <p>The reaction and metabolite IDs in BiGG Models are available in the
+  following tab-separated text files. The column names are the same as those
+  used in COBRApy and in the Web API (below).</p>
+
+  <ul>
+    <li>
+      <a href="/static/namespace/bigg_models_reactions.txt">bigg_models_reactions.txt</a>
+    </li>
+    <li>
+      <a href="/static/namespace/bigg_models_metabolites.txt">bigg_models_metabolites.txt</a>
+    </li>
+  </ul>
+
+  <br/>
+
+  <h2>Programmatic access with the BiGG Models API</h2><br/>
+
+  <p>BiGG Models can be accessed using a simple web API. Here we provide
+    examples of the API reponses. All of the following are GET requests. Some
+    general function that take advantage of this API will be collected in the
+    <a href="https://github.com/SBRG/bigg_tools">BiGG Tools</a> project.</p>
+
+  <p>Please be respectful when using this service and do not send more than 10
+    request per second. The API is very simple, but we hope to add features
+    (including batch requests) over time.</p>
+
+  <p>If you experience any unexpected behavior with the API, you can submit an error
+    report at the <a href="#bottom">bottom of this page</a>.</p>
+
+  <hr/><h3>Database version</h3>
+
+  <pre class="get"># Get the version and the date BiGG Models was last updated<br/>curl 'http://{{api_host}}/api/v2/database_version'</pre>
+  <pre>{"bigg_models_version": "1.1.0",
+ "api_version": "v2",
+ "last_updated": "2016-03-21 17:24:11.138365"}</pre>
+
+  <hr/><h3>Download models</h3>
+
+  <pre class="get"># Download a model in JSON format<br/>curl 'http://{{api_host}}/api/v2/models/iND750/download'</pre>
+  <pre># Returns the whole model as a JSON string</pre>
+
+  <pre class="get"># Download models in other formats. These are not JSON responses, so the URLs look a little different.
+curl -O 'http://{{api_host}}/static/models/iMM904.xml.gz'
+curl -O 'http://{{api_host}}/static/models/iMM904.xml'
+curl -O 'http://{{api_host}}/static/models/iMM904.json'
+curl -O 'http://{{api_host}}/static/models/iMM904.mat'</pre>
+  <pre># Saves the model to the current directory in the given format</pre>
+
+  <hr/><h3>Models, reactions, metabolites, and genes</h3>
+
+  <pre class="get"># Get a list of models<br/>curl 'http://{{api_host}}/api/v2/models'</pre>
+  <pre>{"results_count": 76,
+ "results": [{"bigg_id": "iAPECO1_1312",
+              "organism": "Escherichia coli APEC O1",
+              "metabolite_count": 1944,
+              "gene_count": 1313,
+              "reaction_count": 2737},
+
+             {"bigg_id": "iND750",
+              "organism": "Saccharomyces cerevisiae S288c",
+              "metabolite_count": 1061,
+              "gene_count": 750,
+              "reaction_count": 1266},
+
+             ... ]
+}</pre>
+
+  <pre class="get"># Get model details<br/>curl 'http://{{api_host}}/api/v2/models/iND750'</pre>
+  <pre>{"organism": "Saccharomyces cerevisiae S288c",
+ "genome": "PRJNA43747",
+ "metabolite_count": 1061,
+ "gene_count": 750,
+ "reaction_count": 1266,
+ "reference_type": "pmid",
+ "reference_id": "15197165"}</pre>
+
+  <pre class="get"># Download a model in JSON format
+curl 'http://{{api_host}}/api/v2/models/iND750/download'</pre>
+  <pre># Returns the whole model</pre>
+
+  <pre class="get"># Download a model in another format
+curl 'http://{{api_host}}/static/models/iND750.xml'
+curl 'http://{{api_host}}/static/models/iND750.xml.gz'
+curl 'http://{{api_host}}/static/models/iND750.mat'
+curl 'http://{{api_host}}/static/models/iND750.json'</pre>
+  <pre># Returns the whole model</pre>
+
+  <pre class="get"># Get a list of model reactions<br/>curl 'http://{{api_host}}/api/v2/models/iND750/reactions'</pre>
+  <pre>[{"bigg_id": "EX_4abut_e", "name": "4-Aminobutanoate exchange", "organism": "Saccharomyces cerevisiae S288c"},
+ {"bigg_id": "EX_ac_e", "name": "Acetate exchange", "organism": "Saccharomyces cerevisiae S288c"},
+
+...
+]</pre>
+
+  <pre class="get">curl 'http://{{api_host}}/api/v2/models/iND750/reactions/GAPD'</pre>
+  <pre>{"bigg_id": "GAPD",
+ "name": "glyceraldehyde-3-phosphate dehydrogenase",
+ "pseudoreaction": false,
+ "model_bigg_id": "iND750"
+ "metabolites": [{"stoichiometry": -1,
+		  "bigg_id": "pi",
+		  "compartment_bigg_id": "c",
+		  "name": "Phosphate"},
+		 {"stoichiometry": 1,
+		  "bigg_id": "nadh",
+		  "compartment_bigg_id": "c",
+		  "name": "Nicotinamide adenine dinucleotide - reduced"},
+		 {"stoichiometry": -1,
+		  "bigg_id": "nad",
+		  "compartment_bigg_id": "c",
+		  "name": "Nicotinamide adenine dinucleotide"},
+		 {"stoichiometry": 1,
+		  "bigg_id": "h",
+		  "compartment_bigg_id": "c",
+		  "name": "H+"},
+		 {"stoichiometry": -1,
+		  "bigg_id": "g3p",
+		  "compartment_bigg_id": "c",
+		  "name": "Glyceraldehyde 3-phosphate"
+		 },
+		 {"stoichiometry": 1,
+		  "bigg_id": "13dpg",
+		  "compartment_bigg_id": "c",
+		  "name": "3-Phospho-D-glyceroyl phosphate"
+		 }],
+ "database_links": {},
+ "escher_maps": [],
+ "other_models_with_reaction": ["iAPECO1_1312", "iSB619", ... ],
+ "count": 1,
+ "results": [
+  {"gene_reaction_rule": "(YJL052W) or (YGR192C) or (YJR009C)",
+   "lower_bound": -1000,
+   "upper_bound": 999999,
+   "objective_coefficient": 0,
+   "genes": [{"bigg_id": "YGR192C",
+	          "name": "TDH3"},
+	         {"bigg_id": "YJL052W",
+	          "name": "YJL052W"},
+	         {"bigg_id": "YJR009C",
+	          "name": "YJR009C"}]}
+ ]
+}</pre>
+
+  <pre class="get">curl 'http://{{api_host}}/api/v2/models/iND750/metabolites'</pre>
+	<pre>[{"bigg_id": "10fthf",
+  "model_bigg_id": "iND750",
+  "compartment_bigg_id": "c",
+  "name": "10-Formyltetrahydrofolate",
+  "organism": "Saccharomyces cerevisiae S288c"},
+
+ ...
+]</pre>
+  <pre class="get">curl 'http://{{api_host}}/api/v2/models/iND750/metabolites/10fthf_c'</pre>
+	<pre>{"formula": "C20H21N7O7",
+ "bigg_id": "10fthf",
+ "compartment_bigg_id": "c",
+ "name": "10-Formyltetrahydrofolate",
+ "model_bigg_id": "iND750",
+ "escher_maps": [],
+ "reactions": [
+   {"model_bigg_id": "iND750",
+     "bigg_id": "AICART",
+     "name": "phosphoribosylaminoimidazolecarboxamide formyltransferase"},
+   {"model_bigg_id": "iND750",
+     "bigg_id": "MTHFC",
+     "name": "methenyltetrahydrofolate cyclohydrolase"},
+
+   ...
+   ],
+ "database_links": {
+   "KEGG": [{"link": "http://www.genome.jp/dbget-bin/www_bget?cpd:C00234",
+	     "id": "C00234"}],
+   "MetaCyc": [{"link": "http://metacyc.org/META/NEW-IMAGE?type=COMPOUND&object=10-FORMYL-THF",
+		"id": "10-FORMYL-THF"}],
+   ...
+   },
+ "other_models_with_metabolite": [
+   {"bigg_id": "iAPECO1_1312",
+    "compartment_bigg_id": "c"}
+
+   ...
+ ]
+}
+  </pre>
+
+  <pre class="get">curl 'http://{{api_host}}/api/v2/models/iMM904/genes'</pre>
+	<pre> [{"bigg_id": "Q0045",
+  "organism": "Saccharomyces cerevisiae S288c",
+  "model_bigg_id": "iMM904",
+  "name": "Q0045"},
+
+  ...
+]</pre>
+  <pre class="get">curl 'http://{{api_host}}/api/v2/models/iMM904/genes/Q0045'</pre>
+	<pre>{"bigg_id": "Q0045",
+ "name": "",
+ "leftpos": ,
+ "rightpos": ,
+ "model_bigg_id": "iMM904",
+ "reactions": [{"bigg_id": "",
+		        "name": "",
+		        "gene_reaction_rule": ""}]
+}</pre>
+
+	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/reactions'</pre>
+	<pre>[{"bigg_id": "12DGR120tipp", "name": "_1,2 diacylglycerol transport via flipping (periplasm to cytoplasm, n-C12:0)"},
+ {"bigg_id": "12DGR140tipp", "name": "_1,2 diacylglycerol transport via flipping (periplasm to cytoplasm, n-C14:0)"},
+ ...
+]</pre>
+
+	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/reactions/ADA'</pre>
+	<pre>{"bigg_id": "ADA",
+ "name": "Adenosine deaminase",
+ "database_links": {},
+ "pseudoreaction": false,
+ "models_containing_reaction": [
+   {"organism": "Escherichia coli APEC O1", "bigg_id": "iAPECO1_1312"},
+
+   ...
+ ],
+ "metabolites": [{"stoichiometry": -1.0, "bigg_id": "adn", "compartment_bigg_id": "c", "name": "Adenosine"},
+                 {"stoichiometry": -1.0, "bigg_id": "h2o", "compartment_bigg_id": "c", "name": "H2O"},
+                 {"stoichiometry": -1.0, "bigg_id": "h", "compartment_bigg_id": "c", "name": "H+"},
+                 {"stoichiometry": 1.0, "bigg_id": "ins", "compartment_bigg_id": "c", "name": "Inosine"},
+                 {"stoichiometry": 1.0, "bigg_id": "nh4", "compartment_bigg_id": "c", "name": "Ammonium"}],
+}</pre>
+
+	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/metabolites'</pre>
+	<pre>[{"bigg_id": "10fthf", "name": "_10-Formyltetrahydrofolate"},
+ {"bigg_id": "12dgr120", "name": "_1,2-Diacyl-sn-glycerol (didodecanoyl, n-C12:0)"},
+ ...
+]</pre>
+
+	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/metabolites/g3p'</pre>
+	<pre>{"bigg_id": "g3p",
+ "name": "Glyceraldehyde 3-phosphate",
+ "formula": "C3H5O6P",
+ "database_links": {
+   "KEGG": [
+     {"link": "http://www.genome.jp/dbget-bin/www_bget?cpd:C00661",
+      "id": "C00661"},
+     {"link": "http://www.genome.jp/dbget-bin/www_bget?cpd:C00118",
+      "id": "C00118"}
+   ],
+   "BRENDA": [
+     {"link": null,
+      "id": "BG17970"}
+   ],
+
+   ...
+ },
+ "compartments_in_models": [
+   {"model_bigg_id": "iAPECO1_1312",
+    "bigg_id": "c",
+    "organism": "escherichia coli apec o1"},
+   {"model_bigg_id": "iND750",
+    "bigg_id": "c",
+    "organism": "Saccharomyces cerevisiae S288c"},
+
+   ...
+ ]
+}</pre>
+
+  <hr/><h3>Search</h3>
+
+  <pre class="get">curl 'http://{{api_host}}/api/v2/search?query=g3p&search_type=metabolites'</pre>
+	<pre>{"results_count": 10,
+ "results": [
+     {"model_bigg_id": "Universal", "bigg_id": "g3p", "name": "Glyceraldehyde 3-phosphate", "organism": ""},
+     {"model_bigg_id": "Universal", "bigg_id": "g3pc", "name": "sn-Glycero-3-phosphocholine", "organism": ""},
+     ...
+    ]
+}</pre>
+
+	<pre class="get">curl 'http://{{api_host}}/api/v2/search?query=gapA&search_type=genes'</pre>
+	<pre>{"results_count": 55,
+ "results": [
+     {"model_bigg_id": "iAF987", "bigg_id": "Gmet_1946", "name": "gapA", "organism": "Geobacter metallireducens GS-15"},
+     {"model_bigg_id": "iAF1260", "bigg_id": "b1779", "name": "gapA", "organism": "Escherichia coli str. K-12 substr. MG1655"},
+     ...
+    ]
+}</pre>
+
+	<pre class="get">curl 'http://{{api_host}}/api/v2/search?query=iJO1366&search_type=models'</pre>
+	<pre>{"results_count": 1,
+ "results": [{"bigg_id": "iJO1366",
+              "organism": "Escherichia coli str. K-12 substr. MG1655",
+              "metabolite_count": 1866,
+              "gene_count": 1367,
+              "reaction_count": 2644}]}
+}</pre>
+
+  <div id="bottom">
+    {% include 'comments.html' %}
+  </div>
+
+{% endblock %}

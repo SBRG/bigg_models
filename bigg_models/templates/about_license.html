@@ -1,0 +1,96 @@
+<div class="modal-header">
+  {% if modal %}
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  {% endif %}
+  <h4 class="modal-title">About BiGG Models</h4>
+</div>
+
+<div class="modal-body">
+
+  <p>BiGG Models is a knowledgebase of genome-scale metabolic network
+  reconstructions.</p>
+
+	<p>BiGG Models integrates more than 70 published genome-scale metabolic
+	  networks into a single database with a set of stardized identifiers called
+	  BiGG IDs. Genes in the BiGG models are mapped to NCBI genome annotations,
+	  and metabolites are linked to many external databases (KEGG, PubChem, and
+	  many more). For details about updates to the BiGG Models website and
+    database, see the <a href="https://github.com/SBRG/bigg_models/releases">releases page</a>.</p>
+
+	<p>BiGG is freely available for non-commercial use. It is hosted and
+	  maintained by the <a href="http://systemsbiology.ucsd.edu/">Systems Biology
+	  Research Group</a> at the <a href="http://ucsd.edu"> University of California, San Diego</a>.</p>
+
+  <p>BiGG Models has replaced the original BiGG Database. If you are looking for
+    the old BiGG, you can still find it here: </p>
+
+  <p><a href="http://bigg1.ucsd.edu">http://bigg1.ucsd.edu</a></p>
+
+  <p>If you have questions or find any bugs in the database, please sumbit an
+    issue to our <a href="https://github.com/SBRG/bigg_models/issues" target="_blank">issue tracker</a>
+    or contact Zachary King (zaking-AT-ucsd-DOT-edu).</p>
+</div>
+
+<div class="modal-header">
+  <h4 class="modal-title">How do I use BiGG Models?</h4>
+</div>
+<div class="modal-body">
+  <p>BiGG can be browsed on this website or accessed using a <a href="/data_access">web
+    API</a>. Try searching for a metabolite, reaction, gene, or organism in the
+    search box to browse the content of genome-scale models. Question marks like
+    this {% include 'question_mark.html' %} are available throughout the site to
+    provide more help. Further information is available in the
+    <a href="http://dx.doi.org/10.1093/nar/gkv1049">BiGG Models publication</a>.
+  </p>
+</div>
+
+<div class="modal-header">
+  <h4 class=""modal-title">How do I cite BiGG Models?</h4>
+</div>
+<div class="modal-body">
+  <p>When using the BiGG Models knowledgebase in your research, we kindly ask
+    that you cite the latest publication. Your citation of BiGG Models will help
+    us to apply for ongoing funding to maintain this resource. </p>
+  {% include 'cite.html' %}
+</div>
+
+<div class="modal-header">
+  <h4 class="modal-title">License</h4>
+</div>
+<div class="modal-body">
+
+	<p> Copyright &copy; 2015 The Regents of the University of California </p>
+
+	<p> All Rights Reserved </p>
+
+	<p> Permission to use, copy, modify and distribute any part of BiGG Models for
+	  educational, research and non-profit purposes, without fee, and without a
+	  written agreement is hereby granted, provided that the above copyright
+	  notice, this paragraph and the following three paragraphs appear in all
+	  copies. </p>
+
+	<p> Those desiring to incorporate BiGG Models into commercial products or use
+	  for commercial purposes should contact the Technology Transfer &
+	  Intellectual Property Services, University of California, San Diego, 9500
+	  Gilman Drive, Mail Code 0910, La Jolla, CA 92093-0910, Ph: (858) 534-5815,
+	  FAX: (858) 534-7345, e-mail: invent@ucsd.edu. </p>
+
+	<p> In no event shall the University of California be liable to any party for
+	  direct, indirect, special, incidental, or consequential damages, including
+	  lost profits, arising out of the use of this bigg database, even if the
+	  University of California has been advised of the possibility of such damage. </p>
+
+	<p> The BiGG Models provided herein is on an "as is" basis, and the University
+	  of California has no obligation to provide maintenance, support, updates,
+	  enhancements, or modifications. The University of California makes no
+	  representations and extends no warranties of any kind, either implied or
+	  express, including, but not limited to, the implied warranties of
+	  merchantability or fitness for a particular purpose, or that the use of the
+	  BiGG Models will not infringe any patent, trademark or other rights. </p>
+
+</div>
+<div class="modal-footer">
+  {% if modal %}
+    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+  {% endif %}
+</div>

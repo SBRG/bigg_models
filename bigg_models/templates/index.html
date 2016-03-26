@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>BiGG Models</title>
+
+    <!-- Custom Google Web Font -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+
+    <!-- Scripts -->
+    <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="/static/js/question_mark.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link href="/static/css/style.css" rel="stylesheet"/>
+    <link href="/static/css/frontpage.css" rel="stylesheet"/>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/assets/favicon.ico"/>
+
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta name="google" content="notranslate"/>
+    <meta http-equiv="Content-Language" content="en"/>
+
+    {% include 'analytics.html' %}
+  </head>
+  <body>
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="http://systemsbiology.ucsd.edu/">Systems Biology Research Group</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse navbar-right navbar-collapse">
+          <ul class="nav navbar-nav">
+            <!-- Button trigger modal -->
+            <li><a href="#" data-toggle="modal" data-target="#about-modal">About</a></li>
+            <li><a href="advanced_search">Advanced Search</a></li>
+            <li><a href="/validator/app" target="_blank">Model Validator</a></li>
+            <li><a href="/data_access">Data Access</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="intro-header">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12">
+
+            <div class="intro-message">
+              <h1 class="title">BiGG Models</h1>
+              <hr class="intro-divider">
+              <div style="width: 100%; text-align: center; margin-bottom: 20px">
+                <span class="lead">Search the database by model, reaction, metabolite, or gene</span>
+                {% with question_title='Searching the BiGG Models'%}
+                  {% with question_text='Enter the name of a metabolite, reaction, gene, organism, or genome-scale model into the search box. Or click the buttons below for complete lists of the components in the database.'%}
+                    {% include 'question_mark.html' %}
+                  {% endwith %}
+                {% endwith %}
+              </div>
+              <form id="search-form" action="/search" method="get">
+                <div class="input-group">
+                  <input id ="search" type="text" name="query" class="form-control" placeholder="" autofocus></input>
+                  <span class="input-group-btn">
+                    <input type="submit" value="Search" class="btn btn-default" type="button"></input>
+                  </span>
+                </div>
+              </form>
+            </div>
+            <div class="col-md-4">
+              <div class="thumbnail">
+                <a href=/models>
+                  <img src="/static/assets/models.png" alt="">
+                </a>
+                <div class="caption">
+                  <a href=/models><h3>View Models</h3></a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="thumbnail">
+                <a href="/universal/metabolites">
+                  <img src="/static/assets/metabolites.png" alt="">
+                </a>
+                <div class="caption">
+                  <a href="/universal/metabolites"><h3>View Metabolites</h3></a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="thumbnail">
+                <a href="/universal/reactions">
+                  <img src="/static/assets/reactions.png" alt="">
+                </a>
+                <div class="caption">
+                  <a href="/universal/reactions"><h3>View Reactions</h3></a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="open-source-section" class="desc-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6 col-md-push-6">
+            <div class="clearfix"></div>
+            <h2 class="section-heading">
+              BiGG Models is <a href="https://github.com/sbrg/bigg_models">open source</a>
+            </h2>
+            <p class="lead">
+              BiGG Models is open source, so you can browse the code, submit
+              issues, and contribute on GitHub.
+            </p>
+          </div>
+          <div class="col-md-6 col-md-pull-6">
+            <a href="https://github.com/sbrg/bigg_models">
+              <img id="bigg-models-github" class="img-responsive" src="/static/assets/bigg-github.png">
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div id="escher-section" class="desc-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="clearfix"></div>
+            <h2 class="section-heading">BiGG uses <a href="https://escher.github.io/">Escher</a> maps</h2>
+            <p class="lead">
+              A web-based tool for building, viewing, and sharing
+              visualizations of biological pathways
+            </p>
+          </div>
+          <div class="col-md-6">
+            <a href="https://escher.github.io/">
+              <img class="img-responsive" src="/static/assets/escher-logo.png">
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner desc-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-5">
+            <h2>Connect to BiGG Models:</h2>
+          </div>
+          <div class="col-md-7">
+            <ul class="list-inline banner-social-buttons">
+              <li>
+                <a href="https://twitter.com/ucsd_sbrg" class="btn btn-default btn-lg">
+                  <i class="fa fa-twitter"></i> <span class="network-name"> Twitter</span>
+                </a>
+              </li>
+              <li>
+                <a href="https://github.com/SBRG/bigg_models" class="btn btn-default btn-lg">
+                  <i class="fa fa-github"></i> <span class="network-name"> Github</span>
+                </a>
+              </li>
+              <li>
+                <a href="http://dx.doi.org/10.1093/nar/gkv1049" class="btn btn-default btn-lg">
+                  <i class="fa fa-info-circle"></i> <span class="network-name"> Publication</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-5">
+            <a href="http://systemsbiology.ucsd.edu/">
+              <img class="img-responsive footer-image" src="/static/assets/sbrg-logo.png">
+            </a>
+          </div>
+          <div class="col-md-2">
+            <a href="http://www.biosustain.dtu.dk/"><img class="img-responsive footer-image" src="/static/assets/cfb-logo.png"></a>
+          </div>
+          <div class="col-md-5">
+            <a href="http://www.ucsd.edu/"><img class="img-responsive footer-image" src="/static/assets/ucsd-logo.png"></a>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-12">
+            <p class="copyright text-muted small">
+              BiGG Models is hosted and maintained by the Systems Biology Research Group at the University of California, San Diego. <br/>
+              Copyright &copy; 2015 The Regents of the University of California. All Rights Reserved.
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <div class="modal fade" id="about-modal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          {% with modal=true %}
+            {% include 'about_license.html' %}
+          {% endwith %}
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <script>
+     // autocomplete code
+     $(function() {
+         $("#search").autocomplete({
+             source: function(request, response) {
+                 $.get("autocomplete", {
+                     query: request.term
+                 }, function(data) {
+                     response(data)
+                 });
+             },
+             minLength: 3,
+             select: function(event, ui) {
+                 if (event.keyCode == 13)
+                     $('#search-form').trigger('submit');
+             }
+         });
+     });
+    </script>
+  </body>
+</html>

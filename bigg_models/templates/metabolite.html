@@ -1,0 +1,91 @@
+{% extends "parent_display.html" %}
+{% block title %}BiGG Metabolite: {{bigg_id}}_{{compartment_bigg_id}} in {{model_bigg_id}}{% endblock %}
+{% block content %}
+
+  <div class="row">
+    <div class="col-lg-8">
+      <h1><span class="light">Metabolite: </span>{{bigg_id}}_{{compartment_bigg_id}}</h1>
+      <hr>
+      <h4>Descriptive name: </h4>
+      <p>{% if name is not none %}{{name}}{% endif %}</p>
+
+      <h4>Model: </h4>
+      <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
+
+      <h4>Formula:</h4>
+      <p>{{formula}}</p>
+
+      <h4>Charge:</h4>
+      <p>{{charge}}</p>
+
+      <h4>Compartment:</h4>
+      <p><a href="/compartments/{{compartment_bigg_id}}">{{compartment_bigg_id}} - {{compartment_name}}</a></p>
+
+      <h4>Reactions: </h4>
+      <div class="panel panel-default">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>BiGG ID</th>
+              <th>Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for reaction in reactions %}
+              <tr class="clickable-row" href="/models/{{model_bigg_id}}/reactions/{{reaction['bigg_id']}}">
+                <td>{{reaction['bigg_id']}}</td>
+                <td>{{reaction['name']}}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if escher_maps|count > 0 %}
+        {% include 'escher_div.html' %}
+      {% endif %}
+      
+      {% include 'comments.html' %}
+    </div>
+
+    <!-- Side bar -->
+    <div class="col-lg-4">
+      <div class="well">
+        <h4>
+          Universal metabolite
+          {% with question_title='Universal metabolite'%}
+            {% with question_text='BiGG Models has a list of universal metabolites. Visit the universal metabolite page to see all the models and compartments that contain this metabolite.'%}
+              {% include 'question_mark.html' %}
+            {% endwith %}
+          {% endwith %}
+        </h4>	
+        <ul class="list-unstyled">
+          <li>
+            <a href="/universal/metabolites/{{bigg_id}}">{{bigg_id}}</a>
+          </li>
+        </ul>
+      </div>
+      
+      {% include 'old_identifiers.html' %}
+      {% include 'database_links.html' %}
+
+      <div class="well">
+        <h4>{{bigg_id}} in other models</h4>
+        <ul class="list-unstyled">
+          {% for other in other_models_with_metabolite %}
+            <li>
+              <a href="/models/{{other['bigg_id']}}/metabolites/{{bigg_id}}_{{other['compartment_bigg_id']}}">
+                {{other['bigg_id']}} 
+              </a>
+              ({{bigg_id}}_{{other['compartment_bigg_id']}})
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    
+  </div>
+  {% if escher_maps|count > 0 %}
+    {% set escher_script_type = 'metabolite' %}
+    {% include 'escher_script.html' %}
+  {% endif %}
+{% endblock %}	

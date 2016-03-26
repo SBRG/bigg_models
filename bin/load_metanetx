@@ -1,0 +1,213 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Load synonyms from MetaNetX MNXref namespace."""
+
+from os.path import join, abspath, dirname, exists
+from os import mkdir
+import subprocess
+from collections import defaultdict
+
+from ome.base import *
+from ome.models import *
+from ome.components import *
+from ome.util import get_or_create, get_or_create_data_source
+
+
+# MetaNetX files to download
+files = {
+    'chem_xref': 'chem_xref.tsv',
+    # XREF <tab> MNX_ID <tab> Evidence <tab> Description
+    # bigg:10fthf <tab> MNXM237 <tab> inferred <tab> 10-Formyltetrahydrofolate
+
+    # 'chem_prop': 'chem_prop.tsv',
+    # MNX_ID <tab> Description <tab> Formula <tab> Charge <tab> Mass <tab> InChi <tab> SMILES <tab> Source
+
+    'comp_xref': 'comp_xref.tsv',
+    # XREF <tab> MNX_ID <tab> Description
+
+    # 'comp_prop': 'comp_prop.tsv',
+    # MNX_ID <tab> Description <tab> Source
+
+    'reac_xref': 'reac_xref.tsv',
+    # XREF <tab> MNX_ID
+    # bigg:10FTHF5GLUtl <tab> MNXR1
+
+    # 'reac_prop': 'reac_prop.tsv',
+    # MNX_ID <tab> Equation <tab> Description <tab> Balance <tab> EC <tab> Source
+}
+
+# translation table for MetaNetX databases to those already in BiGG Models
+# see https://github.com/SBRG/bigg_models_data/blob/master/data-source-prefs.txt
+db_translation = {
+    'metabolite': {
+        'biopath': 'biopath.molecule',
+        'chebi': lambda val: ('chebi', 'CHEBI:%s' % val),
+        'kegg': 'kegg.compound',
+        'metacyc': lambda val: ('biocyc', 'META:%s' % val),
+        'seed': 'seed.compound',
+        'umbbd': 'umbbd.compound',
+        'upa': 'unipathway.compound',
+    },
+    'reaction': {
+        'biopath': 'biopath.reaction',
+        'kegg': 'kegg.reaction',
+        'metacyc': lambda x: ('biocyc', 'META:%s' % x),
+        'reactome': lambda x: ('reactome', 'REACT_%s' % x),
+        # 'seed': # could not find a good url prefix for seed reactions
+        'upa': 'unipathway.reaction',
+    },
+}
+
+# directory to store the MetaNetX files
+data_dir = abspath(join(dirname(__file__), '..', 'temp_data'))
+
+# make the temp directory
+try:
+    mkdir(data_dir)
+except OSError:
+    pass
+
+
+def main():
+    # download the files from MetaNetX
+    for key, filename in files.iteritems():
+        download_file(filename)
+
+    # database session
+    session = Session()
+
+    # Update chemicals
+    update_synonyms(parse_xref('chem_xref', 'metabolite'), 'metabolite', session)
+
+    # Update reactions
+    update_synonyms(parse_xref('reac_xref', 'reaction'), 'reaction', session)
+
+    # Update compartments
+    # TODO compartment synonyms
+
+
+def add_prefix(loc):
+    """Add the MetaNetX url prefix."""
+    return 'http://metanetx.org/cgi-bin/mnxget/mnxref/%s' % loc.lstrip('/')
+
+
+def download_file(filename):
+    """Download a file to the data dir."""
+    destination = join(data_dir, filename)
+    if not exists(destination):
+        print('Downloading %s' % filename)
+        subprocess.call(['wget', '-O', destination, add_prefix(filename)])
+    else:
+        print('Already downloaded %s' % filename)
+
+
+def update_synonyms(xref_dict, ref_type, session):
+    """Use MetaNetX files to add Reaction or Metabolite synonyms."""
+
+    warned = set()
+
+    stats = { 'found': 0,
+              'not_found': 0 }
+
+    object_class = Reaction if ref_type == 'reaction' else Component
+    object_synonym_type = 'reaction' if ref_type == 'reaction' else 'component'
+
+    for bigg_id, ref_dict in xref_dict.iteritems():
+        # look for the metabolites
+        objects_db = (session
+                        .query(object_class)
+                        .filter(object_class.bigg_id == bigg_id))
+        if objects_db is None:
+            # check old IDs
+            if ref_type == 'reaction':
+                objects_db = (session
+                              .query(object_class)
+                              .join(ModelReaction)
+                              .join(OldIDSynonym, OldIDSynonym.ome_id == ModelReaction.id)
+                              .join(Synonym)
+                              .filter(Synonym.synonym == bigg_id))
+            else:
+                objects_db = (session
+                              .query(object_class)
+                              .join(CompartmentalizedComponent)
+                              .join(ModelCompartmentalizedComponent)
+                              .join(OldIDSynonym, OldIDSynonym.ome_id == ModelCompartmentalizedComponent.id)
+                              .join(Synonym)
+                              .filter(Synonym.synonym == bigg_id))
+            if objects_db.count() == 0:
+                print '%s not found in database: %s' % (ref_type, bigg_id)
+                continue
+            else:
+                print bigg_id, objects_db.first().bigg_id
+
+        if objects_db.count() > 1:
+            print 'Multiple results for %s: %s' % (ref_type, bigg_id)
+
+        for object_db in objects_db:
+            for ref, values in ref_dict.iteritems():
+                data_source_id = get_or_create_data_source(session, ref)
+
+                for val in values:
+                    # add the Synonym
+                    synonym_db, exists = get_or_create(session, Synonym,
+                                                       ome_id=object_db.id,
+                                                       type=object_synonym_type,
+                                                       data_source_id=data_source_id,
+                                                       synonym=val)
+                    if exists: stats['found'] += 1
+                    else: stats['not_found'] += 1
+
+    print 'New %s synonyms: %d' % (ref_type, stats['not_found'])
+
+
+def parse_xref(file_key, ref_type):
+    """Read an xref file and generate a dict like this:
+
+    { bigg_id: { external_db_tranlated: [values] } }
+
+    """
+
+    bigg_to_metanetx = {}
+    metanetx_to_ref = defaultdict(lambda: defaultdict(list))
+
+    def check_2(l):
+        if len(l) == 2:
+            return l
+        raise Exception('Length != 2')
+
+    # read the file
+    with open(join(data_dir, files[file_key]), 'r')  as f:
+        for line in f.readlines():
+            if line.strip().startswith('#') or line.strip() == '':
+                continue
+            split_line = [x.strip() for x in line.split('\t')]
+            try:
+                ref, val = check_2([x.strip() for x in split_line[0].split(':', 1)])
+            except Exception:
+                print line
+                continue
+            if ref == 'bigg':
+                bigg_to_metanetx[val] = split_line[1]
+            else:
+                # look for the db in the translation dict
+                trans = db_translation[ref_type].get(ref, None)
+                if trans is None:
+                    # no translation
+                    ref_tr = ref
+                elif hasattr(trans, '__call__'):
+                    # if it's a function
+                    ref_tr, val = trans(val)
+                else:
+                    # translation
+                    ref_tr = trans
+                metanetx_to_ref[split_line[1]][ref_tr].append(val)
+
+    # make the dictionary and add metanetx ref
+    mnx_ref_id = 'mnx.chemical' if ref_type == 'metabolite' else 'mnx.equation'
+    return { bigg: dict(metanetx_to_ref[mnx], **{ mnx_ref_id: [mnx] })
+             for bigg, mnx in bigg_to_metanetx.iteritems() }
+
+
+if __name__ == '__main__':
+    main()
