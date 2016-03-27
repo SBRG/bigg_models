@@ -8,6 +8,7 @@
     <!-- Bootstrap and jQuery -->
     <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css"/>
 
@@ -97,21 +98,22 @@
     </div>
 
     <script>
-     $("#search1").autocomplete({
-         source: function (request, response) {
-             $.get("/autocomplete", {
-                 query: request.term
-             }, function (data) {
-                 // assuming data is a JavaScript array such as
-                 // ["one@abc.de", "onf@abc.de","ong@abc.de"]
-                 // and not a string
-                 response(data)
-
-
-             });
-         },
-         minLength: 3
-     });
+     var bh = new Bloodhound({
+       datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+       queryTokenizer: Bloodhound.tokenizers.whitespace,
+       remote: {
+         url: '/autocomplete?query=%QUERY',
+         wildcard: '%QUERY',
+       }
+     })
+     $('#search1').typeahead(null, {
+       name: 'search1',
+       display: 'value',
+       source: bh,
+       minLength: 3,
+       highlight: true,
+       hint: true,
+     })
     </script>
 
   </body>

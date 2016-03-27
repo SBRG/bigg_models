@@ -9,6 +9,7 @@
     <!-- Scripts -->
     <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
     <script src="/static/js/question_mark.js"></script>
 
     <!-- CSS -->
@@ -220,23 +221,27 @@
     </div><!-- /.modal -->
 
     <script>
-     // autocomplete code
-     $(function() {
-         $("#search").autocomplete({
-             source: function(request, response) {
-                 $.get("autocomplete", {
-                     query: request.term
-                 }, function(data) {
-                     response(data)
-                 });
-             },
-             minLength: 3,
-             select: function(event, ui) {
-                 if (event.keyCode == 13)
-                     $('#search-form').trigger('submit');
-             }
-         });
-     });
+     var bh = new Bloodhound({
+       datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+       queryTokenizer: Bloodhound.tokenizers.whitespace,
+       remote: {
+         url: '/autocomplete?query=%QUERY',
+         wildcard: '%QUERY',
+       }
+     })
+     $('#search').typeahead(null, {
+       name: 'search',
+       display: 'value',
+       source: bh,
+       minLength: 3,
+       highlight: true,
+       hint: true,
+     }).bind('typeahead:select', function (event, suggestion) {
+       $('#search-form').trigger('submit')
+     }).keypress(function (event) {
+       if (event.keyCode == 13)
+         $('#search-form').trigger('submit')
+     })
     </script>
   </body>
 </html>
