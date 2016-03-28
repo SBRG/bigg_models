@@ -14,7 +14,7 @@
     <!-- BiGG styles and js -->
     <script src="/static/js/script.js"></script>
     <script src="/static/js/question_mark.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/css/style.css"/>
+    <link rel="stylesheet" href="/static/css/style.css"/>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/static/assets/favicon.ico">
@@ -95,24 +95,5 @@
         </div>
       </footer>
     </div>
-
-    <script>
-     $("#search1").autocomplete({
-         source: function (request, response) {
-             $.get("/autocomplete", {
-                 query: request.term
-             }, function (data) {
-                 // assuming data is a JavaScript array such as
-                 // ["one@abc.de", "onf@abc.de","ong@abc.de"]
-                 // and not a string
-                 response(data)
-
-
-             });
-         },
-         minLength: 3
-     });
-    </script>
-
   </body>
 </html>
