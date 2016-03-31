@@ -6,6 +6,8 @@
     <!-- Bootstrap and jQuery -->
     <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+    <!-- CSS -->
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
 
@@ -68,9 +70,13 @@
               </div>
               <form id="search-form" action="/search" method="get">
                 <div class="input-group">
-                  <input id ="search" type="text" name="query" class="form-control" placeholder="" autofocus></input>
+                  <input id="search" type="text" name="query" class="form-control"
+                         placeholder="" autofocus>
+                  </input>
                   <span class="input-group-btn">
-                    <input type="submit" value="Search" class="btn btn-default" type="button"></input>
+                    <input type="submit" value="Search" class="btn btn-default"
+                           type="button">
+                    </input>
                   </span>
                 </div>
               </form>
@@ -216,5 +222,7 @@
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
+
+    {% include 'typeahead.html' %}
   </body>
 </html>

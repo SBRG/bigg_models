@@ -3,14 +3,9 @@ body, html {
   width: 100%;
 }
 
-#bigg1-alert {
-  right: 20px;
-  left: 20px;
-  position: absolute;
-  top: 20px;
-  font-size: 16px;
-  padding: 8px 35px 8px 35px; 
-  z-index: 20;
+/* search */
+#search-form .twitter-typeahead {
+  text-align: left;
 }
 
 .lead {
@@ -119,7 +114,7 @@ ul.banner-social-buttons {
   ul.banner-social-buttons {
 	  float: left;
 	  margin-top: 15px;
-  }	
+  }
 }
 
 
@@ -166,5 +161,3 @@ footer {
     margin-top: 30px;
   }
 }
-
-

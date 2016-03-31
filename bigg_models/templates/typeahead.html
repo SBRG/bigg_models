@@ -1,0 +1,25 @@
+<script src="//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
+<link href="/static/css/typeahead.css" rel="stylesheet"/>
+<script>
+ var bh = new Bloodhound({
+   datumTokenizer: Bloodhound.tokenizers.whitespace,
+   queryTokenizer: Bloodhound.tokenizers.whitespace,
+   remote: {
+     url: '/autocomplete?query=%QUERY',
+     wildcard: '%QUERY',
+   },
+ })
+   $('#search').typeahead({
+     minLength: 3,
+     highlight: true,
+     hint: true,
+   }, {
+     name: 'search',
+     source: bh,
+   }).bind('typeahead:select', function (event, suggestion) {
+     $('#search-form').trigger('submit')
+   }).keypress(function (event) {
+     if (event.keyCode == 13)
+       $('#search-form').trigger('submit')
+   })
+</script>

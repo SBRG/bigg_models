@@ -60,16 +60,14 @@
             </ul>
             <ul class="nav navbar-nav navbar-right">
 
-              <form class="navbar-form" action = "/search" method="get">
+              <form id="search-form" class="navbar-form" action="/search" method="get">
                 <div class="form-group">
-                  <input id ="search1" type="text" name="query"
+                  <input id="search" type="text" name="query"
                          class="form-control" placeholder="Search Database"
                          style="width:150px;" />
                 </div>
                 <button type="submit" class="btn btn-default">Search</button>
               </form>
-
-
             </ul>
 
           </div>
@@ -95,5 +93,7 @@
         </div>
       </footer>
     </div>
+
+    {% include 'typeahead.html' %}
   </body>
 </html>
