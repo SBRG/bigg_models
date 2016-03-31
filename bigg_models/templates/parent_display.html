@@ -8,7 +8,6 @@
     <!-- Bootstrap and jQuery -->
     <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css"/>
 
@@ -61,16 +60,14 @@
             </ul>
             <ul class="nav navbar-nav navbar-right">
 
-              <form class="navbar-form" action = "/search" method="get">
+              <form id="search-form" class="navbar-form" action="/search" method="get">
                 <div class="form-group">
-                  <input id ="search1" type="text" name="query"
+                  <input id="search" type="text" name="query"
                          class="form-control" placeholder="Search Database"
                          style="width:150px;" />
                 </div>
                 <button type="submit" class="btn btn-default">Search</button>
               </form>
-
-
             </ul>
 
           </div>
@@ -97,24 +94,6 @@
       </footer>
     </div>
 
-    <script>
-     var bh = new Bloodhound({
-       datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-       queryTokenizer: Bloodhound.tokenizers.whitespace,
-       remote: {
-         url: '/autocomplete?query=%QUERY',
-         wildcard: '%QUERY',
-       }
-     })
-     $('#search1').typeahead(null, {
-       name: 'search1',
-       display: 'value',
-       source: bh,
-       minLength: 3,
-       highlight: true,
-       hint: true,
-     })
-    </script>
-
+    {% include 'typeahead.html' %}
   </body>
 </html>

@@ -9,7 +9,6 @@
     <!-- Scripts -->
     <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
     <script src="/static/js/question_mark.js"></script>
 
     <!-- CSS -->
@@ -71,9 +70,13 @@
               </div>
               <form id="search-form" action="/search" method="get">
                 <div class="input-group">
-                  <input id ="search" type="text" name="query" class="form-control" placeholder="" autofocus></input>
+                  <input id="search" type="text" name="query" class="form-control"
+                         placeholder="" autofocus>
+                  </input>
                   <span class="input-group-btn">
-                    <input type="submit" value="Search" class="btn btn-default" type="button"></input>
+                    <input type="submit" value="Search" class="btn btn-default"
+                           type="button">
+                    </input>
                   </span>
                 </div>
               </form>
@@ -220,28 +223,6 @@
       </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
 
-    <script>
-     var bh = new Bloodhound({
-       datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-       queryTokenizer: Bloodhound.tokenizers.whitespace,
-       remote: {
-         url: '/autocomplete?query=%QUERY',
-         wildcard: '%QUERY',
-       }
-     })
-     $('#search').typeahead(null, {
-       name: 'search',
-       display: 'value',
-       source: bh,
-       minLength: 3,
-       highlight: true,
-       hint: true,
-     }).bind('typeahead:select', function (event, suggestion) {
-       $('#search-form').trigger('submit')
-     }).keypress(function (event) {
-       if (event.keyCode == 13)
-         $('#search-form').trigger('submit')
-     })
-    </script>
+    {% include 'typeahead.html' %}
   </body>
 </html>
