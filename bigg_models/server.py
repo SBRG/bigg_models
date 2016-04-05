@@ -26,7 +26,8 @@ from os.path import abspath, dirname, join, isfile
 from jinja2 import Environment, PackageLoader
 import subprocess
 import mimetypes
-import json
+# use simplejson to deal with Decimal coming out of SQLAlchemy
+import simplejson as json
 
 # sbml validator
 try:
