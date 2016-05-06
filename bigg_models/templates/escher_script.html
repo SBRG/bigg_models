@@ -18,8 +18,11 @@
    })
    map_sel.selectAll('.reaction').on('click', function (d) {
      console.log('clicked ', d)
-     if (d.bigg_id)
-       window.location.href = '/models/{{model_bigg_id}}/reactions/' + d.bigg_id;
+     if (d.bigg_id) {
+       // Strip _copy1, etc
+       url = '/models/{{model_bigg_id}}/reactions/' + d.bigg_id.replace(/_copy[0-9]+$/, '')
+       window.location.href = url
+     }
    })
  }
 
