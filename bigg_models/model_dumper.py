@@ -18,7 +18,7 @@ DEBUG = False
 def autodetect_model_polisher():
     """Return the path to ModelPolisher."""
     return abspath(join(dirname(__file__), '..', 'bin',
-                        'ModelPolisher-1.2.jar'))
+                        'ModelPolisher-1.3.jar'))
 
 
 def make_all_static_models():
