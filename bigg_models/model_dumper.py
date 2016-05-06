@@ -96,7 +96,8 @@ def write_static_model(bigg_id, model_polisher_path=None):
                    '--compression-type=NONE',
                    '--check-mass-balance=true',
                    '--omit-generic-terms=false',
-                   '--log-level=INFO']
+                   '--log-level=INFO',
+                   '--include-any-uri=false']
         polish_result = call(command)
         print('Polishing finished in %.2f seconds' % (time.time() - t))
         if polish_result == 0:
