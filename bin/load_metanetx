@@ -33,7 +33,7 @@ files = {
     # XREF <tab> MNX_ID
     # bigg:10FTHF5GLUtl <tab> MNXR1
 
-    # 'reac_prop': 'reac_prop.tsv',
+    'reac_prop': 'reac_prop.tsv',
     # MNX_ID <tab> Equation <tab> Description <tab> Balance <tab> EC <tab> Source
 }
 
@@ -81,10 +81,14 @@ def main():
     update_synonyms(parse_xref('chem_xref', 'metabolite'), 'metabolite', session)
 
     # Update reactions
-    update_synonyms(parse_xref('reac_xref', 'reaction'), 'reaction', session)
+    reaction_xref = parse_xref('reac_xref', 'reaction')
+    reaction_xref = add_ec_numbers('reac_prop', reaction_xref)
+    update_synonyms(reaction_xref, 'reaction', session)
 
     # Update compartments
     # TODO compartment synonyms
+
+    session.close()
 
 
 def add_prefix(loc):
@@ -160,6 +164,37 @@ def update_synonyms(xref_dict, ref_type, session):
 
     print 'New %s synonyms: %d' % (ref_type, stats['not_found'])
 
+
+def add_ec_numbers(file_key, reaction_xref):
+    """Add EC numbers from the reaction properties file to the xref object.
+
+    """
+
+    # read the file
+    ec_numbers = {}
+    with open(join(data_dir, files[file_key]), 'r')  as f:
+        for line in f.readlines():
+            if line.strip().startswith('#') or line.strip() == '':
+                continue
+            split_line = [x.strip() for x in line.split('\t')]
+            # no ec number
+            if split_line[4].strip() == '':
+                continue
+            for ec in [x.strip() for x in split_line[4].split(';')]:
+                # ec_numbers[MNX_ID] = EC
+                ec_numbers[split_line[0]] = ec
+
+    for bigg_id, val in reaction_xref.iteritems():
+        if not 'mnx.equation' in val:
+            continue
+        for mnx_id in val['mnx.equation']:
+            if not mnx_id in ec_numbers:
+                continue
+            if not 'ec' in val:
+                val['ec'] = []
+            val['ec'].append(ec_numbers[mnx_id])
+
+    return reaction_xref
 
 def parse_xref(file_key, ref_type):
     """Read an xref file and generate a dict like this:
