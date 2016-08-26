@@ -1,7 +1,7 @@
 {% extends "parent_display.html" %}
 {% block title %}BiGG: Genomes{% endblock %}
 {% block content %}
-  <script src="/static/lib/tablesorter/jquery.tablesorter.min.js"></script> 
+  <script src="/static/lib/tablesorter/jquery.tablesorter.min.js"></script>
   <script src="/static/js/tablesorter_normal.js"></script>
   <link rel="stylesheet" href="/static/lib/tablesorter/theme.bigg.css">
   <h1>Genomes</h1>
@@ -14,11 +14,11 @@
     </thead>
     <tbody>
       {% for genome in genomes %}
-        <tr class ='rowlink'>  
+        <tr class ='rowlink'>
           <td><a href="/genomes/{{genome['genome_ref_string']}}">{{genome['name']}}</a></td>
           <td>{{genome['organism']}}</td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
-{% endblock %}	
+{% endblock %}

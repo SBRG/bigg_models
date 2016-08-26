@@ -13,7 +13,7 @@
 
       <h4>Genome: </h4>
       <p>
-        {% if genome is none %}
+        {% if genome_name is none %}
           Model is not mapped to a genome annotation.
         {% else %}
           <a href="/genomes/{{genome_ref_string}}">{{genome_name}}</a>

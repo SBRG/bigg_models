@@ -33,4 +33,4 @@ SELECT create_index('component', 'name');
 SELECT create_index('genome_region', 'bigg_id');
 SELECT create_index('gene', 'name');
 SELECT create_index('model', 'bigg_id');
-SELECT create_index('genome', 'organism');
+SELECT create_index('model', 'organism');

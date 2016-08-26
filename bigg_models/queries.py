@@ -178,7 +178,7 @@ def get_model_reactions(model_bigg_id, session, page=None, size=None,
     columns = {'bigg_id': func.lower(Reaction.bigg_id),
                'name': func.lower(Reaction.name),
                'model_bigg_id': func.lower(Model.bigg_id),
-               'organism': func.lower(Genome.organism)}
+               'organism': func.lower(Model.organism)}
 
     if sort_column is None:
         sort_column_object = None
@@ -190,10 +190,9 @@ def get_model_reactions(model_bigg_id, session, page=None, size=None,
             sort_column_object = columns.itervalues().next()
     # set up the query
     query = (session
-             .query(Reaction.bigg_id, Reaction.name, Model.bigg_id, Genome.organism)
+             .query(Reaction.bigg_id, Reaction.name, Model.bigg_id, Model.organism)
              .join(ModelReaction, ModelReaction.reaction_id == Reaction.id)
              .join(Model, Model.id == ModelReaction.model_id)
-             .outerjoin(Genome, Genome.id == Model.genome_id)
              .filter(Model.bigg_id == model_bigg_id))
 
     # order and limit
@@ -234,10 +233,9 @@ def get_reaction_and_models(reaction_bigg_id, session):
                         Reaction.name,
                         Reaction.pseudoreaction,
                         Model.bigg_id,
-                        Genome.organism)
+                        Model.organism)
                  .join(ModelReaction, ModelReaction.reaction_id == Reaction.id)
                  .join(Model, Model.id == ModelReaction.model_id)
-                 .outerjoin(Genome, Genome.id == Model.genome_id)
                  .filter(Reaction.bigg_id == reaction_bigg_id)
                  .distinct()
                  .all())
@@ -266,10 +264,9 @@ def get_reaction_and_models(reaction_bigg_id, session):
 
 def get_reactions_for_model(model_bigg_id, session):
     result_db = (session
-                 .query(Reaction.bigg_id, Reaction.name, Genome.organism)
+                 .query(Reaction.bigg_id, Reaction.name, Model.organism)
                  .join(ModelReaction, ModelReaction.reaction_id == Reaction.id)
                  .join(Model, Model.id == ModelReaction.model_id)
-                 .outerjoin(Genome, Genome.id == Model.genome_id)
                  .filter(Model.bigg_id == model_bigg_id)
                  .all())
     return [{'bigg_id': x[0], 'name': x[1], 'organism': x[2]}
@@ -464,7 +461,7 @@ def get_model_metabolites(model_bigg_id, session, page=None, size=None, sort_col
     columns = {'bigg_id': [func.lower(Metabolite.bigg_id), func.lower(Compartment.bigg_id)],
                'name': func.lower(Metabolite.name),
                'model_bigg_id': func.lower(Model.bigg_id),
-               'organism': func.lower(Genome.organism)}
+               'organism': func.lower(Model.organism)}
 
     if sort_column is None:
         sort_column_object = None
@@ -477,12 +474,11 @@ def get_model_metabolites(model_bigg_id, session, page=None, size=None, sort_col
 
     # set up the query
     query = (session
-             .query(Metabolite.bigg_id, Metabolite.name, Model.bigg_id, Genome.organism, Compartment.bigg_id)
+             .query(Metabolite.bigg_id, Metabolite.name, Model.bigg_id, Model.organism, Compartment.bigg_id)
              .join(CompartmentalizedComponent)
              .join(ModelCompartmentalizedComponent)
              .join(Model)
              .join(Compartment, Compartment.id == CompartmentalizedComponent.compartment_id)
-             .outerjoin(Genome, Genome.id == Model.genome_id)
              .filter(Model.bigg_id == model_bigg_id))
 
     # order and limit
@@ -529,7 +525,7 @@ def get_models(session, page=None, size=None, sort_column=None, sort_direction='
     """
     # get the sort column
     columns = {'bigg_id': func.lower(Model.bigg_id),
-               'organism': func.lower(Genome.organism),
+               'organism': func.lower(Model.organism),
                'metabolite_count': ModelCount.metabolite_count,
                'reaction_count': ModelCount.reaction_count,
                'gene_count': ModelCount.gene_count}
@@ -545,10 +541,9 @@ def get_models(session, page=None, size=None, sort_column=None, sort_direction='
 
     # set up the query
     query = (session
-             .query(Model.bigg_id, Genome.organism, ModelCount.metabolite_count,
+             .query(Model.bigg_id, Model.organism, ModelCount.metabolite_count,
                     ModelCount.reaction_count, ModelCount.gene_count)
-             .join(ModelCount, ModelCount.model_id == Model.id)
-             .outerjoin(Genome, Genome.id == Model.genome_id))
+             .join(ModelCount, ModelCount.model_id == Model.id))
 
     # order and limit
     query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
@@ -696,7 +691,7 @@ def get_model_genes(model_bigg_id, session, page=None, size=None,
     columns = {'bigg_id': func.lower(Gene.bigg_id),
                 'name': func.lower(Gene.name),
                 'model_bigg_id': func.lower(Model.bigg_id),
-                'organism': func.lower(Genome.organism)}
+                'organism': func.lower(Model.organism)}
 
     if sort_column is None:
         sort_column_object = None
@@ -708,10 +703,9 @@ def get_model_genes(model_bigg_id, session, page=None, size=None,
 
     # set up the query
     query = (session
-             .query(Gene.bigg_id, Gene.name, Model.bigg_id, Genome.organism)
+             .query(Gene.bigg_id, Gene.name, Model.bigg_id, Model.organism)
              .join(ModelGene)
              .join(Model)
-             .outerjoin(Genome, Genome.id == Model.genome_id)
              .filter(Model.bigg_id == model_bigg_id))
 
     # order and limit
@@ -793,13 +787,12 @@ def get_metabolite(met_bigg_id, session):
     comp_comp_db = (session
                     .query(Compartment.bigg_id,
                            Model.bigg_id,
-                           Genome.organism,
+                           Model.organism,
                            ModelCompartmentalizedComponent.formula,
                            ModelCompartmentalizedComponent.charge)
                     .join(CompartmentalizedComponent)
                     .join(ModelCompartmentalizedComponent)
                     .join(Model)
-                    .outerjoin(Genome)
                     .join(Metabolite)
                     .filter(Metabolite.bigg_id == met_bigg_id))
     formulae = list({y for y in (x[3] for x in comp_comp_db) if y is not None})
@@ -883,10 +876,9 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, s
 
 def get_gene_list_for_model(model_bigg_id, session):
     result = (session
-              .query(Gene.bigg_id, Gene.name, Genome.organism, Model.bigg_id)
+              .query(Gene.bigg_id, Gene.name, Model.organism, Model.bigg_id)
               .join(ModelGene)
               .join(Model)
-              .outerjoin(Genome, Genome.id == Model.genome_id)
               .filter(Model.bigg_id == model_bigg_id)
               )
     return [{'bigg_id': x[0], 'name': x[1], 'organism': x[2], 'model_bigg_id': x[3]}
@@ -1277,10 +1269,9 @@ def search_for_reactions(query_string, session, page=None, size=None, sort_colum
 
     # set up the query
     query = (session
-             .query(Reaction.bigg_id, Model.bigg_id, Genome.organism, Reaction.name)
+             .query(Reaction.bigg_id, Model.bigg_id, Model.organism, Reaction.name)
              .join(ModelReaction)
              .join(Model)
-             .outerjoin(Genome)
              .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
                          and_(sim_name >= name_sim_cutoff,
                               Reaction.name != ''))))
@@ -1422,7 +1413,7 @@ def search_for_metabolites(query_string, session, page=None, size=None,
     columns = {'bigg_id': [func.lower(Metabolite.bigg_id), func.lower(Compartment.bigg_id)],
                'name': func.lower(Metabolite.name),
                'model_bigg_id': func.lower(Model.bigg_id),
-               'organism': func.lower(Genome.organism)}
+               'organism': func.lower(Model.organism)}
 
     if sort_column is None:
         sort_column_object = None
@@ -1453,15 +1444,14 @@ def search_for_metabolites(query_string, session, page=None, size=None,
     # set up the query
     query = (session
              .query(Metabolite.bigg_id, Compartment.bigg_id, Model.bigg_id,
-                    Genome.organism, Metabolite.name)
+                    Model.organism, Metabolite.name)
              .join(CompartmentalizedComponent,
                    CompartmentalizedComponent.component_id == Metabolite.id)
              .join(Compartment,
                    Compartment.id == CompartmentalizedComponent.compartment_id)
              .join(ModelCompartmentalizedComponent,
                    ModelCompartmentalizedComponent.compartmentalized_component_id == CompartmentalizedComponent.id)
-             .join(Model, Model.id == ModelCompartmentalizedComponent.model_id)
-             .outerjoin(Genome))
+             .join(Model, Model.id == ModelCompartmentalizedComponent.model_id))
 
     # whether to allow fuzzy search
     if strict:
@@ -1499,10 +1489,9 @@ def search_for_genes_count(query_string, session, limit_models=None):
 
     # set up the query
     query = (session
-             .query(Gene.bigg_id, Model.bigg_id, Gene.name, sim_bigg_id, Genome.organism)
+             .query(Gene.bigg_id, Model.bigg_id, Gene.name, sim_bigg_id, Model.organism)
              .join(ModelGene)
              .join(Model)
-             .outerjoin(Genome)
              .filter(or_(sim_bigg_id >= gene_bigg_id_sim_cutoff,
                          and_(sim_name >= name_sim_cutoff,
                               Gene.name != ''))))
@@ -1551,7 +1540,7 @@ def search_for_genes(query_string, session, page=None, size=None, sort_column=No
     columns = {'bigg_id': func.lower(Gene.bigg_id),
                'name': func.lower(Gene.name),
                'model_bigg_id': func.lower(Model.bigg_id),
-               'organism': func.lower(Genome.organism)}
+               'organism': func.lower(Model.organism)}
 
     if sort_column is None:
         # sort by the greater similarity
@@ -1566,11 +1555,10 @@ def search_for_genes(query_string, session, page=None, size=None, sort_column=No
 
     # set up the query
     query = (session
-             .query(GenomeRegion.bigg_id, Gene.name, Model.bigg_id, Genome.organism)
+             .query(GenomeRegion.bigg_id, Gene.name, Model.bigg_id, Model.organism)
              .join(Gene)
              .join(ModelGene)
              .join(Model)
-             .outerjoin(Genome)
              .filter(or_(sim_bigg_id >= gene_bigg_id_sim_cutoff,
                          and_(sim_name >= name_sim_cutoff,
                               Gene.name != ''))))
@@ -1591,13 +1579,12 @@ def search_for_models_count(query_string, session):
     """Count the search results."""
     # similarity functions
     sim_bigg_id = func.similarity(Model.bigg_id, query_string)
-    sim_organism = func.similarity(Genome.organism, query_string)
+    sim_organism = func.similarity(Model.organism, query_string)
 
     # set up the query
     return (session
-            .query(Model.bigg_id, ModelCount, Genome.organism)
+            .query(Model.bigg_id, ModelCount, Model.organism)
             .join(ModelCount)
-            .outerjoin(Genome)
             .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
                         sim_organism >= organism_sim_cutoff))
             .count())
@@ -1635,11 +1622,11 @@ def search_for_models(query_string, session, page=None, size=None,
 
     # models by bigg_id
     sim_bigg_id = func.similarity(Model.bigg_id, query_string)
-    sim_organism = func.similarity(Genome.organism, query_string)
+    sim_organism = func.similarity(Model.organism, query_string)
 
     # get the sort column
     columns = {'bigg_id': func.lower(Model.bigg_id),
-               'organism': func.lower(Genome.organism),
+               'organism': func.lower(Model.organism),
                'metabolite_count': ModelCount.metabolite_count,
                'reaction_count': ModelCount.reaction_count,
                'gene_count': ModelCount.gene_count}
@@ -1657,10 +1644,9 @@ def search_for_models(query_string, session, page=None, size=None,
 
     # set up the query
     query = (session
-             .query(Model.bigg_id, Genome.organism, ModelCount.metabolite_count,
+             .query(Model.bigg_id, Model.organism, ModelCount.metabolite_count,
                     ModelCount.reaction_count, ModelCount.gene_count)
              .join(ModelCount)
-             .outerjoin(Genome)
              .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
                          sim_organism >= organism_sim_cutoff)))
 
@@ -1699,8 +1685,8 @@ def search_ids_fast(query_string, session, limit=None):
                .query(Model.bigg_id)
                .filter(Model.bigg_id.ilike(query_string + '%')))
     organism_q = (session
-                  .query(Genome.organism)
-                  .filter(Genome.organism.ilike(query_string + '%')))
+                  .query(Model.organism)
+                  .filter(Model.organism.ilike(query_string + '%')))
     query = (gene_q
              .union(gene_name_q,
                     reaction_q,
