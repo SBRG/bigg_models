@@ -71,4 +71,7 @@ Then open `docs/schema/index.html` in a web browser.
 License
 =======
 
-BiGG Models is available under the license found here: http://bigg.ucsd.edu/license
+This codebase is released under the
+[MIT license](https://github.com/SBRG/bigg_models/blob/master/LICENSE). The
+license information for the BiGG Models website hosted at SBRG and the
+associated models can be found here: http://bigg.ucsd.edu/license.
