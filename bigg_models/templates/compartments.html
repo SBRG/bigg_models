@@ -1,5 +1,6 @@
 {% extends "parent_display.html" %}
-{% block title %}BiGG: Compartments{% endblock %}
+{% block title %}BiGG Compartments{% endblock %}
+{% block description %}A list of compartments in BiGG Models{% endblock %}
 {% block content %}
   <script src="/static/lib/tablesorter/jquery.tablesorter.min.js"></script>
   <script src="/static/js/tablesorter_normal.js"></script>
@@ -14,7 +15,7 @@
     </thead>
     <tbody>
       {% for compartment in compartments %}
-        <tr class ='rowlink'>  
+        <tr class ='rowlink'>
           <td><a href="/compartments/{{compartment['bigg_id']}}">{{compartment['bigg_id']}}</a></td>
           <td><a href="/compartments/{{compartment['bigg_id']}}">{{compartment['name']}}</a></td>
         </tr>

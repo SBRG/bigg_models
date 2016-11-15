@@ -1,5 +1,6 @@
 {% extends "parent_display.html" %}
-{% block title %}BiGG Reaction: {{bigg_id}} in {{model_bigg_id}}{% endblock %}
+{% block title %}BiGG Reaction {{bigg_id}} in {{model_bigg_id}}{% endblock %}
+{% block description %}Reaction {{bigg_id}} in {{model_bigg_id}}. {{name}}.{% endblock %}
 {% block content %}
   <div class="row">
     <div class="col-lg-8">

@@ -1,5 +1,6 @@
 {% extends "parent_display.html" %}
 {% block title %}BiGG Reaction: {{bigg_id}}{% endblock %}
+{% block description %}Universal BiGG reaction {{bigg_id}}. {{name}}.{% endblock %}
 {% block content %}
   <div class="row">
 
@@ -12,7 +13,7 @@
 
       <hr/>
 
-      <h4>Descriptive name:</h4> 
+      <h4>Descriptive name:</h4>
       <p>{% if name is not none %}{{name}}{% endif %}</p>
 
       <h4>Reaction:</h4>
@@ -42,7 +43,7 @@
         </table>
       </div>
       <br/>
-      
+
       <h4><i>{{bigg_id}}</i> in BiGG models:</h4>
       <div class="panel panel-default">
         <table class="table table-hover">
@@ -66,12 +67,12 @@
       {% include 'comments.html' %}
 
     </div>
-    
+
     <!-- Side bar -->
     <div class="col-lg-4">
       {% include 'old_identifiers.html' %}
       {% include 'database_links.html' %}
-    </div>    
+    </div>
 
   </div>
-{% endblock %}	
+{% endblock %}

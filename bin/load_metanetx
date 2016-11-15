@@ -3,16 +3,16 @@
 
 """Load synonyms from MetaNetX MNXref namespace."""
 
-from os.path import join, abspath, dirname, exists
-from os import mkdir
-import subprocess
-from collections import defaultdict
-
 from ome.base import *
 from ome.models import *
 from ome.components import *
 from ome.util import get_or_create, get_or_create_data_source
 
+from sqlalchemy import exists
+from os.path import join, abspath, dirname, exists
+from os import mkdir
+import subprocess
+from collections import defaultdict
 
 # MetaNetX files to download
 files = {
@@ -87,6 +87,8 @@ def main():
 
     # Update compartments
     # TODO compartment synonyms
+
+    print_missing_metabolite_refs(session)
 
     session.close()
 
@@ -243,6 +245,29 @@ def parse_xref(file_key, ref_type):
     return { bigg: dict(metanetx_to_ref[mnx], **{ mnx_ref_id: [mnx] })
              for bigg, mnx in bigg_to_metanetx.iteritems() }
 
+def print_missing_metabolite_refs(session):
+    """Print any metabolites with no external database ID, by model."""
+    print('Looking for metabolites with no linkout')
+    mets_with_source_db = (session
+                           .query(Component.id)
+                           .join(Synonym, Synonym.ome_id == Component.id)
+                           .join(DataSource, DataSource.id == Synonym.data_source_id)
+                           .filter(DataSource.url_prefix is not None)
+                           .filter(DataSource.name != 'mnx.chemical'))
+    mets_no_source_db = (session
+                         .query(Model.bigg_id, Component.bigg_id)
+                         .join(ModelCompartmentalizedComponent, ModelCompartmentalizedComponent.model_id == Model.id)
+                         .join(CompartmentalizedComponent, CompartmentalizedComponent.id == ModelCompartmentalizedComponent.compartmentalized_component_id)
+                         .join(Component, Component.id == CompartmentalizedComponent.component_id)
+                         .filter(~Component.id.in_(mets_with_source_db))
+                         .order_by(Model.bigg_id))
+    by_model = defaultdict(list)
+    for model_bigg_id, met_bigg_id in mets_no_source_db:
+        by_model[model_bigg_id].append(met_bigg_id)
+    for model_bigg_id, l in by_model.iteritems():
+        print('Warning: Metabolites with no linkout in model %s' % model_bigg_id)
+        print(', '.join(l))
+    print('Finished')
 
 if __name__ == '__main__':
     main()

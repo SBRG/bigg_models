@@ -1,5 +1,6 @@
 {% extends "parent_display.html" %}
-{% block title %}BiGG Metabolite: {{bigg_id}}_{{compartment_bigg_id}} in {{model_bigg_id}}{% endblock %}
+{% block title %}BiGG Metabolite {{bigg_id}}_{{compartment_bigg_id}} in {{model_bigg_id}}{% endblock %}
+{% block description %}Metabolite {{bigg_id}}_{{compartment_bigg_id}} in {{model_bigg_id}}. {{name}}.{% endblock %}
 {% block content %}
 
   <div class="row">
@@ -43,7 +44,7 @@
       {% if escher_maps|count > 0 %}
         {% include 'escher_div.html' %}
       {% endif %}
-      
+
       {% include 'comments.html' %}
     </div>
 
@@ -57,14 +58,14 @@
               {% include 'question_mark.html' %}
             {% endwith %}
           {% endwith %}
-        </h4>	
+        </h4>
         <ul class="list-unstyled">
           <li>
             <a href="/universal/metabolites/{{bigg_id}}">{{bigg_id}}</a>
           </li>
         </ul>
       </div>
-      
+
       {% include 'old_identifiers.html' %}
       {% include 'database_links.html' %}
 
@@ -74,7 +75,7 @@
           {% for other in other_models_with_metabolite %}
             <li>
               <a href="/models/{{other['bigg_id']}}/metabolites/{{bigg_id}}_{{other['compartment_bigg_id']}}">
-                {{other['bigg_id']}} 
+                {{other['bigg_id']}}
               </a>
               ({{bigg_id}}_{{other['compartment_bigg_id']}})
             </li>
@@ -82,10 +83,10 @@
         </ul>
       </div>
     </div>
-    
+
   </div>
   {% if escher_maps|count > 0 %}
     {% set escher_script_type = 'metabolite' %}
     {% include 'escher_script.html' %}
   {% endif %}
-{% endblock %}	
+{% endblock %}

@@ -1,5 +1,6 @@
 {% extends "parent_display.html" %}
-{% block title %}BiGG Gene: {{bigg_id}}{% endblock %}
+{% block title %}BiGG Gene {{bigg_id}}{% endblock %}
+{% block description %}Gene {{bigg_id}} ({{name}}) in {{model_bigg_id}}.{% endblock %}
 {% block content %}
   <div class="row">
     <div class="col-lg-8">
@@ -9,10 +10,10 @@
 
       <h4>Descriptive name: </h4>
       <p>{% if name is not none %}{{name}}{% endif %}</p>
-      
+
       <h4>Model: </h4>
       <p><a href="/models/{{model_bigg_id}}">{{model_bigg_id}}</a></p>
-      
+
       {% if mapped_to_genbank %}
         <h4>Position: </h4>
         <p>Left: {{leftpos}} – Right: {{rightpos}}</p>
@@ -48,9 +49,9 @@
           </tbody>
         </table>
       </div>
-      
+
       {% include 'comments.html' %}
-      
+
     </div>
 
     <!-- Side bar -->
@@ -58,4 +59,4 @@
       {% include 'old_identifiers.html' %}
       {% include 'database_links.html' %}
     </div>
-{% endblock %}	
+{% endblock %}

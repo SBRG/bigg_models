@@ -3,8 +3,6 @@
   <head>
     <title>{% block title %}BiGG Models{% endblock %}</title>
 
-    <title>BiGG Models</title>
-
     <!-- Bootstrap and jQuery -->
     <script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
@@ -22,6 +20,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <meta name="google" content="notranslate">
+    <meta name="description" content="{% block description %}{% endblock %}">
     <meta http-equiv="Content-Language" content="en">
 
     {% include 'analytics.html' %}
