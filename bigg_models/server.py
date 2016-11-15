@@ -264,7 +264,6 @@ class BaseHandler(RequestHandler):
 
         """
         if self.request.uri.startswith("/api"):
-
             self.write(result)
         else:
             self.write(self.template.render(result))
@@ -445,8 +444,8 @@ class CompartmentListHandler(BaseHandler):
 
     def get(self):
         session = Session()
-        results = [{'bigg_id': x[0], 'name': x[1]}
-                   for x in session.query(Compartment.bigg_id, Compartment.name)]
+        results = {'compartments': [{'bigg_id': x[0], 'name': x[1]}
+                   for x in session.query(Compartment.bigg_id, Compartment.name)]}
         session.close()
         self.return_result(results)
 
