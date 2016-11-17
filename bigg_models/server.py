@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from bigg_models import queries, __api_version__ as api_v
 from bigg_models.queries import NotFoundError
@@ -11,15 +12,12 @@ from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
 from ome.base import Session
 from ome.loading.parse import split_compartment, hash_metabolite_dictionary
 
-import tornado.ioloop
-import tornado.web
-import tornado.httpserver
-from tornado.options import define, options
+from tornado.ioloop import IOLoop
+from tornado.httpserver import HTTPServer
+from tornado.options import define, options, parse_command_line
 from tornado.escape import url_escape
-from tornado.web import (StaticFileHandler, RequestHandler, RedirectHandler,
-                         asynchronous, HTTPError)
-from tornado.httpclient import AsyncHTTPClient
-from tornado import gen
+from tornado.web import (Application, StaticFileHandler, RequestHandler,
+                         RedirectHandler, asynchronous, HTTPError)
 
 import os
 from os.path import abspath, dirname, join, isfile
@@ -38,21 +36,12 @@ except ImportError:
 else:
     HAS_SBML_VALIDATOR = True
 
-
-# sbml validator
-try:
-    import cobra_sbml_validator
-except ImportError:
-    print('COBRA SBML Validator not installed')
-    HAS_SBML_VALIDATOR = False
-else:
-    HAS_SBML_VALIDATOR = True
-
-
 # command line options
-define("port", default= 8888, help="run on given port", type=int)
-define("password", default= "", help="password to email", type=str)
+define('port', default= 8888, help='run on given port', type=int)
+define('public', default=True, help='run on all addresses')
+define('password', default= '', help='password to email', type=str)
 define('debug', default=False, help='Start server in debug mode')
+define('processes', default=1, help='number of subprocesses to spawn', type=int)
 
 # set up jinja2 template location
 env = Environment(loader=PackageLoader('bigg_models', 'templates'),
@@ -60,16 +49,10 @@ env = Environment(loader=PackageLoader('bigg_models', 'templates'),
 
 # root directory
 directory = abspath(dirname(__file__))
-static_model_dir = join(directory, "static", "models")
+static_model_dir = join(directory, 'static', 'models')
 
 # host
 api_host = 'bigg.ucsd.edu'
-
-# content types
-
-
-# make a tutorial on how to make a api request using curl
-# http://www.restapitutorial.com/
 
 # -------------------------------------------------------------------------------
 # Application API
@@ -84,39 +67,32 @@ def get_application(debug=False):
         (r'/api/%s/(?:models/)?universal/reactions/?$' % api_v, UniversalReactionListHandler),
         (r'/(?:models/)?universal/reactions/?$', UniversalReactionListDisplayHandler),
         #
-        (r'/api/%s/(?:models/)?universal/reactions/([^/]+)/?$' % api_v, UniversalReactionHandler),
-        (r'/(?:models/)?universal/reactions/([^/]+)/?$', UniversalReactionHandler),
+        (r'/(?:api/%s/)?(?:models/)?universal/reactions/([^/]+)/?$' % api_v, UniversalReactionHandler),
         #
         (r'/api/%s/(?:models/)?universal/metabolites/?$' % api_v, UniversalMetaboliteListHandler),
         (r'/(?:models/)?universal/metabolites/?$', UniversalMetaboliteListDisplayHandler),
         #
-        (r'/api/%s/(?:models/)?universal/metabolites/([^/]+)/?$' % api_v, UniversalMetaboliteHandler),
-        (r'/(?:models/)?universal/metabolites/([^/]+)/?$', UniversalMetaboliteHandler),
+        (r'/(?:api/%s/)?(?:models/)?universal/metabolites/([^/]+)/?$' % api_v, UniversalMetaboliteHandler),
         #
-        (r'/api/%s/compartments/?$' % api_v, CompartmentListHandler),
-        (r'/compartments/?$', CompartmentListHandler),
+        (r'/(?:api/%s/)?compartments/?$' % api_v, CompartmentListHandler),
         #
-        (r'/api/%s/compartments/([^/]+)/?$' % api_v, CompartmentHandler),
-        (r'/compartments/([^/]+)/?$', CompartmentHandler),
+        (r'/(?:api/%s/)?compartments/([^/]+)/?$' % api_v, CompartmentHandler),
         #
         (r'/api/%s/genomes/?$' % api_v, GenomeListHandler),
         (r'/genomes/?$', GenomeListDisplayHandler),
         #
-        (r'/api/%s/genomes/([^/]+)/?$' % api_v, GenomeHandler),
-        (r'/genomes/([^/]+)/?$', GenomeHandler),
+        (r'/(?:api/%s/)?genomes/([^/]+)/?$' % api_v, GenomeHandler),
         #
         # By model
         #
         (r'/api/%s/models/?$' % api_v, ModelListHandler),
         (r'/models/?$', ModelsListDisplayHandler),
         #
-        (r'/api/%s/models/([^/]+)/?$' % api_v, ModelHandler),
-        (r'/models/([^/]+)/?$', ModelHandler),
+        (r'/(?:api/%s/)?models/([^/]+)/?$' % api_v, ModelHandler),
         #
         (r'/(?:api/%s/)?models/([^/]+)/download/?$' % api_v, ModelDownloadHandler),
         #
-        (r'/api/%s/models/([^/]+)/reactions/([^/]+)/?$' % api_v, ReactionHandler),
-        (r'/models/([^/]+)/reactions/([^/]+)/?$', ReactionDisplayHandler),
+        (r'/(?:api/%s/)?models/([^/]+)/reactions/([^/]+)/?$' % api_v, ReactionHandler),
         #
         (r'/api/%s/models/([^/]+)/reactions/?$' % api_v, ReactionListHandler),
         (r'/models/([^/]+)/reactions/?$', ReactionListDisplayHandler),
@@ -124,11 +100,9 @@ def get_application(debug=False):
         (r'/api/%s/models/([^/]+)/metabolites/?$' % api_v, MetaboliteListHandler),
         (r'/models/([^/]+)/metabolites/?$', MetabolitesListDisplayHandler),
         #
-        (r'/api/%s/models/([^/]+)/metabolites/([^/]+)/?$' % api_v, MetaboliteHandler),
-        (r'/models/([^/]+)/metabolites/([^/]+)/?$', MetaboliteHandler),
+        (r'/(?:api/%s/)?models/([^/]+)/metabolites/([^/]+)/?$' % api_v, MetaboliteHandler),
         #
-        (r'/api/%s/models/([^/]+)/genes/([^/]+)/?$' % api_v, GeneHandler),
-        (r'/models/([^/]+)/genes/([^/]+)/?$', GeneHandler),
+        (r'/(?:api/%s/)?models/([^/]+)/genes/([^/]+)/?$' % api_v, GeneHandler),
         #
         (r'/api/%s/models/([^/]+)/genes/?$' % api_v, GeneListHandler),
         (r'/models/([^/]+)/genes/?$', GeneListDisplayHandler),
@@ -169,27 +143,29 @@ def get_application(debug=False):
             (r'/validator/upload$', cobra_sbml_validator.Upload)
         ]
 
-    return tornado.web.Application(routes, debug=debug)
+    return Application(routes, debug=debug)
 
-
-def run(public=True):
+def run():
     """Run the server"""
-
-    tornado.options.parse_command_line()
-    debug = options.debug
-    http_server = tornado.httpserver.HTTPServer(get_application(debug=debug))
-    print('serving BiGG Models on port %d' % options.port)
-    http_server.listen(options.port, None if public else "localhost")
+    parse_command_line()
+    server = HTTPServer(get_application(debug=options.debug))
+    server.bind(options.port, None if options.public else 'localhost')
+    if options.debug:
+        print('Serving BiGG Models on port %d in debug mode' % options.port)
+        if options.processes > 1:
+            print('Multiple processes not supported in debug mode')
+        server.start()
+    else:
+        print('Serving BiGG Models on port %d with %d processes' % (options.port, options.processes))
+        server.start(options.processes)
     try:
-        tornado.ioloop.IOLoop.instance().start()
+        IOLoop.current().start()
     except KeyboardInterrupt:
-        print("bye!")
-
+        stop()
 
 def stop():
     """Stop the server"""
-    tornado.ioloop.IOLoop.instance().stop()
-
+    IOLoop.current().stop()
 
 # -------------------------------------------------------------------------------
 # Handlers
@@ -201,13 +177,11 @@ def _possibly_compartmentalized_met_id(obj):
     else:
         return '{bigg_id}_{compartment_bigg_id}'.format(**obj)
 
-
 def _parse_col_arg(s):
     try:
         return s.split(',')
     except AttributeError:
         return None
-
 
 def _get_col_name(query_arguments, columns, default_column=None,
                   default_direction='ascending'):
@@ -220,7 +194,6 @@ def _get_col_name(query_arguments, columns, default_column=None,
             sort_col_index = int(split[1])
             return columns[sort_col_index], sort_direction
     return default_column, default_direction
-
 
 def safe_query(func, *args, **kwargs):
     """Run the given function, and raise a 404 if it fails.
@@ -242,7 +215,6 @@ def safe_query(func, *args, **kwargs):
     finally:
         session.close()
 
-
 class BaseHandler(RequestHandler):
     def write(self, value):
         # note that serving a json list is a security risk
@@ -254,7 +226,7 @@ class BaseHandler(RequestHandler):
         else:
             RequestHandler.write(self, value)
 
-    def return_result(self, result):
+    def return_result(self, result=None):
         """Returns result as either rendered HTML or JSON
 
         This is suitable for cases where the template takes exactly the same
@@ -264,11 +236,19 @@ class BaseHandler(RequestHandler):
 
         """
         if self.request.uri.startswith("/api"):
-            self.write(result)
+            if result:
+                self.write(result)
+            else:
+                self.write()
         else:
-            self.write(self.template.render(result))
+            if result:
+                self.write(self.template.render(result))
+            else:
+                self.write(self.template.render())
         self.finish()
 
+    def get(self):
+        self.return_result()
 
 class PageableHandler(BaseHandler):
     """HTTP requests can pass in arguments for page, size, columns, and the
@@ -317,13 +297,8 @@ class PageableHandler(BaseHandler):
 
         return query_kwargs
 
-
 class MainHandler(BaseHandler):
-    def get(self):
-        template = env.get_template('index.html')
-        self.write(template.render())
-        self.finish()
-
+    template = env.get_template('index.html')
 
 # reactions
 class UniversalReactionListHandler(PageableHandler):
@@ -342,15 +317,14 @@ class UniversalReactionListHandler(PageableHandler):
         self.write(result)
         self.finish()
 
-
 class UniversalReactionListDisplayHandler(BaseHandler):
+    template = env.get_template('list_display.html')
+
     def get(self):
-        template = env.get_template('list_display.html')
         dictionary = {'results': {'reactions': 'ajax'},
                       'hide_organism': True}
-        self.write(template.render(dictionary))
+        self.write(self.template.render(dictionary))
         self.finish()
-
 
 class UniversalReactionHandler(BaseHandler):
     template = env.get_template('universal_reaction.html')
@@ -358,7 +332,6 @@ class UniversalReactionHandler(BaseHandler):
     def get(self, reaction_bigg_id):
         result = safe_query(queries.get_reaction_and_models, reaction_bigg_id)
         self.return_result(result)
-
 
 class UniversalMetaboliteListHandler(PageableHandler):
     def get(self):
@@ -368,7 +341,7 @@ class UniversalMetaboliteListHandler(PageableHandler):
         raw_results = safe_query(queries.get_universal_metabolites, **kwargs)
 
         # add links and universal
-        if "include_link_urls" in self.request.query_arguments:
+        if 'include_link_urls' in self.request.query_arguments:
             raw_results = [dict(x, link_urls={'bigg_id': '/universal/metabolites/{bigg_id}'.format(**x)})
                            for x in raw_results]
         result = {'results': [dict(x, model_bigg_id='Universal') for x in raw_results],
@@ -377,23 +350,20 @@ class UniversalMetaboliteListHandler(PageableHandler):
         self.write(result)
         self.finish()
 
-
 class UniversalMetaboliteListDisplayHandler(BaseHandler):
+    template = env.get_template('list_display.html')
+
     def get(self):
-        template = env.get_template("list_display.html")
-        template_data = {'results': {'metabolites': 'ajax'},
-                         'hide_organism': True}
-        self.write(template.render(template_data))
+        data = {'results': {'metabolites': 'ajax'}, 'hide_organism': True}
+        self.write(self.template.render(data))
         self.finish()
 
-
 class UniversalMetaboliteHandler(BaseHandler):
-    template = env.get_template("universal_metabolite.html")
+    template = env.get_template('universal_metabolite.html')
 
     def get(self, met_bigg_id):
         results = safe_query(queries.get_metabolite, met_bigg_id)
         self.return_result(results)
-
 
 class ReactionListHandler(PageableHandler):
     def get(self, model_bigg_id):
@@ -412,35 +382,24 @@ class ReactionListHandler(PageableHandler):
         self.write(result)
         self.finish()
 
-
 class ReactionListDisplayHandler(BaseHandler):
-    def get(self, model_bigg_id):
-        template = env.get_template("list_display.html")
-        template_data = {'results': {'reactions': 'ajax'}}
-        self.write(template.render(template_data))
-        self.finish()
+    template = env.get_template('list_display.html')
 
+    def get(self, model_bigg_id):
+        results = {'results': {'reactions': 'ajax'}}
+        self.return_result(results)
 
 class ReactionHandler(BaseHandler):
+    template = env.get_template('reaction.html')
+
     def get(self, model_bigg_id, reaction_bigg_id):
         results = safe_query(queries.get_model_reaction,
                              model_bigg_id, reaction_bigg_id)
-        self.write(results)
-        self.finish()
-
-
-class ReactionDisplayHandler(BaseHandler):
-    def get(self, model_bigg_id, reaction_bigg_id):
-        template = env.get_template("reaction.html")
-        data = safe_query(queries.get_model_reaction,
-                          model_bigg_id, reaction_bigg_id)
-        self.write(template.render(data))
-        self.finish()
-
+        self.return_result(results)
 
 # Compartments
 class CompartmentListHandler(BaseHandler):
-    template = env.get_template("compartments.html")
+    template = env.get_template('compartments.html')
 
     def get(self):
         session = Session()
@@ -449,9 +408,8 @@ class CompartmentListHandler(BaseHandler):
         session.close()
         self.return_result(results)
 
-
 class CompartmentHandler(BaseHandler):
-    template = env.get_template("compartment.html")
+    template = env.get_template('compartment.html')
 
     def get(self, compartment_bigg_id):
         session = Session()
@@ -464,7 +422,6 @@ class CompartmentHandler(BaseHandler):
         result = {'bigg_id': result_db.bigg_id, 'name': result_db.name}
         self.return_result(result)
 
-
 # Genomes
 class GenomeListHandler(BaseHandler):
     def get(self):
@@ -472,27 +429,25 @@ class GenomeListHandler(BaseHandler):
         self.write(results)
         self.finish()
 
-
 class GenomeListDisplayHandler(BaseHandler):
+    template = env.get_template('genomes.html')
+
     def get(self):
-        template = env.get_template("genomes.html")
         results = safe_query(queries.get_genome_list)
-        self.write(template.render({'genomes': results}))
+        self.write(self.template.render({'genomes': results}))
         self.finish()
 
-
 class GenomeHandler(BaseHandler):
-    template = env.get_template("genome.html")
+    template = env.get_template('genome.html')
 
     def get(self, genome_ref_string):
         result = safe_query(queries.get_genome_and_models, genome_ref_string)
         self.return_result(result)
 
-
 # Models
 class ModelListHandler(PageableHandler):
     def get(self):
-        kwargs = self._get_pager_args(default_sort_column="bigg_id")
+        kwargs = self._get_pager_args(default_sort_column='bigg_id')
 
         # run the queries
         raw_results = safe_query(queries.get_models, **kwargs)
@@ -508,14 +463,13 @@ class ModelListHandler(PageableHandler):
         self.write(result)
         self.finish()
 
-
 class ModelsListDisplayHandler(BaseHandler):
-    def get(self):
-        template = env.get_template('list_display.html')
-        template_data = {'results': {'models': 'ajax'}}
-        self.write(template.render(template_data))
-        self.finish()
+    template = env.get_template('list_display.html')
 
+    def get(self):
+        template_data = {'results': {'models': 'ajax'}}
+        self.write(self.template.render(template_data))
+        self.finish()
 
 class ModelDownloadHandler(BaseHandler):
     def get(self, model_bigg_id):
@@ -525,15 +479,13 @@ class ModelDownloadHandler(BaseHandler):
         self.set_header('Content-type', 'application/json; charset=utf-8')
         self.finish()
 
-
 class ModelHandler(BaseHandler):
-    template = env.get_template("model.html")
+    template = env.get_template('model.html')
 
     def get(self, model_bigg_id):
         result = safe_query(queries.get_model_and_counts, model_bigg_id,
                             static_model_dir=static_model_dir)
         self.return_result(result)
-
 
 class MetaboliteListHandler(PageableHandler):
     def get(self, model_bigg_id):
@@ -552,35 +504,22 @@ class MetaboliteListHandler(PageableHandler):
         self.write(result)
         self.finish()
 
-
 class MetabolitesListDisplayHandler(BaseHandler):
-    @asynchronous
-    @gen.coroutine
+    template = env.get_template('list_display.html')
+
     def get(self, model_bigg_id):
-        template = env.get_template("list_display.html")
-        http_client = AsyncHTTPClient()
-        url_request = 'http://localhost:%d/api/%s/models/%s/metabolites' % \
-                      (options.port, api_v, url_escape(model_bigg_id, plus=False))
-        request = tornado.httpclient.HTTPRequest(url=url_request,
-                                                 connect_timeout=20.0,
-                                                 request_timeout=20.0)
-        response = yield gen.Task(http_client.fetch, request)
-        if response.error:
-            raise HTTPError(404)
-        dictionary = {"results": {"metabolites": json.loads(response.body)}}
-        self.write(template.render(dictionary))
+        data = {'results': {'metabolites': 'ajax'}}
+        self.write(self.template.render(data))
         self.finish()
 
-
 class MetaboliteHandler(BaseHandler):
-    template = env.get_template("metabolite.html")
+    template = env.get_template('metabolite.html')
 
     def get(self, model_bigg_id, comp_met_id):
         met_bigg_id, compartment_bigg_id = split_compartment(comp_met_id)
         results = safe_query(queries.get_model_comp_metabolite,
                              met_bigg_id, compartment_bigg_id, model_bigg_id)
         self.return_result(results)
-
 
 class GeneListHandler(PageableHandler):
     def get(self, model_bigg_id):
@@ -598,33 +537,30 @@ class GeneListHandler(PageableHandler):
         self.write(result)
         self.finish()
 
-
 class GeneListDisplayHandler(BaseHandler):
-    def get(self, model_bigg_id):
-        template = env.get_template("list_display.html")
-        template_data = {'results': {'genes': 'ajax'}}
+    template = env.get_template('list_display.html')
 
-        self.write(template.render(template_data))
+    def get(self, model_bigg_id):
+        data = {'results': {'genes': 'ajax'}}
+        self.write(self.template.render(data))
         self.finish()
 
-
 class GeneHandler(BaseHandler):
-    template = env.get_template("gene.html")
+    template = env.get_template('gene.html')
 
     def get(self, model_bigg_id, gene_bigg_id):
         result = safe_query(queries.get_model_gene,
                             gene_bigg_id, model_bigg_id)
         self.return_result(result)
 
-
 class SearchHandler(BaseHandler):
     def get(self):
         # get arguments
-        query_string = self.get_argument("query")
+        query_string = self.get_argument('query')
         page = self.get_argument('page', None)
         size = self.get_argument('size', None)
         search_type = self.get_argument('search_type', None)
-        include_link_urls = "include_link_urls" in self.request.query_arguments
+        include_link_urls = 'include_link_urls' in self.request.query_arguments
 
         # defaults
         sort_column = None
@@ -692,7 +628,6 @@ class SearchHandler(BaseHandler):
         self.write(result)
         self.finish()
 
-
 class ReactionWithStoichHandler(BaseHandler):
     def get(self):
         metabolite_dict = {k: float(v[0]) for k, v in
@@ -709,31 +644,32 @@ class ReactionWithStoichHandler(BaseHandler):
         self.write(results)
         self.finish()
 
-
 class SearchDisplayHandler(BaseHandler):
+    template = env.get_template('list_display.html')
+
     def get(self):
-        template = env.get_template("list_display.html")
-        template_data = {'results': {'models': 'ajax',
-                                     'reactions': 'ajax',
-                                     'metabolites': 'ajax',
-                                     'genes': 'ajax'},
-                         'tablesorter_size': 20}
-        self.write(template.render(template_data))
+        data = {'results': {'models': 'ajax',
+                            'reactions': 'ajax',
+                            'metabolites': 'ajax',
+                            'genes': 'ajax'},
+                'tablesorter_size': 20}
+        self.write(self.template.render(data))
         self.finish()
 
-
 class AdvancedSearchHandler(BaseHandler):
+    template = env.get_template('advanced_search.html')
+
     def get(self):
-        template = env.get_template('advanced_search.html')
         model_list = safe_query(queries.get_model_list)
         database_sources = safe_query(queries.get_database_sources)
 
-        self.write(template.render({'models': model_list,
+        self.write(self.template.render({'models': model_list,
                                     'database_sources': database_sources}))
         self.finish()
 
-
 class AdvancedSearchExternalIDHandler(BaseHandler):
+    template = env.get_template('list_display.html')
+
     def post(self):
         query_string = self.get_argument('query', '')
         database_source = self.get_argument('database_source', '')
@@ -754,12 +690,12 @@ class AdvancedSearchExternalIDHandler(BaseHandler):
                       'no_pager': True,
                       'hide_organism': True}
 
-        template = env.get_template("list_display.html")
-        self.write(template.render(dictionary))
+        self.write(self.template.render(dictionary))
         self.finish()
 
-
 class AdvancedSearchResultsHandler(BaseHandler):
+    template = env.get_template('list_display.html')
+
     def post(self):
         query_strings = [x.strip() for x in
                          self.get_argument('query', '').split(',')
@@ -768,7 +704,6 @@ class AdvancedSearchResultsHandler(BaseHandler):
         session = Session()
         def checkbox_arg(name):
             return self.get_argument(name, None) == 'on'
-
 
         all_models = queries.get_model_list(session)
         model_list = [m for m in all_models if checkbox_arg(m)]
@@ -796,20 +731,15 @@ class AdvancedSearchResultsHandler(BaseHandler):
                   'no_pager': True}
 
         session.close()
-        template = env.get_template("list_display.html")
-        self.write(template.render(result))
+        self.write(self.template.render(result))
         self.finish()
-
 
 class AutocompleteHandler(BaseHandler):
     def get(self):
-        query_string = self.get_argument("query")
-
-        # get the session
+        query_string = self.get_argument('query')
         result_array = safe_query(queries.search_ids_fast, query_string, limit=15)
         self.write(result_array)
         self.finish()
-
 
 class EscherMapJSONHandler(BaseHandler):
     def get(self, map_name):
@@ -820,27 +750,20 @@ class EscherMapJSONHandler(BaseHandler):
         self.set_header('Content-type', 'application/json; charset=utf-8')
         self.finish()
 
-
 class WebAPIHandler(BaseHandler):
-    def get(self):
-        template = env.get_template('data_access.html')
-        self.write(template.render(api_v=api_v, api_host=api_host))
-        self.finish()
+    template = env.get_template('data_access.html')
 
+    def get(self):
+        self.write(self.template.render(api_v=api_v, api_host=api_host))
+        self.finish()
 
 class LicenseHandler(BaseHandler):
-    def get(self):
-        template = env.get_template('about_license_page.html')
-        self.write(template.render())
-        self.finish()
-
+    template = env.get_template('about_license_page.html')
 
 class APIVersionHandler(BaseHandler):
     def get(self):
         result = safe_query(queries.database_version)
-        self.write(result)
-        self.finish()
-
+        self.return_result(result)
 
 # static files
 class StaticFileHandlerWithEncoding(StaticFileHandler):
@@ -881,7 +804,6 @@ class StaticFileHandlerWithEncoding(StaticFileHandler):
         # if mime_type not detected, use application/octet-stream
         else:
             return 'application/octet-stream'
-
 
 if __name__ == '__main__':
     run()
