@@ -56,13 +56,12 @@
       <div class="container">
         <div class="row">
           <div class="col-lg-12">
-
             <div class="intro-message">
               <h1 class="title">BiGG Models</h1>
               <hr class="intro-divider">
               <div style="width: 100%; text-align: center; margin-bottom: 20px">
                 <span class="lead">Search the database by model, reaction, metabolite, or gene</span>
-                {% with question_title='Searching the BiGG Models'%}
+                {% with question_title='Searching BiGG Models'%}
                   {% with question_text='Enter the name of a metabolite, reaction, gene, organism, or genome-scale model into the search box. Or click the buttons below for complete lists of the components in the database.'%}
                     {% include 'question_mark.html' %}
                   {% endwith %}
@@ -76,11 +75,22 @@
                   <span class="input-group-btn">
                     <input type="submit" value="Search" class="btn btn-default"
                            type="button">
-                    </input>
+                  </input>
                   </span>
                 </div>
               </form>
             </div>
+          </div>
+          <div class="row" style="margin: 0 10px">
+            <div class="col-lg-12">
+              <div class="well well-sm updates-link">
+                <a href="updates">
+                  <i><b>Latest update</b></i>&nbsp;&nbsp;&nbsp;Version 1.3: Introducing the <i>i</i>CHO model
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin: 0 10px">
             <div class="col-md-4">
               <div class="thumbnail">
                 <a href=/models>

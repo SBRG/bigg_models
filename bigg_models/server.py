@@ -60,7 +60,7 @@ api_host = 'bigg.ucsd.edu'
 
 def get_application(debug=False):
     routes = [
-        (r'/', MainHandler),
+        (r'/', TemplateHandler, {'template_name': 'index.html'}),
         #
         # Universal
         #
@@ -122,7 +122,8 @@ def get_application(debug=False):
         # Pages
         (r'/web_api$', RedirectHandler, {'url': '/data_access'}),
         (r'/data_access$', WebAPIHandler),
-        (r'/license$', LicenseHandler),
+        (r'/license$', TemplateHandler, {'template_name': 'about_license_page.html'}),
+        (r'/updates$', TemplateHandler, {'template_name': 'updates.html'}),
         #
         # Version
         (r'/api/%s/database_version$' % api_v, APIVersionHandler),
@@ -250,6 +251,10 @@ class BaseHandler(RequestHandler):
     def get(self):
         self.return_result()
 
+class TemplateHandler(BaseHandler):
+    def initialize(self, template_name):
+        self.template = env.get_template(template_name)
+
 class PageableHandler(BaseHandler):
     """HTTP requests can pass in arguments for page, size, columns, and the
     sort_column.
@@ -296,9 +301,6 @@ class PageableHandler(BaseHandler):
                 query_kwargs["sort_direction"] = sort_direction
 
         return query_kwargs
-
-class MainHandler(BaseHandler):
-    template = env.get_template('index.html')
 
 # reactions
 class UniversalReactionListHandler(PageableHandler):
@@ -756,9 +758,6 @@ class WebAPIHandler(BaseHandler):
     def get(self):
         self.write(self.template.render(api_v=api_v, api_host=api_host))
         self.finish()
-
-class LicenseHandler(BaseHandler):
-    template = env.get_template('about_license_page.html')
 
 class APIVersionHandler(BaseHandler):
     def get(self):
