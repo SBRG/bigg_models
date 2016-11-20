@@ -1,0 +1,225 @@
+MNXM1037	bigg:oxoarg__L	inferred	2-Oxoarginine
+MNXM1037	bigg:5g2oxpt	inferred	5-Guanidino-2-oxopentanoate
+MNXM1039	bigg:zcarote	inferred	zeta-Carotene
+MNXM1039	bigg:zcaro	inferred	zeta-Carotene
+MNXM1048	bigg:gcarote	inferred	gamma-Carotene
+MNXM1048	bigg:gcaro	inferred	gamma-Carotene
+MNXM105630	bigg:hso3	inferred	HSO3-
+MNXM105630	bigg:so3	inferred	Sulfite
+MNXM1155	bigg:phllqne	inferred	Phylloquinone
+MNXM1155	bigg:phyQ	inferred	Phylloquinone
+MNXM1157	bigg:slnt	inferred	selenite
+MNXM1157	bigg:selt	inferred	Selenite
+MNXM1163	bigg:5cmhm	inferred	5-Carboxymethyl-2-hydroxymuconate
+MNXM1163	bigg:5cm2hmu	inferred	5-Carboxymethyl-2-hydroxymuconate
+MNXM1176	bigg:4h2oxov	inferred	4-Hydroxy-2-oxovalerate
+MNXM1176	bigg:4h2opntn	inferred	4-Hydroxy-2-oxopentanoate
+MNXM12007	bigg:ksii_core4_pre1	structural	keratan sulfate II biosynthesis, precursor 1
+MNXM12007	bigg:ksii_core2_pre1	identity	keratan sulfate II biosynthesis, precursor 1
+MNXM12009	bigg:ksii_core4_pre10	structural	keratan sulfate II biosynthesis, precursor 10
+MNXM12009	bigg:ksii_core2_pre10	identity	keratan sulfate II biosynthesis, precursor 10
+MNXM12012	bigg:ksii_core2_pre3	identity	keratan sulfate II biosynthesis, precursor 3
+MNXM12012	bigg:ksii_core4_pre3	structural	keratan sulfate II biosynthesis, precursor 3
+MNXM12014	bigg:ksii_core2_pre4	identity	keratan sulfate II biosynthesis, precursor 4
+MNXM12014	bigg:ksii_core4_pre4	structural	keratan sulfate II biosynthesis, precursor 4
+MNXM12016	bigg:ksii_core4_pre5	structural	keratan sulfate II biosynthesis, precursor 5
+MNXM12016	bigg:ksii_core2_pre5	identity	keratan sulfate II biosynthesis, precursor 5
+MNXM12019	bigg:ksii_core2_pre6	identity	keratan sulfate II biosynthesis, precursor 6
+MNXM12019	bigg:ksii_core4_pre6	structural	keratan sulfate II biosynthesis, precursor 6
+MNXM12021	bigg:ksii_core4_pre7	structural	keratan sulfate II biosynthesis, precursor 7
+MNXM12021	bigg:ksii_core2_pre7	identity	keratan sulfate II biosynthesis, precursor 7
+MNXM12023	bigg:ksii_core4_pre8	structural	keratan sulfate II biosynthesis, precursor 8
+MNXM12023	bigg:ksii_core2_pre8	identity	keratan sulfate II biosynthesis, precursor 8
+MNXM12025	bigg:ksii_core2_pre9	identity	keratan sulfate II biosynthesis, precursor 9
+MNXM12025	bigg:ksii_core4_pre9	structural	keratan sulfate II biosynthesis, precursor 9
+MNXM1206	bigg:kdolipid4_HP	inferred	KDO-lipid IV(A)
+MNXM1206	bigg:kdolipid4	inferred	KDO-lipid IV(A)
+MNXM1231	bigg:foam	inferred	Formamide
+MNXM1231	bigg:frmd	inferred	Formamide
+MNXM1243	bigg:Ncbmpts	inferred	N-Carbamoylputrescine
+MNXM1243	bigg:cbmp	inferred	N-carbamoylputrescine
+MNXM1272	bigg:chla	inferred	Chlorophyll a
+MNXM1272	bigg:cholphya	inferred	Chlorophyll a
+MNXM1352	bigg:omppp9me	inferred	13(1)-Oxo-magnesium-protoporphyrin IX 13-monom...
+MNXM1352	bigg:omppp9	inferred	13(1)-Oxo-magnesium-protoporphyrin IX 13-monom...
+MNXM141	bigg:cmp_nate	inferred	CMP-N-acetylneuraminate
+MNXM141	bigg:cmpacna	inferred	CMP-N-acetylneuraminate
+MNXM145541	bigg:fdxo_42	identity	ferredoxin (oxidized form 4:2)
+MNXM145541	bigg:fdxo_4_2	inferred	ferredoxin (oxidized form 4:2)
+MNXM145542	bigg:fdxr_42	identity	ferredoxin (reduced form 4:2)
+MNXM145542	bigg:fdxr_4_2	inferred	ferredoxin (reduced form 4:2)
+MNXM145572	bigg:udcpo4	structural	Undecaprenyl diphosphate galactose-rhamnose-ma...
+MNXM145572	bigg:udcdpgalrmnmanabe	identity	Undecaprenyl-diphosphate-galactose-rhamnose-ma...
+MNXM145629	bigg:2ohed	inferred	2-Oxohept-3-ene-1,7-dioate
+MNXM145629	bigg:2oh3d	inferred	2-Oxohept-3-ene-1,7-dioate
+MNXM145921	bigg:pcrd	inferred	Plastocyanin(Cu+)
+MNXM145921	bigg:pccu1p	identity	Plastocyanin(Cu+)
+MNXM145922	bigg:pccu2p	identity	Plastocyanin(Cu2+)
+MNXM145922	bigg:pcox	inferred	Plastocyanin(Cu2+)
+MNXM147330	bigg:udcpg	inferred	Undecaprenyl diphosphate galactose
+MNXM147330	bigg:udcdpgal	identity	Undecaprenyl-diphosphate-galactose
+MNXM147331	bigg:udcpgr	structural	Undecaprenyl diphosphate galactose-rhamnose
+MNXM147331	bigg:udcdpgalrmn	identity	Undecaprenyl-diphosphate-galactose-rhamnose
+MNXM147332	bigg:udcdpgalrmnman	identity	Undecaprenyl-diphosphate-galactose-rhamnose-ma...
+MNXM147332	bigg:udcpgrm	structural	Undecaprenyl diphosphate galactose-rhamnose-ma...
+MNXM147493	bigg:kokdolipid4	identity	KO-KDO-LIPID A
+MNXM147493	bigg:kokdolipidA	inferred	KO-KDO-LIPID A
+MNXM1503	bigg:stc	inferred	stachyose
+MNXM1503	bigg:stys	inferred	stachyose
+MNXM1521	bigg:2c25dho	inferred	2-Carboxy-2,5-dihydro-5-oxofuran-2-acetate
+MNXM1521	bigg:4cml	inferred	4-Carboxymuconolactone
+MNXM1541	bigg:bcrptxan	inferred	beta-Cryptoxanthin
+MNXM1541	bigg:bcryptox	inferred	beta-Cryptoxanthin
+MNXM1623	bigg:4h2kpi	inferred	4-Hydroxy-2-ketopimelate
+MNXM1623	bigg:24dhhed	inferred	2,4-Dihydroxyhept-2-enedioate
+MNXM1628	bigg:2h5cmmusa	inferred	2-Hydroxy-5-carboxymethylmuconate-Semialdehyde
+MNXM1628	bigg:5cmhmsa	inferred	2-Hydroxy-5-carboxymethylmuconate-Semialdehyde
+MNXM1641	bigg:pcdme	inferred	2-Phospho-4-(cytidine 5'-diphospho)-2-C-methyl...
+MNXM1641	bigg:2p4c2me	inferred	2-phospho-4-(cytidine 5'-diphospho)-2-C-methyl...
+MNXM169	bigg:fdxrd	inferred	Reduced ferredoxin
+MNXM169	bigg:fdxr_2_2	inferred	Reduced ferredoxin
+MNXM1692	bigg:AEP	inferred	2-Aminoethylphosphonate
+MNXM1692	bigg:2ameph	inferred	(2-Aminoethyl)phosphonate
+MNXM1697	bigg:appp	inferred	D-1-Aminopropan-2-ol-O-phosphate
+MNXM1697	bigg:applp	inferred	D-1-Aminopropan-2-ol O-phosphate
+MNXM1927	bigg:guln__L	inferred	L-gulonate
+MNXM1927	bigg:guln	inferred	L-Gulonate
+MNXM2	bigg:h2o	inferred	H2O
+MNXM2	bigg:oh1	inferred	hydroxide ion
+MNXM2361	bigg:codscl4	inferred	Cobalt-precorrin-4
+MNXM2361	bigg:copre4	inferred	cobalt-precorrin 4
+MNXM2379	bigg:gdchola	inferred	glycochenodeoxycholate
+MNXM2379	bigg:dgchol	inferred	Chenodeoxyglycocholate
+MNXM2428	bigg:scys__L	inferred	S-Sulfo-L-cysteine
+MNXM2428	bigg:slcys	inferred	S-Sulfo-L-cysteine
+MNXM2522	bigg:yvite	inferred	gamma-Tocopherol
+MNXM2522	bigg:gtocophe	inferred	gamma-Tocopherol
+MNXM2563	bigg:hpglu	inferred	Tetrahydropteroyltri L glutamate
+MNXM2563	bigg:thglu	inferred	Tetrahydropteroyltri-L-glutamate
+MNXM2623	bigg:5mthglu	inferred	5-Methyltetrahydropteroyltri-L-glutamate
+MNXM2623	bigg:mhpglu	inferred	5 Methyltetrahydropteroyltri L glutamate
+MNXM264	bigg:coucoa	inferred	p coumaroyl CoA
+MNXM264	bigg:4cmcoa	inferred	4-Coumaroyl-CoA
+MNXM2653	bigg:codscl6b	inferred	Cobalt-precorrin-6b
+MNXM2653	bigg:codhpre6	inferred	cobalt-dihydro-precorrin 6
+MNXM2741	bigg:atocophe	inferred	alpha-Tocopherol
+MNXM2741	bigg:avite1	inferred	alpha-Tocopherol
+MNXM2782	bigg:mtpp	inferred	3-methylthiopropionate
+MNXM2782	bigg:3mtpa	inferred	3-(Methylthio)propionic acid
+MNXM3059	bigg:4pcys	inferred	N-((R)-pantothenoyl)-L-cysteine
+MNXM3059	bigg:ptcys	inferred	N-Pantothenoylcysteine
+MNXM312	bigg:op4en	inferred	2-Oxopent-4-enoate
+MNXM312	bigg:chpd	inferred	2-Hydroxy-2,4-pentadienoate
+MNXM3160	bigg:mpq	inferred	2-Methyl-6-phytylquinol
+MNXM3160	bigg:2m6phol	inferred	2-Methyl-6-phytylquinol
+MNXM3194	bigg:6ctd	inferred	6-carboxy-5,6,7,8-tetrahydropterin
+MNXM3194	bigg:cph4	inferred	6-carboxy-5,6,7,8-tetrahydropterin
+MNXM320	bigg:phenol	inferred	Phenol
+MNXM320	bigg:phen	inferred	Phenol
+MNXM3356	bigg:salcn6p	inferred	Salicin 6 phosphate
+MNXM3356	bigg:salc6p	inferred	Salicin 6-phosphate
+MNXM3505	bigg:5cohe	inferred	5-Carboxy-2-oxohept-3-enedioate
+MNXM3505	bigg:5c2o3ed	inferred	5-Carboxy-2-oxohept-3-enedioate
+MNXM3591	bigg:echn	inferred	Echinenone
+MNXM3591	bigg:echin	inferred	Echinenone
+MNXM3863	bigg:4hphac	inferred	4-Hydroxyphenylacetate
+MNXM3863	bigg:4hoxpac	inferred	4 Hydroxyphenylacetic acid
+MNXM3903	bigg:zxan	inferred	Zeinoxanthin
+MNXM3903	bigg:crpxan	inferred	alpha-Cryptoxanthin
+MNXM403	bigg:zaxan	inferred	Zeaxanthin
+MNXM403	bigg:zeax	inferred	Zeaxanthin
+MNXM409	bigg:2h3kmtp	inferred	2-Hydroxy-3-keto-5-methylthiopentenyl-1-phosphate
+MNXM409	bigg:hkmpp	inferred	2-Hydroxy-3-keto-5-methylthiopentenyl-1-phosphate
+MNXM41	bigg:glc__D	inferred	D-Glucose
+MNXM41	bigg:glc_B	inferred	D-Glucose
+MNXM41358	bigg:fucfucgalacglcgalacglcgal14acglcgalglusid...	structural	(Gal)4 (Glc)1 (GlcNAc)3 (LFuc)2 (Cer)1
+MNXM41358	bigg:fucfucgalacglc13galacglcgal14acglcgalglus...	inferred	(Gal)4 (Glc)1 (GlcNAc)3 (LFuc)2 (Cer)1
+MNXM4266	bigg:23dmphol	inferred	2,3-Dimethyl-5-phytylquinol
+MNXM4266	bigg:dmpq	inferred	2,3-Dimethyl-5-phytylquinol
+MNXM445	bigg:lyc	inferred	Lycopene
+MNXM445	bigg:lycop	inferred	Lycopene
+MNXM4488	bigg:bvite	inferred	beta-tocopherol
+MNXM4488	bigg:btocophe	inferred	beta-Tocopherol
+MNXM4610	bigg:hemeA	inferred	Heme A
+MNXM4610	bigg:hemeA_1	inferred	Heme A
+MNXM4615	bigg:dplpt	inferred	Diploptene
+MNXM4615	bigg:dptne	inferred	Diploptene
+MNXM474	bigg:quin_kt	inferred	Quinate
+MNXM474	bigg:quin	inferred	Quinate
+MNXM47441	bigg:copre6	inferred	cobalt-precorrin 6
+MNXM47441	bigg:codscl6a	inferred	Cobalt-precorrin-6a
+MNXM47447	bigg:copre2	inferred	cobalt-precorrin 2
+MNXM47447	bigg:codscl2	inferred	Cobalt-precorrin-2
+MNXM47647	bigg:colipaA	inferred	core oligosaccharide lipid A
+MNXM47647	bigg:colipa	inferred	core oligosaccharide lipid A
+MNXM4851	bigg:tamlgnc	inferred	tri-methyl lignoceric acid
+MNXM4851	bigg:tmlgnc	structural	tri-methyl lignoceric acid
+MNXM491	bigg:ppmi1346p	inferred	Diphosphoinositol tetrakisphosphate
+MNXM491	bigg:minohp	inferred	myo-Inositol hexakisphosphate
+MNXM494	bigg:dhmtp	inferred	1,2-Dihydroxy-5-(methylthio)pent-1-en-3-one
+MNXM494	bigg:12dmpo	inferred	1,2-Dihydroxy-5-(methylthio)pent-1-en-3-one
+MNXM5121	bigg:dtocophe	inferred	delta-Tocopherol
+MNXM5121	bigg:dvite	inferred	delta-Tocopherol
+MNXM513	bigg:3ohodcoa	inferred	3 Oxooctadecanoyl CoA
+MNXM513	bigg:3oodcoa	inferred	3-Oxooctadecanoyl-CoA
+MNXM535	bigg:ckdo	inferred	CMP-3-deoxy-D-manno-octulosonate
+MNXM535	bigg:cmpkdo	inferred	CMP-3-deoxy-D-manno-octulosonate
+MNXM56168	bigg:hphhlipaA	inferred	heptosyl phospho heptosyl heptosyl kdo2 lipidA
+MNXM56168	bigg:hphhlipa	inferred	heptosyl-phospho-heptosyl-heptosyl-kdo2-lipidA
+MNXM563	bigg:formcoa	inferred	Formyl-CoA
+MNXM563	bigg:forcoa	inferred	Formyl-CoA
+MNXM5750	bigg:focytc	inferred	Ferrocytochrome
+MNXM5750	bigg:focytb	inferred	Ferrocytochrome
+MNXM60922	bigg:hmppp9me	inferred	13(1)-Hydroxy-magnesium-protoporphyrin IX 13-m...
+MNXM60922	bigg:hmppp9	inferred	13(1)-Hydroxy-magnesium-protoporphyrin IX 13-m...
+MNXM614	bigg:caro	inferred	beta-Carotene
+MNXM614	bigg:bcarote	inferred	beta-Carotene
+MNXM626	bigg:4tmeabutn	inferred	4-Trimethylammoniobutanoate
+MNXM626	bigg:gbbtn	inferred	gamma-butyrobetaine
+MNXM631	bigg:chlld	inferred	Chlorophyllide a
+MNXM631	bigg:chlda	inferred	Chlorophyllide a
+MNXM643	bigg:dhocholoylcoa	inferred	3alpha,7alpha,12alpha,26-Tetrahydroxy-5beta-ch...
+MNXM643	bigg:xoltetrol	inferred	3alpha,7alpha,12alpha,26-Tetrahydroxy-5beta-ch...
+MNXM6536	bigg:m5masnB1	identity	(alpha-D-mannosyl)5-beta-D-mannosyl-diacetylch...
+MNXM6536	bigg:m5masnB2	inferred	(alpha-D-mannosyl)5-beta-D-mannosyl-diacetylch...
+MNXM6536	bigg:m5masnC	structural	(alpha-D-mannosyl)5-beta-D-mannosyl-diacetylch...
+MNXM672	bigg:pre2	inferred	dihydrosirohydrochlorin
+MNXM672	bigg:dscl	inferred	dihydrosirohydrochlorin
+MNXM685	bigg:rbl__L	inferred	L-Ribulose
+MNXM685	bigg:xylu__D	inferred	D-Xylulose
+MNXM700	bigg:urocan	inferred	Urocanate
+MNXM700	bigg:urcan	inferred	Urocanate
+MNXM710	bigg:lum3	inferred	Lumisterol 3
+MNXM710	bigg:7dhchsterol	inferred	7-Dehydrocholesterol
+MNXM75042	bigg:phphtna	inferred	Pheophytin a
+MNXM75042	bigg:chlaemr	inferred	Chlorophyll a'
+MNXM7865	bigg:uGgla	inferred	UDP-N-acetylmuramoyl-L-alanyl-gamma-D-glutamyl...
+MNXM7865	bigg:uAgla	inferred	UDP-N-acetylmuramoyl-L-alanyl-D-glutamyl-L-lys...
+MNXM8637	bigg:gd1a_hs	identity	GD1a (homo sapiens)
+MNXM8637	bigg:gd1alpha_hs	inferred	GD1a (homo sapiens)
+MNXM903	bigg:phdp	inferred	Phytyl diphosphate
+MNXM903	bigg:pdp	inferred	Phytyl diphosphate
+MNXM90394	bigg:4iz5pp	inferred	4-Imidazolone-5-propanoate
+MNXM90394	bigg:4izp	inferred	4-Imidazolone-5-propanoate
+MNXM9139	bigg:tetpent3crn	identity	tetracosapentaenoyl carnitine
+MNXM9139	bigg:tetpent6crn	structural	tetracosapentaenoyl carnitine
+MNXM920	bigg:hacon_T	inferred	trans-homoaconitate
+MNXM920	bigg:hacon_C	inferred	cis-homoaconitate
+MNXM92204	bigg:copre3	inferred	cobalt-precorrin 3
+MNXM92204	bigg:codscl3	inferred	Cobalt-precorrin-3
+MNXM92210	bigg:cobn	inferred	Cobyrinate
+MNXM92210	bigg:cobya	inferred	Cobyrinate
+MNXM92401	bigg:tagat__D	inferred	D-Tagatose
+MNXM92401	bigg:tag__D	inferred	D-Tagatose
+MNXM927	bigg:Lcystin	inferred	L Cystine
+MNXM927	bigg:cysi__L	inferred	L-Cystine
+MNXM933	bigg:mmtsa	inferred	(S)-Methylmalonate semialdehyde
+MNXM933	bigg:mmsa	inferred	(S)-Methylmalonate semialdehyde
+MNXM9451	bigg:m6masnB2	inferred	(alpha-D-mannosyl)6-beta-D-mannosyl-diacetylch...
+MNXM9451	bigg:m6masnC	inferred	(alpha-D-mannosyl)6-beta-D-mannosyl-diacetylch...
+MNXM9451	bigg:m6masnA	identity	(alpha-D-mannosyl)6-beta-D-mannosyl-diacetylch...
+MNXM9451	bigg:m6masnB1	structural	(alpha-D-mannosyl)6-beta-D-mannosyl-diacetylch...
+MNXM949	bigg:neuspn	inferred	Neurosporene
+MNXM949	bigg:norsp	inferred	Neurosporene
+MNXM99	bigg:glc_A	inferred	alpha-D-glucose
+MNXM99	bigg:Glc_aD	inferred	alpha D-glucose

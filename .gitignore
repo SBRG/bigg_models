@@ -17,3 +17,4 @@ bigg_models/static/namespace
 temp_data/
 *.swp
 TAGS
+.ipynb_checkpoints/
