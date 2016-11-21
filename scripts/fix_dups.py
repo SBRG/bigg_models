@@ -1,11 +1,13 @@
+#!/usr/bin/env python3
+
 import pandas as pd
 import requests
-from functools import lru_cache
+# from functools import lru_cache
 from IPython.display import HTML, display
 
 host = 'http://bigg.ucsd.edu/api/v2/'
 
-@lru_cache(maxsize=200)
+# @lru_cache(maxsize=200)
 def get_metabolite(bigg_id):
     req = requests.get(host + 'universal/metabolites/' + bigg_id)
     try:
@@ -73,3 +75,5 @@ prefs += additional
 
 # save
 pd.DataFrame(prefs).to_csv('metabolite-duplicates.txt', sep='\t', index=False, header=None)
+
+print('done')

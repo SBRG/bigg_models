@@ -69,8 +69,10 @@
               </div>
               <form id="search-form" action="/search" method="get">
                 <div class="input-group">
+                  <!-- Autofocus here causes a bug in Safari where you
+                       cannot click the search bar -->
                   <input id="search" type="text" name="query" class="form-control"
-                         placeholder="" autofocus>
+                         placeholder="">
                   </input>
                   <span class="input-group-btn">
                     <input type="submit" value="Search" class="btn btn-default"

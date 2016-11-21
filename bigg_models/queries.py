@@ -940,6 +940,7 @@ def _get_db_links_for_reaction(reaction_bigg_id, session):
                  .query(DataSource.bigg_id, DataSource.name, DataSource.url_prefix, Synonym.synonym)
                  .join(Synonym)
                  .join(Reaction, Reaction.id == Synonym.ome_id)
+                 .filter(Synonym.type == 'reaction')
                  .filter(Reaction.bigg_id == reaction_bigg_id))
     return _compile_db_links(result_db)
 
@@ -949,6 +950,7 @@ def _get_old_ids_for_reaction(reaction_bigg_id, session):
                  .query(Synonym.synonym)
                  .join(OldIDSynonym)
                  .join(ModelReaction, ModelReaction.id == OldIDSynonym.ome_id)
+                 .filter(OldIDSynonym.type == 'model_reaction')
                  .join(Reaction)
                  .filter(Reaction.bigg_id == reaction_bigg_id)
                  .distinct())
@@ -964,6 +966,7 @@ def _get_old_ids_for_model_reaction(model_bigg_id, reaction_bigg_id, session):
                  .query(Synonym.synonym)
                  .join(OldIDSynonym)
                  .join(ModelReaction, ModelReaction.id == OldIDSynonym.ome_id)
+                 .filter(OldIDSynonym.type == 'model_reaction')
                  .join(Reaction)
                  .join(Model)
                  .filter(Reaction.bigg_id == reaction_bigg_id)
@@ -977,6 +980,7 @@ def _get_db_links_for_model_gene(gene_bigg_id, session):
                  .query(DataSource.bigg_id, DataSource.name, DataSource.url_prefix, Synonym.synonym)
                  .join(Synonym)
                  .join(Gene, Gene.id == Synonym.ome_id)
+                 .filter(Synonym.type == 'gene')
                  .filter(Gene.bigg_id == gene_bigg_id))
     return _compile_db_links(result_db)
 
@@ -986,6 +990,7 @@ def _get_old_ids_for_model_gene(gene_bigg_id, model_bigg_id, session):
                  .query(Synonym.synonym)
                  .join(OldIDSynonym)
                  .join(ModelGene, ModelGene.id == OldIDSynonym.ome_id)
+                 .filter(OldIDSynonym.type == 'model_gene')
                  .join(Gene)
                  .join(Model)
                  .filter(Gene.bigg_id == gene_bigg_id)
@@ -999,12 +1004,14 @@ def _get_db_links_for_metabolite(met_bigg_id, session):
                    .query(DataSource.bigg_id, DataSource.name, DataSource.url_prefix, Synonym.synonym)
                    .join(Synonym)
                    .join(Metabolite, Metabolite.id == Synonym.ome_id)
+                   .filter(Synonym.type == 'component')
                    .filter(Metabolite.bigg_id == met_bigg_id))
     result_db_2 = (session
                    .query(DataSource.bigg_id, DataSource.name, DataSource.url_prefix, Synonym.synonym)
                    .join(Synonym)
                    .join(CompartmentalizedComponent,
                          CompartmentalizedComponent.id == Synonym.ome_id)
+                   .filter(Synonym.type == 'compartmentalized_component')
                    .join(Metabolite,
                          Metabolite.id == CompartmentalizedComponent.component_id)
                    .join(Compartment,
@@ -1019,6 +1026,7 @@ def _get_old_ids_for_metabolite(met_bigg_id, session):
                  .join(OldIDSynonym)
                  .join(ModelCompartmentalizedComponent,
                        ModelCompartmentalizedComponent.id == OldIDSynonym.ome_id)
+                 .filter(OldIDSynonym.type == 'model_compartmentalized_component')
                  .join(CompartmentalizedComponent)
                  .join(Component)
                  .filter(Component.bigg_id == met_bigg_id)
@@ -1037,6 +1045,7 @@ def _get_old_ids_for_model_comp_metabolite(met_bigg_id, compartment_bigg_id,
                  .join(OldIDSynonym)
                  .join(ModelCompartmentalizedComponent,
                        ModelCompartmentalizedComponent.id == OldIDSynonym.ome_id)
+                 .filter(OldIDSynonym.type == 'model_compartmentalized_component')
                  .join(CompartmentalizedComponent)
                  .join(Compartment)
                  .join(Component)
@@ -1095,6 +1104,7 @@ def get_escher_maps_for_reaction(reaction_bigg_id, model_bigg_id, session):
                        EscherMapMatrix.escher_map_id == EscherMap.id)
                  .join(ModelReaction,
                        ModelReaction.id == EscherMapMatrix.ome_id)
+                 .filter(EscherMapMatrix.type == 'model_reaction')
                  .join(Model,
                        Model.id == ModelReaction.model_id)
                  .join(Reaction,
@@ -1113,6 +1123,7 @@ def get_escher_maps_for_metabolite(metabolite_bigg_id, compartment_bigg_id,
                        EscherMapMatrix.escher_map_id == EscherMap.id)
                  .join(ModelCompartmentalizedComponent,
                        ModelCompartmentalizedComponent.id == EscherMapMatrix.ome_id)
+                 .filter(EscherMapMatrix.type == 'model_compartmentalized_component')
                  .join(Model,
                        Model.id == ModelCompartmentalizedComponent.model_id)
                  .join(CompartmentalizedComponent,
@@ -1718,6 +1729,7 @@ def get_metabolites_for_database_id(session, query, database_source):
     met_db = (session
               .query(Metabolite.bigg_id, Metabolite.name)
               .join(Synonym, Synonym.ome_id == Metabolite.id)
+              .filter(Synonym.type == 'component')
               .join(DataSource, DataSource.id == Synonym.data_source_id)
               .filter(DataSource.bigg_id == database_source)
               .filter(Synonym.synonym == query.strip()))
@@ -1725,6 +1737,7 @@ def get_metabolites_for_database_id(session, query, database_source):
                     .query(Metabolite.bigg_id, Metabolite.name)
                     .join(CompartmentalizedComponent)
                     .join(Synonym, Synonym.ome_id == CompartmentalizedComponent.id)
+                    .filter(Synonym.type == 'compartmentalized_component')
                     .join(DataSource, DataSource.id == Synonym.data_source_id)
                     .filter(DataSource.bigg_id == database_source)
                     .filter(Synonym.synonym == query.strip()))
@@ -1736,6 +1749,7 @@ def get_reactions_for_database_id(session, query, database_source):
     result_db = (session
                  .query(Reaction.bigg_id, Reaction.name)
                  .join(Synonym, Synonym.ome_id == Reaction.id)
+                 .filter(Synonym.type == 'reaction')
                  .join(DataSource, DataSource.id == Synonym.data_source_id)
                  .filter(DataSource.bigg_id == database_source)
                  .filter(Synonym.synonym == query.strip()))
@@ -1747,6 +1761,7 @@ def get_genes_for_database_id(session, query, database_source):
     result_db = (session
                  .query(Gene.bigg_id, Model.bigg_id, Gene.name)
                  .join(Synonym, Synonym.ome_id == Gene.id)
+                 .filter(Synonym.type == 'gene')
                  .join(DataSource)
                  .join(ModelGene)
                  .join(Model)
