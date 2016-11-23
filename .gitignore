@@ -18,3 +18,4 @@ temp_data/
 *.swp
 TAGS
 .ipynb_checkpoints/
+*.out

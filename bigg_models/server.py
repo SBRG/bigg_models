@@ -217,6 +217,11 @@ def safe_query(func, *args, **kwargs):
         session.close()
 
 class BaseHandler(RequestHandler):
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+
     def write(self, value):
         # note that serving a json list is a security risk
         # This is meant to be serving public-read only data only.
