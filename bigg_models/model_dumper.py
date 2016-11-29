@@ -18,7 +18,7 @@ DEBUG = False
 def autodetect_model_polisher():
     """Return the path to ModelPolisher."""
     return abspath(join(dirname(__file__), '..', 'bin',
-                        'ModelPolisher-1.3.jar'))
+                        'ModelPolisher-1.5.jar'))
 
 
 def make_all_static_models():
@@ -97,7 +97,8 @@ def write_static_model(bigg_id, model_polisher_path=None):
                    '--check-mass-balance=true',
                    '--omit-generic-terms=false',
                    '--log-level=INFO',
-                   '--include-any-uri=false']
+                   '--include-any-uri=false',
+                   '--annotate-with-bigg=true']
         polish_result = call(command)
         print('Polishing finished in %.2f seconds' % (time.time() - t))
         if polish_result == 0:
