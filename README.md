@@ -19,6 +19,13 @@ Then, do the following to get BiGG Models up and running:
 4. Generate the static models by running ```bin/make_all_static_models```.
 5. Start the server with ```python -m bigg_models.server --port=8910```
 
+Alternative installation: Docker
+================================
+
+BiGG Models can also be installed with Docker. Everything you need is here, thanks to @psalvy:
+
+https://github.com/psalvy/bigg-docker
+
 Testing BiGG Models
 ===================
 
