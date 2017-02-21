@@ -1,11 +1,15 @@
-BiGG Models
+bigg_models
 -----------
+
+
+[BiGG Models](http://bigg.ucsd.edu) is a website for browsing gold-standard genome-scale models, described in our publication here:
+
+King ZA, Lu JS, Dräger A, Miller PC, Federowicz S, Lerman JA, Ebrahim A, Palsson BO, and Lewis NE. (2015). BiGG Models: A platform for integrating, standardizing, and sharing genome-scale models. Nucl Acids Res. doi:[10.1093/nar/gkv1049](https://doi.org/10.1093/nar/gkv1049).
+
+This repository includes the web server and front-end for BiGG Models. The database is managed by [COBRAdb](https://github.com/sbrg/cobradb).
 
 Installation
 ============
-
-BiGG Models is a web front end for genome-scale models stored using the
-[OME Framework](https://github.com/sbrg/ome).
 
 To install BiGG Models, first, follow the OME installation instructions:
 https://github.com/SBRG/ome/blob/bigg/INSTALL.md
