@@ -6,7 +6,7 @@ bigg_models
 
 King ZA, Lu JS, Dräger A, Miller PC, Federowicz S, Lerman JA, Ebrahim A, Palsson BO, and Lewis NE. (2015). BiGG Models: A platform for integrating, standardizing, and sharing genome-scale models. Nucl Acids Res. doi:[10.1093/nar/gkv1049](https://doi.org/10.1093/nar/gkv1049).
 
-This repository includes the web server and front-end for BiGG Models. The database is managed by [COBRAdb](https://github.com/sbrg/cobradb).
+This repository includes the web server and front-end for BiGG Models. The database is managed by [COBRAdb](https://github.com/sbrg/cobradb). You can see our plans for new BiGG Models features in the [Development Roadmap](https://github.com/SBRG/bigg_models/wiki/Development-roadmap).
 
 Installation
 ============
