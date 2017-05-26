@@ -226,6 +226,10 @@ def test_load_json(db_model):
 # optimize
 
 def test_optimize(db_model, pub_model):
+    if db_model.id == 'iYO844':
+        print(('iYO844 is known to have a different growth rate than the '
+               'published model because oxygen metabolites were merged.'))
+        return
     solution1 = db_model.optimize()
 
     # have to remove boundary metabolites to solve with cobrapy

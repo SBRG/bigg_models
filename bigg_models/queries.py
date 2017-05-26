@@ -597,17 +597,20 @@ def get_model_and_counts(model_bigg_id, session, static_model_dir=None):
         genome_ref_string = ref_tuple_to_str(model_db[2].accession_type,
                                              genome_name)
     escher_maps = get_escher_maps_for_model(model_db[0].id, session)
-    result = {'model_bigg_id': model_db[0].bigg_id,
-              'published_filename': model_db[0].published_filename,
-              'organism': getattr(model_db[2], 'organism', None),
-              'genome_name': genome_name,
-              'genome_ref_string': genome_ref_string,
-              'metabolite_count': model_db[1].metabolite_count,
-              'reaction_count': model_db[1].reaction_count,
-              'gene_count': model_db[1].gene_count,
-              'reference_type': model_db[3],
-              'reference_id': model_db[4],
-              'escher_maps': escher_maps}
+    result = {
+        'model_bigg_id': model_db[0].bigg_id,
+        'published_filename': model_db[0].published_filename,
+        'organism': getattr(model_db[2], 'organism', None),
+        'genome_name': genome_name,
+        'genome_ref_string': genome_ref_string,
+        'metabolite_count': model_db[1].metabolite_count,
+        'reaction_count': model_db[1].reaction_count,
+        'gene_count': model_db[1].gene_count,
+        'reference_type': model_db[3],
+        'reference_id': model_db[4],
+        'escher_maps': escher_maps,
+        'last_updated': str(session.query(DatabaseVersion).first().date_time.strftime("%d/%m/%Y")),
+    }
     if static_model_dir:
         # get filesizes
         for ext in ("xml", "mat", "json", "xml_gz"):
@@ -932,7 +935,7 @@ def _compile_db_links(results):
             continue
         link = url_prefix + synonym
         sources[data_source_name].append({'link': link, 'id': synonym})
-    return sources
+    return dict(sources)
 
 
 def _get_db_links_for_reaction(reaction_bigg_id, session):

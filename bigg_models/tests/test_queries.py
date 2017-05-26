@@ -62,8 +62,8 @@ def test_get_model_reaction(session):
     result = get_model_reaction('iAPECO1_1312', 'ADA', session)
     assert result['bigg_id'] == 'ADA'
     assert result['name'] == 'Adenosine deaminase'
-    assert result['results'][0]['gene_reaction_rule'] == 'APECO1_706'
-    assert 'APECO1_706' in [x['bigg_id'] for x in result['results'][0]['genes']]
+    assert result['results'][0]['gene_reaction_rule'] == 'APECO1_RS08710'
+    assert 'APECO1_RS08710' in [x['bigg_id'] for x in result['results'][0]['genes']]
     assert 'nh4' in [x['bigg_id'] for x in result['metabolites']]
     assert 'Ammonium' in [x['name'] for x in result['metabolites']]
     assert 'c' in [x['compartment_bigg_id'] for x in result['metabolites']]
@@ -146,7 +146,11 @@ def test_get_metabolite(session):
     assert 'Escherichia coli APEC O1' in [c['organism'] for c in result['compartments_in_models']]
     assert ({'link': 'http://identifiers.org/kegg.compound/C00026', 'id': 'C00026'}
             in result['database_links']['KEGG Compound'])
-    assert set(result['old_identifiers']) == {'akg[c]', 'akg_c', 'akg_e', 'akg_p', 'akg_m', 'akg_x', 'akg_r', 'akg_n', 'akg_h'}
+    assert set(result['old_identifiers']) == {u'akg_c', u'akg_x', u'akg[x]',
+                                              u'akg[m]', u'akg[c]', u'akg_h',
+                                              u'akg_n', u'akg_m', u'akg_r',
+                                              u'akg_p', u'akg_e', u'akg[r]',
+                                              u'akg[e]'}
     assert 'old_id' not in result['database_links']
 
 
@@ -182,7 +186,7 @@ def test_get_model_metabolites(session):
 # genes
 def test_get_gene_list_for_model(session):
     results = get_gene_list_for_model('iAPECO1_1312', session)
-    assert 'APECO1_706' in [x['bigg_id'] for x in results]
+    assert 'APECO1_RS08710' in [x['bigg_id'] for x in results]
 
 
 def test__get_gene_list_for_model_reaction(session):
@@ -210,7 +214,7 @@ def test__get_gene_list_for_model_reaction(session):
 
 
 def test__get_old_ids_for_model_gene(session):
-    res = _get_old_ids_for_model_gene('APECO1_706', 'iAPECO1_1312', session)
+    res = _get_old_ids_for_model_gene('APECO1_RS08710', 'iAPECO1_1312', session)
     assert res == ['APECO1_706']
     res = _get_old_ids_for_model_gene('TM0846', 'iLJ478', session)
     assert set(res) == {'TM0846', 'TM_0846'}
@@ -294,15 +298,15 @@ def test_search_for_metabolites(session):
 
 
 def test_search_for_genes(session):
-    results = search_for_genes('APECO1_706', session)
-    assert results[0]['bigg_id'] == 'APECO1_706'
+    results = search_for_genes('APECO1_RS08710', session)
+    assert results[0]['bigg_id'] == 'APECO1_RS08710'
     assert results[0]['model_bigg_id'] == 'iAPECO1_1312'
-    results = search_for_genes('APECO1_706', session,
+    results = search_for_genes('APECO1_RS08710', session,
                                limit_models=['iAPECO1_1312', 'iJO1366'])
-    assert results[0]['bigg_id'] == 'APECO1_706'
-    results = search_for_genes('APECO1_706', session, limit_models=['iJO1366'])
+    assert results[0]['bigg_id'] == 'APECO1_RS08710'
+    results = search_for_genes('APECO1_RS08710', session, limit_models=['iJO1366'])
     assert len(results) == 0
-    results = search_for_genes('APECO1_706_6', session)
+    results = search_for_genes('APECO1_RS08710_6', session)
     assert len(results) == 0
     # test query == ''
     results = search_for_genes('', session)

@@ -5,7 +5,7 @@ from ome.models import Model
 from ome.dumping.model_dumping import dump_model
 from ome import settings
 
-from os.path import join, isdir, abspath, dirname
+from os.path import join, isdir, abspath, dirname, isfile
 from os import makedirs, system
 from subprocess import call
 import time
@@ -15,10 +15,14 @@ import cobra
 # DEBUG means test with one model
 DEBUG = False
 
-def autodetect_model_polisher():
+def get_model_polisher():
     """Return the path to ModelPolisher."""
-    return abspath(join(dirname(__file__), '..', 'bin',
-                        'ModelPolisher-1.5.jar'))
+    path = abspath(join(dirname(__file__), '..', 'bin', 'ModelPolisher-1.6.jar'))
+    if not isfile(path):
+        raise Exception('Could not find ModelPolisher: %s' % path)
+    if not isfile(settings.java):
+        raise Exception('Could not find java executable: %s' % settings.java)
+    return path
 
 
 def make_all_static_models():
@@ -36,7 +40,7 @@ def make_all_static_models():
         pass
 
     failed_models = []
-    polisher_path = autodetect_model_polisher()
+    model_polisher_path = get_model_polisher()
     session = Session()
     bigg_ids = [i[0] for i in session.query(Model.bigg_id)]
     for bigg_id in bigg_ids:
@@ -45,14 +49,14 @@ def make_all_static_models():
         # keep track of which models failed
         print('------------------------------------------------------------\n'
               'Dumping model %s' % bigg_id)
-        if not write_static_model(bigg_id, polisher_path):
+        if not write_static_model(bigg_id, model_polisher_path):
             failed_models.append(bigg_id)
     session.close()
     if len(failed_models) > 0:
         return "Failed for models " + " ".join(failed_models)
 
 
-def write_static_model(bigg_id, model_polisher_path=None):
+def write_static_model(bigg_id, model_polisher_path):
     """Write out static files for a model with the given BiGG ID.
 
     This will output compressed and uncompressed SBML L3 + FBCv2, JSON,
@@ -66,8 +70,6 @@ def write_static_model(bigg_id, model_polisher_path=None):
     print('Dumping finished in %.2f seconds' % (time.time() - t))
     raw_sbml_filepath = join(static_dir, 'raw', bigg_id + '.xml')
     sbml_filepath = join(static_dir, bigg_id + '.xml')
-    if model_polisher_path is None:
-        model_polisher_path = autodetect_model_polisher()
     try:
         print('Writing SBML')
         t = time.time()
