@@ -295,6 +295,19 @@ def test_mass_balance(db_model, pub_model):
 def test_pyr(db_model):
     assert 'pyr_c' in db_model.metabolites
 
+# Mapped genes
+
+def test_mapped_genes(session, db_model):
+    num_genes = len(db_model.genes)
+    count = (session
+             .query(Gene)
+             .join(ModelGene)
+             .join(Model)
+             .filter(Model.bigg_id == db_model.id)
+             .filter(Gene.mapped_to_genbank == True)
+             .count())
+    fraction = float(count) / num_genes
+    assert fraction > 0.95
 
 # specific issues
 
