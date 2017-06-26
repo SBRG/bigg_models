@@ -44,15 +44,21 @@
         </table>
       </div>
 
-      <h4>Download COBRA model from the BiGG Database:</h4>
+      <br/>
+      <hr/>
+
+      <h4>
+        Download COBRA model from the BiGG Database:
+        <span class="last-updated">Last updated {{last_updated}}</span>
+      </h4>
       {% include 'sbml_link.html' %}
       <br/>
       {% include 'json_link.html' %}
       <br/>
       {% include 'mat_link.html' %}
-      <br/>
-      <p>Downloads last updated {{last_updated}}</p>
-      <br/>
+
+      <br/><br/><br/>
+
       {% if reference_type == 'pmid' %}
         Publication PMID:&nbsp;
         <a href="http://www.ncbi.nlm.nih.gov/pubmed/{{reference_id}}" target="_blank">

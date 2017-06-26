@@ -18,12 +18,25 @@ h3 {
 h4 {
   font-size: 21px;
   font-weight: 200;
-  color: #999999;
+  color: #666;
 }
 
 p.sequence {
   word-wrap: break-word;
   font-size: 0.7em;
+}
+
+span.last-updated {
+  border: 1px solid #dbdbdb;
+  font-size: 15px;
+  font-weight: 400;
+  border-radius: 3px;
+  background-color: rgba(51, 122, 183, 0.03);
+  color: #607690;
+  padding: 2px 4px;
+  float: right;
+  position: relative;
+  top: -3px;
 }
 
 span.pseudoreaction {

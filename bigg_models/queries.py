@@ -609,7 +609,7 @@ def get_model_and_counts(model_bigg_id, session, static_model_dir=None):
         'reference_type': model_db[3],
         'reference_id': model_db[4],
         'escher_maps': escher_maps,
-        'last_updated': str(session.query(DatabaseVersion).first().date_time.strftime("%d/%m/%Y")),
+        'last_updated': session.query(DatabaseVersion).first().date_time.strftime('%b %d, %Y'),
     }
     if static_model_dir:
         # get filesizes
