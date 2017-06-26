@@ -730,7 +730,9 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
                         Chromosome.ncbi_accession,
                         Genome.accession_type,
                         Genome.accession_value,
-                        Gene.mapped_to_genbank)
+                        Gene.mapped_to_genbank,
+                        Gene.dna_sequence,
+                        Gene.protein_sequence)
                  .join(ModelGene)
                  .join(Model)
                  .outerjoin(Genome, Genome.id == Model.genome_id)
@@ -773,6 +775,8 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
         'genome_ref_string': ref_tuple_to_str(result_db[7], result_db[8]),
         'genome_name': result_db[8],
         'mapped_to_genbank': result_db[9],
+        'dna_sequence': result_db[10],
+        'protein_sequence': result_db[11],
         'reactions': reaction_results,
         'database_links': synonym_db,
         'old_identifiers': old_id_results

@@ -21,6 +21,11 @@ h4 {
   color: #999999;
 }
 
+p.sequence {
+  word-wrap: break-word;
+  font-size: 0.7em;
+}
+
 span.pseudoreaction {
   font-size: 24px;
   font-weight: bold;

@@ -228,6 +228,8 @@ def test_get_model_gene(session):
     none_links = [x for x in result['database_links'].iteritems()
                   if any([ext['link'] is None for ext in x[1]])]
     assert len(none_links) == 0
+    assert result['dna_sequence'] is not None
+    assert result['protein_sequence'] is not None
 
 
 # database sources

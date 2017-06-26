@@ -23,6 +23,17 @@
 
         <h4>Chromosome: </h4>
         <p><a href="/genomes/{{genome_ref_string}}#{{chromosome_ncbi_accession}}">{{chromosome_ncbi_accession}}</a></p>
+
+        {% if dna_sequence is not none %}
+          <h4>DNA Sequence</h4>
+          <p class="sequence">{{dna_sequence}}</p>
+        {% endif %}
+
+        {% if protein_sequence is not none %}
+          <h4>Protein Sequence</h4>
+          <p class="sequence">{{protein_sequence}}</p>
+        {% endif %}
+
       {% else %}
         <h4>Chromosome: </h4>
         <p>Gene is not mapped to a genome annotation.</p>
