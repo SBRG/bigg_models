@@ -9,7 +9,7 @@
     <script>
      /* pass in the hide_organism variable from Jinja */
      var HIDE_ORGANISM = {% if hide_organism %}true{% else %}false{% endif %},
-         TABLESORTER_SIZE = {{tablesorter_size if tablesorter_size else 80}};
+         TABLESORTER_SIZE = {{tablesorter_size if tablesorter_size else 85}};
     </script>
     <script src="/static/lib/tablesorter/jquery.tablesorter.pager.js"></script>
     <link rel="stylesheet" href="/static/lib/tablesorter/jquery.tablesorter.pager.css">
@@ -33,7 +33,7 @@
           not results['metabolites'] and not results['genes']) %}
         <h3 class="centered section-label">No results</h3>
       {% endif %}
-      
+
       {% for type in ['models', 'reactions', 'metabolites', 'genes'] %}
         {% if results[type] %}
           <h2 class="section-label">{{type|capitalize()}}</h2>
@@ -45,7 +45,7 @@
                   <th>BiGG ID</th>
                   {% if hide_organism != true %}
                     <th>Organism</th>
-                  {% endif %}  
+                  {% endif %}
                   <th>Metabolites</th>
                   <th>Reactions</th>
                   <th>Genes</th>
@@ -53,7 +53,7 @@
               </thead>
               <tbody>
                 {% for values in results[type] %}
-                  <tr class ='rowlink'>  
+                  <tr class ='rowlink'>
                     <td><a href="/models/{{values['bigg_id']}}">{{values['bigg_id']}}</a></td>
                     {% if hide_organism != true %}
                       <td>{% if values['organism'] is none %}{% else %}{{values['organism']}}{% endif %}</td>
@@ -77,7 +77,7 @@
               </thead>
               <tbody>
                 {% for values in results[type] %}
-                  <tr class ='rowlink'>  
+                  <tr class ='rowlink'>
                     <td>
                       {% if type == 'metabolites' and 'compartment_bigg_id' not in values %}
                         <a href="/models/universal/{{type}}/{{values['bigg_id']}}">{{values['bigg_id']}}</a>
@@ -133,7 +133,7 @@
                     <img src="/static/lib/tablesorter/addons/pager/icons/last.png" class="last"/>
                   </td>
                 </tr>
-                
+
                 <tr>
                   <th>1</th>
                   <th>2</th>
@@ -155,9 +155,9 @@
                     <img src="/static/lib/tablesorter/addons/pager/icons/last.png" class="last"/>
                   </td>
                 </tr>
-                
+
                 <tr>
-                  <th>1</th> 
+                  <th>1</th>
                   <th>2</th>
                   <th>3</th>
                   {% if hide_organism != true %}
