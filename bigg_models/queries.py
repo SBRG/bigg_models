@@ -23,6 +23,10 @@ class NotFoundError(Exception):
     pass
 
 
+class RedirectError(Exception):
+    pass
+
+
 def _shorten_name(name, l=100):
     if name is None:
         return None
@@ -240,7 +244,17 @@ def get_reaction_and_models(reaction_bigg_id, session):
                  .distinct()
                  .all())
     if len(result_db) == 0:
-        raise NotFoundError('Could not find reaction')
+        # Look for a result with a deprecated ID
+        res_db = (session
+                .query(DeprecatedID, Reaction)
+                .filter(DeprecatedID.type == 'reaction')
+                .filter(DeprecatedID.deprecated_id == reaction_bigg_id)
+                .join(Reaction, Reaction.id == DeprecatedID.ome_id)
+                .first())
+        if res_db:
+            raise RedirectError(res_db[1].bigg_id)
+        else:
+            raise NotFoundError('No Reaction found with BiGG ID ' + reaction_bigg_id)
 
     db_link_results = _get_db_links_for_reaction(reaction_bigg_id, session)
     old_id_results = _get_old_ids_for_reaction(reaction_bigg_id, session)
@@ -588,7 +602,8 @@ def get_model_and_counts(model_bigg_id, session, static_model_dir=None):
                 .filter(Model.bigg_id == model_bigg_id)
                 .first())
     if model_db is None:
-        raise NotFoundError("No model found with bigg_id " + model_bigg_id)
+        raise NotFoundError('No Model found with BiGG ID ' + model_bigg_id)
+
     # genome ref
     if model_db[2] is None:
         genome_ref_string = genome_name = None
@@ -790,7 +805,18 @@ def get_metabolite(met_bigg_id, session):
                  .filter(Metabolite.bigg_id == met_bigg_id)
                  .first())
     if result_db is None:
-        raise NotFoundError("No Metabolite found with bigg id " + met_bigg_id)
+        # Look for a result with a deprecated ID
+        res_db = (session
+                  .query(DeprecatedID, Metabolite)
+                  .filter(DeprecatedID.type == 'component')
+                  .filter(DeprecatedID.deprecated_id == met_bigg_id)
+                  .join(Metabolite, Metabolite.id == DeprecatedID.ome_id)
+                  .first())
+        if res_db:
+            raise RedirectError(res_db[1].bigg_id)
+        else:
+            raise NotFoundError('No Metabolite found with BiGG ID ' + met_bigg_id)
+
     comp_comp_db = (session
                     .query(Compartment.bigg_id,
                            Model.bigg_id,
@@ -1034,6 +1060,7 @@ def _get_old_ids_for_metabolite(met_bigg_id, session):
                  .join(ModelCompartmentalizedComponent,
                        ModelCompartmentalizedComponent.id == OldIDSynonym.ome_id)
                  .filter(OldIDSynonym.type == 'model_compartmentalized_component')
+                 .filter(Synonym.type == 'component')
                  .join(CompartmentalizedComponent)
                  .join(Component)
                  .filter(Component.bigg_id == met_bigg_id)
@@ -1053,6 +1080,7 @@ def _get_old_ids_for_model_comp_metabolite(met_bigg_id, compartment_bigg_id,
                  .join(ModelCompartmentalizedComponent,
                        ModelCompartmentalizedComponent.id == OldIDSynonym.ome_id)
                  .filter(OldIDSynonym.type == 'model_compartmentalized_component')
+                 .filter(Synonym.type == 'compartmentalized_component')
                  .join(CompartmentalizedComponent)
                  .join(Compartment)
                  .join(Component)

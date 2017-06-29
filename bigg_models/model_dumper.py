@@ -17,7 +17,7 @@ DEBUG = False
 
 def get_model_polisher():
     """Return the path to ModelPolisher."""
-    path = abspath(join(dirname(__file__), '..', 'bin', 'ModelPolisher-1.6.jar'))
+    path = abspath(join(dirname(__file__), '..', 'bin', 'ModelPolisher-1.7.jar'))
     if not isfile(path):
         raise Exception('Could not find ModelPolisher: %s' % path)
     if not isfile(settings.java):

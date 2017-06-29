@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from bigg_models import queries, __api_version__ as api_v
-from bigg_models.queries import NotFoundError
+from bigg_models.queries import NotFoundError, RedirectError
 
 from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
                         CompartmentalizedComponent, ModelReaction,
@@ -26,6 +26,7 @@ import subprocess
 import mimetypes
 # use simplejson to deal with Decimal coming out of SQLAlchemy
 import simplejson as json
+import re
 
 # sbml validator
 try:
@@ -206,7 +207,7 @@ def safe_query(func, *args, **kwargs):
 
     """
     session = Session()
-    kwargs["session"] = session
+    kwargs['session'] = session
     try:
         return func(*args, **kwargs)
     except queries.NotFoundError as e:
@@ -244,14 +245,17 @@ class BaseHandler(RequestHandler):
         if self.request.uri.startswith("/api"):
             if result:
                 self.write(result)
+                self.finish()
             else:
-                self.write()
+                # For redirects
+                pass
         else:
             if result:
                 self.write(self.template.render(result))
+                self.finish()
             else:
                 self.write(self.template.render())
-        self.finish()
+                self.finish()
 
     def get(self):
         self.return_result()
@@ -337,8 +341,12 @@ class UniversalReactionHandler(BaseHandler):
     template = env.get_template('universal_reaction.html')
 
     def get(self, reaction_bigg_id):
-        result = safe_query(queries.get_reaction_and_models, reaction_bigg_id)
-        self.return_result(result)
+        try:
+            result = safe_query(queries.get_reaction_and_models, reaction_bigg_id)
+        except RedirectError as e:
+            self.redirect(re.sub(self.request.path, '%s$' % reaction_bigg_id, e.message))
+        else:
+            self.return_result(result)
 
 class UniversalMetaboliteListHandler(PageableHandler):
     def get(self):
@@ -369,8 +377,12 @@ class UniversalMetaboliteHandler(BaseHandler):
     template = env.get_template('universal_metabolite.html')
 
     def get(self, met_bigg_id):
-        results = safe_query(queries.get_metabolite, met_bigg_id)
-        self.return_result(results)
+        try:
+            result = safe_query(queries.get_metabolite, met_bigg_id)
+        except RedirectError as e:
+            self.redirect(re.sub(self.request.path, '%s$' % met_bigg_id, e.message))
+        else:
+            self.return_result(result)
 
 class ReactionListHandler(PageableHandler):
     def get(self, model_bigg_id):
