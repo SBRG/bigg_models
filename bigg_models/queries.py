@@ -316,7 +316,8 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
                          .join(Model, Model.id == ModelReaction.model_id)
                          .filter(Model.bigg_id == model_bigg_id)
                          .filter(Reaction.bigg_id == reaction_bigg_id))
-    if model_reaction_db.count() == 0:
+    db_count = model_reaction_db.count()
+    if db_count == 0:
         raise NotFoundError('Reaction %s not found in model %s' %(reaction_bigg_id, model_bigg_id))
 
     # metabolites
@@ -343,6 +344,8 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
                                                 result_db[4],
                                                 result_db[5],
                                                 False)
+        exported_reaction_id = (make_reaction_copy_id(reaction_bigg_id, result_db[8])
+                                if db_count > 1 else reaction_bigg_id)
         result_list.append({
             'gene_reaction_rule': result_db[3],
             'lower_bound': result_db[4],
@@ -351,7 +354,7 @@ def get_model_reaction(model_bigg_id, reaction_bigg_id, session):
             'genes': gene_db,
             'copy_number': result_db[8],
             'subsystem': result_db[9],
-            'exported_reaction_id': make_reaction_copy_id(reaction_bigg_id, result_db[8]),
+            'exported_reaction_id': exported_reaction_id,
             'reaction_string': reaction_string,
         })
 
@@ -1097,30 +1100,30 @@ def _get_old_ids_for_model_comp_metabolite(met_bigg_id, compartment_bigg_id,
 #---------------------------------------------------------------------
 
 def build_reaction_string(metabolitelist, lower_bound, upper_bound, universal=False):
-    post_reaction_string = ""
-    pre_reaction_string = ""
+    post_reaction_string = ''
+    pre_reaction_string = ''
     for met in metabolitelist:
         if float(met['stoichiometry']) < 0:
             if float(met['stoichiometry'])!= -1:
-                pre_reaction_string += "{0:.1f}".format(abs(met['stoichiometry'])) + \
-                                       " " + met['bigg_id']+"_"+met['compartment_bigg_id'] + " + "
+                pre_reaction_string += '{0:.1f}'.format(abs(met['stoichiometry'])) + \
+                                       ' ' + met['bigg_id']+'_'+met['compartment_bigg_id'] + ' + '
             else:
-                pre_reaction_string += " " + met['bigg_id']+"_"+met['compartment_bigg_id'] + " + "
-        if float(met['stoichiometry'])>0:
+                pre_reaction_string += ' ' + met['bigg_id']+'_'+met['compartment_bigg_id'] + ' + '
+        if float(met['stoichiometry']) > 0:
             if float(met['stoichiometry'])!= 1:
-                post_reaction_string += "{0:.1f}".format(abs(met['stoichiometry'])) + " " + \
-                                        met['bigg_id']+"_"+met['compartment_bigg_id'] + " + "
+                post_reaction_string += '{0:.1f}'.format(abs(met['stoichiometry'])) + ' ' + \
+                                        met['bigg_id']+'_'+met['compartment_bigg_id'] + ' + '
             else:
-                post_reaction_string += " " + met['bigg_id']+"_"+met['compartment_bigg_id'] + " + "
+                post_reaction_string += ' ' + met['bigg_id']+'_'+met['compartment_bigg_id'] + ' + '
 
-    if len(metabolitelist) == 1 or universal== True:
-        reaction_string = pre_reaction_string[:-2] + " &#8652; " + post_reaction_string[:-2]
-    elif lower_bound <0 and upper_bound <=0:
-        reaction_string = pre_reaction_string[:-2] + " &#x2192; " + post_reaction_string[:-2]
-    elif lower_bound >= 0:
-        reaction_string = pre_reaction_string[:-2] + " &#x2192; " + post_reaction_string[:-2]
+    if len(metabolitelist) == 1 or universal is True:
+        reaction_string = pre_reaction_string[:-2] + ' &#8652; ' + post_reaction_string[:-2]
+    elif lower_bound < 0 and upper_bound <= 0:
+        reaction_string = pre_reaction_string[:-2] + ' &#x2190; ' + post_reaction_string[:-2]
+    elif lower_bound >= 0 and upper_bound > 0:
+        reaction_string = pre_reaction_string[:-2] + ' &#x2192; ' + post_reaction_string[:-2]
     else:
-        reaction_string = pre_reaction_string[:-2] + " &#8652; " + post_reaction_string[:-2]
+        reaction_string = pre_reaction_string[:-2] + ' &#8652; ' + post_reaction_string[:-2]
 
     return reaction_string
 
