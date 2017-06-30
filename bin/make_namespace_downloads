@@ -27,7 +27,7 @@ session = Session()
 # get the reactions
 logging.info('Querying for reactions')
 reactions = {
-    'header': ['bigg_id', 'name', 'model_list', 'database_links'],
+    'header': ['bigg_id', 'name', 'model_list', 'database_links', 'old_bigg_ids'],
     'lines': [],
 }
 for reaction in get_universal_reactions(session):
@@ -37,11 +37,12 @@ for reaction in get_universal_reactions(session):
         res['name'] if res['name'] else '',
         ', '.join([x['bigg_id'] for x in res['models_containing_reaction']]),
         json.dumps(dict(res['database_links'])),
+        ', '.join(res['old_identifiers']),
     ])
 
 logging.info('Querying for metabolites')
 metabolites = {
-    'header': ['bigg_id', 'universal_bigg_id', 'name', 'model_list', 'database_links'],
+    'header': ['bigg_id', 'universal_bigg_id', 'name', 'model_list', 'database_links', 'old_bigg_ids'],
     'lines': [],
 }
 for metabolite in get_universal_metabolites(session):
@@ -56,6 +57,7 @@ for metabolite in get_universal_metabolites(session):
             res['name'] if res['name'] else '',
             ', '.join(models_for_compartment[comp]),
             json.dumps(dict(res['database_links'])),
+            ', '.join(res['old_identifiers']),
         ])
 
 logging.info('Saving files')
