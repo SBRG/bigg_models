@@ -1,4 +1,9 @@
+#!/bin/bash
+
+cd $(dirname $0)
+
 ./load_metanetx
 ./make_database_indices
 ./make_namespace_downloads
 ./make_all_static_models
+./apply_charges

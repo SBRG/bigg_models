@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Apply the charges from large models to related small models."""
+
+from ome.base import *
+from ome.models import *
+from ome.components import *
+
+# child, parent
+models = [
+    ('e_coli_core', 'iJO1366'),
+]
+
+session = Session()
+
+for child, parent in models:
+    print('\n\n%s <- %s\n' % (child, parent))
+    parent_charges = (session.query(Metabolite.bigg_id, Compartment.bigg_id, ModelCompartmentalizedComponent.charge)
+                      .join(CompartmentalizedComponent)
+                      .join(Compartment)
+                      .join(ModelCompartmentalizedComponent)
+                      .join(Model)
+                      .filter(Model.bigg_id == parent)
+                      .all())
+    parent_charges_dict = {'%s_%s' % (m, c): v for m, c, v in parent_charges}
+    child_mets = (session.query(Metabolite.bigg_id, Compartment.bigg_id, ModelCompartmentalizedComponent)
+                  .join(CompartmentalizedComponent)
+                  .join(Compartment)
+                  .join(ModelCompartmentalizedComponent)
+                  .join(Model)
+                  .filter(Model.bigg_id == child)
+                  .all())
+    for bigg_id, compartment, model_compartmentalized_component in child_mets:
+        with_comp = '%s_%s' % (bigg_id, compartment)
+        try:
+            new_charge = parent_charges_dict[with_comp]
+        except KeyError:
+            print('No charge found for %s in %s' % (with_comp, parent))
+        else:
+            if new_charge is None:
+                print('Charge for %s is None in %s' % (with_comp, parent))
+            else:
+                print('Setting charge for %s to %.1f in %s' % (with_comp, new_charge, child))
+                model_compartmentalized_component.charge = new_charge
+
+session.commit()
+session.close()
