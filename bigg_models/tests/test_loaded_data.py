@@ -64,6 +64,8 @@ def pub_model(request):
             pub_model = read_sbml_model(model_path)
         elif model_path.endswith('.mat'):
             pub_model = load_matlab_model(model_path)
+        elif model_path.endswith('.json'):
+            pub_model = load_json_model(model_path)
         else:
             raise Exception('Unrecongnized extension for model %s' % model_file)
     except IOError:
@@ -321,6 +323,8 @@ def test_mapped_genes(session, db_model):
         assert fraction > 0.92
     elif db_model.id == 'iAB_RBC_283':
         assert fraction > 0.89
+    elif db_model.id == 'iLB1027_lipid':
+        assert fraction > 0.68
     else:
         assert fraction > 0.95
 
