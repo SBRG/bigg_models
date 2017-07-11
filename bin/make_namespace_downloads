@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""TODO speed up. takes about 2 hours right now."""
+
 from ome.base import Session
 from bigg_models.queries import (get_universal_reactions, get_reaction_and_models,
                                  get_universal_metabolites, get_metabolite)
@@ -9,6 +11,7 @@ from os.path import abspath, dirname, join
 from os import makedirs
 import logging
 import json
+from progressbar import ProgressBar
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,7 +33,7 @@ reactions = {
     'header': ['bigg_id', 'name', 'model_list', 'database_links', 'old_bigg_ids'],
     'lines': [],
 }
-for reaction in get_universal_reactions(session):
+for reaction in ProgressBar()(get_universal_reactions(session)):
     res = get_reaction_and_models(reaction['bigg_id'], session)
     reactions['lines'].append([
         res['bigg_id'],
@@ -45,7 +48,7 @@ metabolites = {
     'header': ['bigg_id', 'universal_bigg_id', 'name', 'model_list', 'database_links', 'old_bigg_ids'],
     'lines': [],
 }
-for metabolite in get_universal_metabolites(session):
+for metabolite in ProgressBar()(get_universal_metabolites(session)):
     res = get_metabolite(metabolite['bigg_id'], session)
     compartments = set([x['bigg_id'] for x in res['compartments_in_models']])
     models_for_compartment = {c: [r['model_bigg_id'] for r in res['compartments_in_models'] if r['bigg_id'] == c]

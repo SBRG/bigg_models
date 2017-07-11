@@ -24,4 +24,5 @@ setup(name='BiGG Models',
                         'pytest>=2.6.4',
                         'ome>=0.1.0',
                         'python-libsbml>=5.12.1',
-                        'simplejson>=3.8.2'])
+                        'simplejson>=3.8.2',
+                        'progressbar2>=3.30.2'])

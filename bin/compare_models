@@ -1,0 +1,94 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Script to compare models in the database.
+
+This was used to make sure models in BiGG1 match the models provided with
+publications.
+
+TODO possibly by changing 99999 bounds to 1000 bounds, some of the different
+solutions could be fixed.
+
+"""
+
+from ome.base import *
+from ome.models import *
+from ome.components import *
+from ome.dumping.model_dumping import dump_model
+
+from cobra.flux_analysis.variability import flux_variability_analysis
+
+from numpy.testing import assert_approx_equal
+
+MODELS = [
+    # ['RECON1', 'RECON1_bigg1'], # MATCH
+    # ['e_coli_core', 'e_coli_core_bigg1'], # different max/min bounds
+    # ['iAF1260', 'iAF1260_bigg1'], # MATCH
+    # ['iAF1260b', 'iAF1260b_bigg1'], #
+    # ['iAF692', 'iAF692_bigg1'], # {u'S2hglut_c', u's2hglut_c'}, this is an improvement; but different solution
+    # ['iIT341', 'iIT341_bigg1'], # different solution
+    # ['iJN746', 'iJN746_bigg1'], # different solution
+    # ['iJR904', 'iJR904_bigg1'], # different solution
+    # ['iND750', 'iND750_bigg1'], # different solution
+    # ['iNJ661', 'iNJ661_bigg1'], # different solution
+    # ['iSB619', 'iSB619_bigg1'], # different solution
+]
+THRESHOLD = 1e-6
+DEC = 6
+
+session = Session()
+
+def test_pair(pair):
+    print(pair)
+
+    print('Dumping models')
+    try:
+        ml = [dump_model(k) for k in pair]
+    except:
+        print('Not loaded')
+        return
+    m0, m1 = ml
+
+    print('Comparing size')
+    for key in ['reactions', 'metabolites', 'genes']:
+        print(key)
+        s1 = set(x.id for x in getattr(ml[0], key))
+        s2 = set(x.id for x in getattr(ml[1], key))
+        diff = s1.difference(s2).union(s2.difference(s1))
+        try:
+            assert len(diff) == 0
+        except AssertionError:
+            from IPython import embed; embed()
+
+    print('Comparing FBA')
+    sols = [m.optimize().f for m in ml]
+    if any(abs(sol) > THRESHOLD for sol in sols):
+        try:
+            assert_approx_equal(sols[0], sols[1], DEC)
+        except AssertionError:
+            from IPython import embed; embed()
+
+    print('Comparing FVA')
+    var = [flux_variability_analysis(m) for m in ml]
+
+    for r_id in set([x.id for x in ml[0].reactions]).union([x.id for x in ml[1].reactions]):
+        for key in ['minimum', 'maximum']:
+            vals = [v[r_id][key] for v in var]
+            if abs(vals[0]) > THRESHOLD or abs(vals[1]) > THRESHOLD:
+                try:
+                    assert_approx_equal(vals[0], vals[1], DEC)
+                except AssertionError as e:
+                    print(r_id, key)
+                    from IPython import embed; embed()
+
+for pair in MODELS:
+    test_pair(pair)
+
+    # try:
+    # except Exception as e:
+    #     from IPython import embed; embed()
+    #     print(str(e))
+
+session.close()
+
+print('Done')
