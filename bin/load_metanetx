@@ -43,7 +43,7 @@ db_translation = {
     'metabolite': {
         'biopath': 'biopath.molecule',
         'chebi': lambda val: ('chebi', 'CHEBI:%s' % val),
-        'kegg': 'kegg.compound',
+        'kegg': lambda val: ('kegg.drug', val) if val.startswith('D') else ('kegg.compound', val),
         'metacyc': lambda val: ('biocyc', 'META:%s' % val),
         'seed': 'seed.compound',
         'umbbd': 'umbbd.compound',
@@ -95,7 +95,7 @@ def main():
 
 def add_prefix(loc):
     """Add the MetaNetX url prefix."""
-    return 'http://metanetx.org/cgi-bin/mnxget/mnxref/%s' % loc.lstrip('/')
+    return 'http://www.metanetx.org/cgi-bin/mnxget/mnxref/%s' % loc.lstrip('/')
 
 
 def download_file(filename):
@@ -142,13 +142,13 @@ def update_synonyms(xref_dict, ref_type, session):
                               .join(Synonym)
                               .filter(Synonym.synonym == bigg_id))
             if objects_db.count() == 0:
-                print '%s not found in database: %s' % (ref_type, bigg_id)
+                print('%s not found in database: %s' % (ref_type, bigg_id))
                 continue
-            else:
-                print bigg_id, objects_db.first().bigg_id
+            # else:
+            #     print(bigg_id, objects_db.first().bigg_id)
 
         if objects_db.count() > 1:
-            print 'Multiple results for %s: %s' % (ref_type, bigg_id)
+            print('Multiple results for %s: %s' % (ref_type, bigg_id))
 
         for object_db in objects_db:
             for ref, values in ref_dict.iteritems():
@@ -164,7 +164,7 @@ def update_synonyms(xref_dict, ref_type, session):
                     if exists: stats['found'] += 1
                     else: stats['not_found'] += 1
 
-    print 'New %s synonyms: %d' % (ref_type, stats['not_found'])
+    print('New %s synonyms: %d' % (ref_type, stats['not_found']))
 
 
 def add_ec_numbers(file_key, reaction_xref):
@@ -208,21 +208,16 @@ def parse_xref(file_key, ref_type):
     bigg_to_metanetx = {}
     metanetx_to_ref = defaultdict(lambda: defaultdict(list))
 
-    def check_2(l):
-        if len(l) == 2:
-            return l
-        raise Exception('Length != 2')
-
     # read the file
     with open(join(data_dir, files[file_key]), 'r')  as f:
         for line in f.readlines():
             if line.strip().startswith('#') or line.strip() == '':
                 continue
             split_line = [x.strip() for x in line.split('\t')]
+            strip_line = [x.strip() for x in split_line[0].split(':', 1)]
             try:
-                ref, val = check_2([x.strip() for x in split_line[0].split(':', 1)])
-            except Exception:
-                print line
+                ref, val = strip_line[:2]
+            except:
                 continue
             if ref == 'bigg':
                 bigg_to_metanetx[val] = split_line[1]
