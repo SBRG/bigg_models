@@ -41,7 +41,7 @@ def test_get_reaction_and_models(session):
     assert result['pseudoreaction'] is False
     assert ({'bigg_id': 'iAPECO1_1312', 'organism': 'Escherichia coli APEC O1'}
             in result['models_containing_reaction'])
-    assert result['old_identifiers'] == ['ADA', 'ADNDA']
+    assert set(result['old_identifiers']) == {'ADA', 'ADNDA', 'ADNDA_c'}
     assert 'old_id' not in result['database_links']
     with raises(Exception):
         result = get_reaction_and_models('not_a_reaction', session)
@@ -146,11 +146,7 @@ def test_get_metabolite(session):
     assert 'Escherichia coli APEC O1' in [c['organism'] for c in result['compartments_in_models']]
     assert ({'link': 'http://identifiers.org/kegg.compound/C00026', 'id': 'C00026'}
             in result['database_links']['KEGG Compound'])
-    assert set(result['old_identifiers']) == {u'akg_c', u'akg_x', u'akg[x]',
-                                              u'akg[m]', u'akg[c]', u'akg_h',
-                                              u'akg_n', u'akg_m', u'akg_r',
-                                              u'akg_p', u'akg_e', u'akg[r]',
-                                              u'akg[e]'}
+    assert set(result['old_identifiers']) == {'akg'}
     assert 'old_id' not in result['database_links']
 
 

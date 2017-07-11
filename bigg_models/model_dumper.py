@@ -98,7 +98,7 @@ def write_static_model(bigg_id, model_polisher_path):
                    '--compression-type=NONE',
                    '--check-mass-balance=true',
                    '--omit-generic-terms=false',
-                   '--log-level=INFO',
+                   '--log-level=OFF',
                    '--include-any-uri=false',
                    '--annotate-with-bigg=true']
         polish_result = call(command)

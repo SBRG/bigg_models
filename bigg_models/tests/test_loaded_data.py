@@ -396,9 +396,9 @@ def test_dad_2(session):
     assert len(res_db) == 1
     session.close()
 
-# --------------------------
+#----------------------------
 # Check charge disagreements
-# --------------------------
+#----------------------------
 
 def test_check_charge_disagreements(session):
     # Find metabolites with conflicting charges
@@ -413,7 +413,7 @@ def test_check_charge_disagreements(session):
            .subquery())
     res = session.query(sub).filter('cc > 1')
     print('Metabolites with conflicting charges: %s' % ', '.join([x[0] for x in res.all()]))
-    assert res.count() == 13
+    assert res.count() == 168
 
 def test_model_without_all_charges(session):
     res = (session.query(Model.bigg_id)
@@ -421,4 +421,4 @@ def test_model_without_all_charges(session):
            .filter(ModelCompartmentalizedComponent.charge == None)
            .distinct())
     print('Models without complete set of charges: %s' % ', '.join([x[0] for x in res.all()]))
-    assert res.count() == 5
+    assert res.count() == 19

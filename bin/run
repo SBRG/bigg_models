@@ -6,4 +6,4 @@ cd $(dirname $0)
     && ./make_database_indices \
     && ./make_namespace_downloads \
     && ./make_all_static_models \
-    && ./apply_charges
+    && ./apply_charges_and_formulas

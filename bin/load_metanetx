@@ -173,7 +173,7 @@ def add_ec_numbers(file_key, reaction_xref):
     """
 
     # read the file
-    ec_numbers = {}
+    ec_numbers = defaultdict(set)
     with open(join(data_dir, files[file_key]), 'r')  as f:
         for line in f.readlines():
             if line.strip().startswith('#') or line.strip() == '':
@@ -184,7 +184,7 @@ def add_ec_numbers(file_key, reaction_xref):
                 continue
             for ec in [x.strip() for x in split_line[4].split(';')]:
                 # ec_numbers[MNX_ID] = EC
-                ec_numbers[split_line[0]] = ec
+                ec_numbers[split_line[0]].add(ec)
 
     for bigg_id, val in reaction_xref.iteritems():
         if not 'mnx.equation' in val:
@@ -194,7 +194,7 @@ def add_ec_numbers(file_key, reaction_xref):
                 continue
             if not 'ec' in val:
                 val['ec'] = []
-            val['ec'].append(ec_numbers[mnx_id])
+            val['ec'] += ec_numbers[mnx_id]
 
     return reaction_xref
 
