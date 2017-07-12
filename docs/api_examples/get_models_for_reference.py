@@ -53,7 +53,7 @@ def main():
         if model['reference_type'] == ref_type and model['reference_id'] == ref:
             download_list.append(bigg_id)
 
-    print ', '.join(download_list)
+    print(', '.join(download_list))
     import sys
     sys.exit()
 

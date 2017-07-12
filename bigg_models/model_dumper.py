@@ -1,9 +1,9 @@
 from bigg_models.server import static_model_dir as static_dir
 
-from ome.base import Session
-from ome.models import Model
-from ome.dumping.model_dumping import dump_model
-from ome import settings
+from cobradb.base import Session
+from cobradb.models import Model
+from cobradb.dumping.model_dumping import dump_model
+from cobradb import settings
 
 from os.path import join, isdir, abspath, dirname, isfile
 from os import makedirs, system

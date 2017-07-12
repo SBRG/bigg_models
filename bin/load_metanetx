@@ -3,16 +3,17 @@
 
 """Load synonyms from MetaNetX MNXref namespace."""
 
-from ome.base import *
-from ome.models import *
-from ome.components import *
-from ome.util import get_or_create, get_or_create_data_source
+from cobradb.base import *
+from cobradb.models import *
+from cobradb.components import *
+from cobradb.util import get_or_create, get_or_create_data_source
 
 from sqlalchemy import exists
 from os.path import join, abspath, dirname, exists
 from os import mkdir
 import subprocess
 from collections import defaultdict
+import six
 
 # MetaNetX files to download
 files = {
@@ -71,7 +72,7 @@ except OSError:
 
 def main():
     # download the files from MetaNetX
-    for key, filename in files.iteritems():
+    for key, filename in six.iteritems(files):
         download_file(filename)
 
     # database session
@@ -119,7 +120,7 @@ def update_synonyms(xref_dict, ref_type, session):
     object_class = Reaction if ref_type == 'reaction' else Component
     object_synonym_type = 'reaction' if ref_type == 'reaction' else 'component'
 
-    for bigg_id, ref_dict in xref_dict.iteritems():
+    for bigg_id, ref_dict in six.iteritems(xref_dict):
         # look for the metabolites
         objects_db = (session
                         .query(object_class)
@@ -151,7 +152,7 @@ def update_synonyms(xref_dict, ref_type, session):
             print('Multiple results for %s: %s' % (ref_type, bigg_id))
 
         for object_db in objects_db:
-            for ref, values in ref_dict.iteritems():
+            for ref, values in six.iteritems(ref_dict):
                 data_source_id = get_or_create_data_source(session, ref)
 
                 for val in values:
@@ -186,7 +187,7 @@ def add_ec_numbers(file_key, reaction_xref):
                 # ec_numbers[MNX_ID] = EC
                 ec_numbers[split_line[0]].add(ec)
 
-    for bigg_id, val in reaction_xref.iteritems():
+    for bigg_id, val in six.iteritems(reaction_xref):
         if not 'mnx.equation' in val:
             continue
         for mnx_id in val['mnx.equation']:
@@ -238,7 +239,7 @@ def parse_xref(file_key, ref_type):
     # make the dictionary and add metanetx ref
     mnx_ref_id = 'mnx.chemical' if ref_type == 'metabolite' else 'mnx.equation'
     return { bigg: dict(metanetx_to_ref[mnx], **{ mnx_ref_id: [mnx] })
-             for bigg, mnx in bigg_to_metanetx.iteritems() }
+             for bigg, mnx in six.iteritems(bigg_to_metanetx) }
 
 def print_missing_metabolite_refs(session):
     """Print any metabolites with no external database ID, by model."""
@@ -259,7 +260,7 @@ def print_missing_metabolite_refs(session):
     by_model = defaultdict(list)
     for model_bigg_id, met_bigg_id in mets_no_source_db:
         by_model[model_bigg_id].append(met_bigg_id)
-    for model_bigg_id, l in by_model.iteritems():
+    for model_bigg_id, l in six.iteritems(by_model):
         print('Warning: Metabolites with no linkout in model %s' % model_bigg_id)
         print(', '.join(l))
     print('Finished')

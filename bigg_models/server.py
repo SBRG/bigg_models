@@ -4,13 +4,13 @@
 from bigg_models import queries, __api_version__ as api_v
 from bigg_models.queries import NotFoundError, RedirectError
 
-from ome.models import (Model, Component, Reaction, Compartment, Metabolite,
-                        CompartmentalizedComponent, ModelReaction,
-                        ReactionMatrix, GeneReactionMatrix,
-                        ModelCompartmentalizedComponent, ModelGene, Gene,
-                        GenomeRegion, Genome)
-from ome.base import Session
-from ome.loading.parse import split_compartment, hash_metabolite_dictionary
+from cobradb.models import (Model, Component, Reaction, Compartment, Metabolite,
+                            CompartmentalizedComponent, ModelReaction,
+                            ReactionMatrix, GeneReactionMatrix,
+                            ModelCompartmentalizedComponent, ModelGene, Gene,
+                            GenomeRegion, Genome)
+from cobradb.base import Session
+from cobradb.loading.parse import split_compartment, hash_metabolite_dictionary
 
 from tornado.ioloop import IOLoop
 from tornado.httpserver import HTTPServer
@@ -27,6 +27,7 @@ import mimetypes
 # use simplejson to deal with Decimal coming out of SQLAlchemy
 import simplejson as json
 import re
+import six
 
 # sbml validator
 try:
@@ -187,7 +188,7 @@ def _parse_col_arg(s):
 
 def _get_col_name(query_arguments, columns, default_column=None,
                   default_direction='ascending'):
-    for k, v in query_arguments.iteritems():
+    for k, v in six.iteritems(query_arguments):
         split = [x.strip('[]') for x in k.split('[')]
         if len(split) != 2:
             continue
@@ -286,7 +287,7 @@ class PageableHandler(BaseHandler):
 
         # determine which column we are sorting by
         # These are parameters formatted as col[i] = 0 (or 1 for descending)
-        for param_name, param_value in self.request.query_arguments.iteritems():
+        for param_name, param_value in six.iteritems(self.request.query_arguments):
             if not (param_name.startswith("col[") and
                     param_name.endswith("]")):
                 continue
@@ -650,7 +651,7 @@ class SearchHandler(BaseHandler):
 class ReactionWithStoichHandler(BaseHandler):
     def get(self):
         metabolite_dict = {k: float(v[0]) for k, v in
-                           self.request.query_arguments.iteritems()}
+                           six.iteritems(self.request.query_arguments)}
         hash = hash_metabolite_dictionary(metabolite_dict)
         session = Session()
         try:

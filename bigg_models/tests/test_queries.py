@@ -7,7 +7,7 @@ from bigg_models.queries import (_shorten_name, _get_old_ids_for_model_gene,
 from bigg_models.version import (__version__ as version,
                                  __api_version__ as api_version)
 
-from ome import base
+from cobradb import base
 
 from decimal import Decimal
 import pytest
@@ -15,6 +15,7 @@ from pytest import raises
 import time
 import json
 from itertools import chain
+import six
 
 
 @pytest.fixture(scope='function')
@@ -221,7 +222,7 @@ def test_get_model_gene(session):
     assert result['bigg_id'] == 'ECO103_2936'
     assert result['old_identifiers'] == ['ECO103_2936']
     assert 'NCBI GI' in result['database_links']
-    none_links = [x for x in result['database_links'].iteritems()
+    none_links = [x for x in six.iteritems(result['database_links'])
                   if any([ext['link'] is None for ext in x[1]])]
     assert len(none_links) == 0
     # No protein sequence
@@ -272,7 +273,7 @@ def test_search_for_reactions(session):
     time1 = time.time()
     results = search_for_reactions('GAPD', session)
     time2 = time.time()
-    print 'search_for_reactions took %0.3f ms' % ((time2 - time1) * 1000.0)
+    print('search_for_reactions took %0.3f ms' % ((time2 - time1) * 1000.0))
 
     assert results[0]['bigg_id'] == 'GAPD'
     assert 'iAPECO1_1312' in [x['model_bigg_id'] for x in results]
@@ -334,17 +335,17 @@ def test_search_ids_fast(session):
     time1 = time.time()
     results = search_ids_fast('ga', session)
     time2 = time.time()
-    print 'l = 2, search_ids_fast took %0.3f ms' % ((time2 - time1) * 1000.0)
+    print('l = 2, search_ids_fast took %0.3f ms' % ((time2 - time1) * 1000.0))
 
     time1 = time.time()
     results = search_ids_fast('gap', session)
     time2 = time.time()
-    print 'l = 3, search_ids_fast took %0.3f ms' % ((time2 - time1) * 1000.0)
+    print('l = 3, search_ids_fast took %0.3f ms' % ((time2 - time1) * 1000.0))
 
     time1 = time.time()
     results = search_ids_fast('gapd', session)
     time2 = time.time()
-    print 'l = 4, search_ids_fast took %0.3f ms' % ((time2 - time1) * 1000.0)
+    print('l = 4, search_ids_fast took %0.3f ms' % ((time2 - time1) * 1000.0))
     assert 'GAPD' in results
 
     # organism

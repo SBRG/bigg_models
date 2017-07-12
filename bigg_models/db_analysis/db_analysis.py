@@ -15,14 +15,14 @@ def matches_for_reaction_name(reaction_name):
     session = Session()
 
     regex = reaction_name.replace('-', '%').replace(' ', '%')
-    print regex
+    print(regex)
     results = (session.query(ModelReaction, Reaction, Model)
                .join(Reaction)
                .join(Model)
                .filter(Reaction.name.ilike(regex))
                .all())
-    print results
-    
+    print(results)
+
 def model_fraction_sharing_reaction(reaction_bigg_id):
     """ Find the fraction of models that have the reaction id. Returns a tuple
     of (fraction, model_list).
@@ -43,16 +43,16 @@ def model_fraction_sharing_reaction(reaction_bigg_id):
                  .join(Reaction)
                  .filter(Reaction.bigg_id == reaction_bigg_id)
                  .all())
-    print ('%d of %d models (%.1f%%) have reaction %s' % (len(has_count),
+    print('%d of %d models (%.1f%%) have reaction %s' % (len(has_count),
                                                           len(all_models),
                                                           100.0 * len(has_count) / len(all_models),
                                                           reaction_bigg_id))
-    
-    print '\n'.join([str(x[0]) for x in all_models if x not in has_count])
+
+    print('\n'.join([str(x[0]) for x in all_models if x not in has_count]))
 
 if __name__=="__main__":
     from sys import argv, exit
     if len(argv) < 2:
-        print 'Usage: python db_analysis.py "GAPD"'
+        print('Usage: python db_analysis.py "GAPD"')
         exit()
     model_fraction_sharing_reaction(argv[1])

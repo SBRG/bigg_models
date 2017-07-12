@@ -3,9 +3,9 @@
 
 """Apply the charges and formulas from large models to related small models."""
 
-from ome.base import *
-from ome.models import *
-from ome.components import *
+from cobradb.base import *
+from cobradb.models import *
+from cobradb.components import *
 
 # child, parent
 models = [

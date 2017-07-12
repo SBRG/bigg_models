@@ -22,7 +22,9 @@ setup(name='BiGG Models',
       install_requires=['Jinja2>=2.7.3',
                         'tornado>=4.0.2',
                         'pytest>=2.6.4',
-                        'ome>=0.1.0',
+                        'cobradb>=0.1.0',
+                        'cobra>=0.6.2',
                         'python-libsbml>=5.12.1',
                         'simplejson>=3.8.2',
-                        'progressbar2>=3.30.2'])
+                        'progressbar2>=3.30.2',
+                        'six>=1.10.0'])

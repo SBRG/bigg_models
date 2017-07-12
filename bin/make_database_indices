@@ -5,7 +5,7 @@ import os
 from os.path import join
 
 from bigg_models.server import directory
-from ome import settings
+from cobradb import settings
 
 # make sure the indices are ready
 print('Creating pg_trgm extension and indices')

@@ -11,17 +11,21 @@ from os.path import abspath, dirname, join, exists
 from os import listdir
 from numpy.testing import assert_almost_equal
 from decimal import Decimal
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import re
 from time import time
 import itertools
+import six
 
-from ome.models import *
-from ome.base import Session
-from ome import settings
-from ome.dumping.model_dumping import dump_model
-from ome.loading.parse import convert_ids, remove_boundary_metabolites
-from ome.util import load_tsv
+from cobradb.models import *
+from cobradb.base import Session
+from cobradb import settings
+from cobradb.dumping.model_dumping import dump_model
+from cobradb.loading.parse import convert_ids, remove_boundary_metabolites
+from cobradb.util import load_tsv
 
 from bigg_models.server import (directory as bigg_root_directory,
                                 static_model_dir)
@@ -61,7 +65,8 @@ def pub_model(request):
     start = time()
     try:
         if model_path.endswith('.xml'):
-            pub_model = read_sbml_model(model_path)
+            # LibSBML does not like unicode filepaths in Python 2.7
+            pub_model = read_sbml_model(str(model_path))
         elif model_path.endswith('.mat'):
             pub_model = load_matlab_model(model_path)
         elif model_path.endswith('.json'):
@@ -114,11 +119,11 @@ def _check_merged(cobra_dictlist, model_bigg_id, cobra_type):
 
     # count merged
     db_merged_extra = sum([len(v['original_bigg_ids']) - len(v['bigg_ids_w_copy'])
-                           for v in db_merged.itervalues()])
+                           for v in six.itervalues(db_merged)])
 
     # report merged
     if db_merged_extra > 0:
-        merged_dict = {v['bigg_ids_w_copy']: v['original_bigg_ids'] for v in db_merged.itervalues()
+        merged_dict = {v['bigg_ids_w_copy']: v['original_bigg_ids'] for v in six.itervalues(db_merged)
                        if len(v['original_bigg_ids']) > len(v['bigg_ids_w_copy'])}
         print('{} {} merged in model {}: {}'
               .format(db_merged_extra, cobra_type + 's', model_bigg_id, merged_dict))
@@ -143,7 +148,7 @@ def test_reaction_count(db_model, pub_model):
         assert db_reactions_len + db_merged_extra == pub_reactions_len
     except AssertionError as e:
         missing = _find_missing(db_model.reactions, pub_model.reactions)
-        print missing
+        print(missing)
         raise e
 
 
@@ -157,7 +162,7 @@ def test_metabolite_count(db_model, pub_model):
         assert db_metabolites_len + db_merged_extra == pub_metabolites_len - pub_boundary_len
     except AssertionError as e:
         missing = _find_missing(db_model.metabolites, pub_model.metabolites)
-        print missing
+        print(missing)
         raise e
 
 
@@ -170,7 +175,7 @@ def test_gene_count(db_model, pub_model):
         assert db_genes_len + db_merged_extra == pub_genes_len
     except AssertionError as e:
         missing = _find_missing(db_model.genes, pub_model.genes)
-        print missing
+        print(missing)
         raise e
 
 
@@ -246,7 +251,7 @@ def test_optimize(db_model, pub_model):
 # mass balance
 
 def _filtered_mass_balance(mb):
-    return {k: v for k, v in mb.iteritems() if abs(v) > 1e-6}
+    return {k: v for k, v in six.iteritems(mb) if abs(v) > 1e-6}
 
 
 def test_mass_balance(db_model, pub_model):

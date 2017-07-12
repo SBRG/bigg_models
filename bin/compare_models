@@ -11,10 +11,10 @@ solutions could be fixed.
 
 """
 
-from ome.base import *
-from ome.models import *
-from ome.components import *
-from ome.dumping.model_dumping import dump_model
+from cobradb.base import *
+from cobradb.models import *
+from cobradb.components import *
+from cobradb.dumping.model_dumping import dump_model
 
 from cobra.flux_analysis.variability import flux_variability_analysis
 

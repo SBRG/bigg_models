@@ -1,11 +1,11 @@
 from bigg_models.version import (__version__ as version,
                                  __api_version__ as api_version)
 
-from ome.models import *
-from ome.base import Publication, PublicationModel
-from ome.loading.model_loading import parse
-from ome import settings
-from ome.util import make_reaction_copy_id, ref_str_to_tuple, ref_tuple_to_str
+from cobradb.models import *
+from cobradb.base import Publication, PublicationModel
+from cobradb.loading.model_loading import parse
+from cobradb import settings
+from cobradb.util import make_reaction_copy_id, ref_str_to_tuple, ref_tuple_to_str
 
 from sqlalchemy import desc, asc, func, or_, and_
 from collections import defaultdict
@@ -127,7 +127,7 @@ def get_universal_reactions(session, page=None, size=None, sort_column=None,
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
 
     # set up the query
@@ -190,7 +190,7 @@ def get_model_reactions(model_bigg_id, session, page=None, size=None,
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
     # set up the query
     query = (session
@@ -422,7 +422,7 @@ def get_universal_metabolites(session, page=None, size=None, sort_column=None,
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
 
     # set up the query
@@ -486,7 +486,7 @@ def get_model_metabolites(model_bigg_id, session, page=None, size=None, sort_col
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
 
     # set up the query
@@ -553,7 +553,7 @@ def get_models(session, page=None, size=None, sort_column=None, sort_direction='
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
 
     # set up the query
@@ -1253,7 +1253,7 @@ def search_for_universal_reactions(query_string, session, page=None, size=None,
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
 
     # set up the query
@@ -1313,7 +1313,7 @@ def search_for_reactions(query_string, session, page=None, size=None, sort_colum
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
 
     # set up the query
@@ -1404,7 +1404,7 @@ def search_for_universal_metabolites(query_string, session, page=None,
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
 
     # set up the query
@@ -1470,7 +1470,7 @@ def search_for_metabolites(query_string, session, page=None, size=None,
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
 
 
@@ -1487,7 +1487,7 @@ def search_for_metabolites(query_string, session, page=None, size=None,
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
 
     # set up the query
@@ -1599,7 +1599,7 @@ def search_for_genes(query_string, session, page=None, size=None, sort_column=No
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
 
     # set up the query
@@ -1688,7 +1688,7 @@ def search_for_models(query_string, session, page=None, size=None,
         try:
             sort_column_object = columns[sort_column]
         except KeyError:
-            print 'Bad sort_column name: %s' % sort_column
+            print('Bad sort_column name: %s' % sort_column)
             sort_column_object = columns.itervalues().next()
 
     # set up the query

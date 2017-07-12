@@ -7,9 +7,9 @@ from sqlalchemy.orm import sessionmaker, aliased
 from sqlalchemy import create_engine, desc, func, or_
 import sys
 from bigg_models.curation import *
-from ome import base,models
-from ome.models import *
-from ome.base import GenomeRegion
+from cobradb import base,models
+from cobradb.models import *
+from cobradb.base import GenomeRegion
 
 @pytest.fixture(scope='session')
 def connection(request):
@@ -39,7 +39,7 @@ def test_addGene(db_session):
     ncbiID = "AE000512.1"
     try: chromosome = session.query(Chromosome).filter(Chromosome.ncbi_id == ncbiID).one()
     except:
-        print "genbank file does not exist in database"
+        print("genbank file does not exist in database")
     gene = addGene(longName, locusId, name, leftpos, rightpos, ncbiID, strand)
     assert session.query(Gene).filter(Gene.long_name == longName).filter(Gene.locus_id ==locusId)\
                                 .filter(Gene.name == name).filter(Gene.leftpos == leftpos)\
