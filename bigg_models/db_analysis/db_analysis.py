@@ -1,5 +1,4 @@
-from ome.base import Session
-from ome.models import (ModelReaction, Reaction, Model)
+from ome.models import *
 
 def matches_for_reaction_name(reaction_name):
     """ Find reactions with fuzzy matches to reaction name, and return

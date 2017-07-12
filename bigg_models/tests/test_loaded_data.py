@@ -21,10 +21,9 @@ import itertools
 import six
 
 from cobradb.models import *
-from cobradb.base import Session
 from cobradb import settings
-from cobradb.dumping.model_dumping import dump_model
-from cobradb.loading.parse import convert_ids, remove_boundary_metabolites
+from cobradb.model_dumping import dump_model
+from cobradb.parse import convert_ids, remove_boundary_metabolites
 from cobradb.util import load_tsv
 
 from bigg_models.server import (directory as bigg_root_directory,

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 """Script to compare models in the database.
 
@@ -10,10 +11,8 @@ solutions could be fixed.
 
 """
 
-from cobradb.base import *
 from cobradb.models import *
-from cobradb.components import *
-from cobradb.dumping.model_dumping import dump_model
+from cobradb.model_dumping import dump_model
 
 from cobra.flux_analysis.variability import flux_variability_analysis
 

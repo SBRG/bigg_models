@@ -2,9 +2,7 @@
 
 """Load synonyms from MetaNetX MNXref namespace."""
 
-from cobradb.base import *
 from cobradb.models import *
-from cobradb.components import *
 from cobradb.util import get_or_create, get_or_create_data_source
 
 from sqlalchemy import exists

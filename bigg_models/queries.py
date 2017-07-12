@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from bigg_models.version import (__version__ as version,
                                  __api_version__ as api_version)
 
 from cobradb.models import *
-from cobradb.base import Publication, PublicationModel
-from cobradb.loading.model_loading import parse
+from cobradb.model_loading import parse
 from cobradb import settings
 from cobradb.util import make_reaction_copy_id, ref_str_to_tuple, ref_tuple_to_str
 

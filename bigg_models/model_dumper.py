@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
+
 from bigg_models.server import static_model_dir as static_dir
 
-from cobradb.base import Session
-from cobradb.models import Model
-from cobradb.dumping.model_dumping import dump_model
+from cobradb.models import *
+from cobradb.model_dumping import dump_model
 from cobradb import settings
 
 from os.path import join, isdir, abspath, dirname, isfile

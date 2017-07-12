@@ -4,13 +4,8 @@
 from bigg_models import queries, __api_version__ as api_v
 from bigg_models.queries import NotFoundError, RedirectError
 
-from cobradb.models import (Model, Component, Reaction, Compartment, Metabolite,
-                            CompartmentalizedComponent, ModelReaction,
-                            ReactionMatrix, GeneReactionMatrix,
-                            ModelCompartmentalizedComponent, ModelGene, Gene,
-                            GenomeRegion, Genome)
-from cobradb.base import Session
-from cobradb.loading.parse import split_compartment, hash_metabolite_dictionary
+from cobradb.models import *
+from cobradb.parse import split_compartment, hash_metabolite_dictionary
 
 from tornado.ioloop import IOLoop
 from tornado.httpserver import HTTPServer

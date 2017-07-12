@@ -2,7 +2,7 @@
 
 """TODO speed up. takes about 2 hours right now."""
 
-from cobradb.base import Session
+from cobradb.models import Session
 from bigg_models.queries import (get_universal_reactions, get_reaction_and_models,
                                  get_universal_metabolites, get_metabolite)
 

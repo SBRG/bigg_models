@@ -7,7 +7,7 @@ from bigg_models.queries import (_shorten_name, _get_old_ids_for_model_gene,
 from bigg_models.version import (__version__ as version,
                                  __api_version__ as api_version)
 
-from cobradb import base
+from cobradb.models import *
 
 from decimal import Decimal
 import pytest
@@ -22,10 +22,10 @@ import six
 def session(request):
     """Make a session"""
     def teardown():
-        base.Session.close_all()
+        Session.close_all()
     request.addfinalizer(teardown)
 
-    return base.Session()
+    return Session()
 
 
 # util
@@ -255,7 +255,7 @@ def test_escher_maps_for_metabolite(session):
 
 
 def test_json_for_map():
-    session = base.Session()
+    session = Session()
     map_json = json_for_map('iMM904.Central carbon metabolism', session)
     assert isinstance(map_json, unicode)
     assert json.loads(map_json)[0]['homepage'] == 'https://escher.github.io'
