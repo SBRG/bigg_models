@@ -26,17 +26,19 @@ p.sequence {
   font-size: 0.7em;
 }
 
-span.last-updated {
+.downloads {
   border: 1px solid #dbdbdb;
+  border-radius: 3px;
+  /* background-color: rgba(51, 122, 183, 0.03); */
+  padding: 12px 16px;
+  margin: 0 0 10px 0;
+}
+
+.downloads>.last-update {
+  margin-top: 11px;
+  color: #607690;
   font-size: 15px;
   font-weight: 400;
-  border-radius: 3px;
-  background-color: rgba(51, 122, 183, 0.03);
-  color: #607690;
-  padding: 2px 4px;
-  float: right;
-  position: relative;
-  top: -3px;
 }
 
 span.pseudoreaction {
