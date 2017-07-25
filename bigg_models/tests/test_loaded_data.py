@@ -147,6 +147,7 @@ def test_reaction_count(db_model, pub_model):
         assert db_reactions_len + db_merged_extra == pub_reactions_len
     except AssertionError as e:
         missing = _find_missing(db_model.reactions, pub_model.reactions)
+        print('Missing reactions:')
         print(missing)
         raise e
 

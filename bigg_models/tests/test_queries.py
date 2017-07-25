@@ -257,7 +257,7 @@ def test_escher_maps_for_metabolite(session):
 def test_json_for_map():
     session = Session()
     map_json = json_for_map('iMM904.Central carbon metabolism', session)
-    assert isinstance(map_json, unicode)
+    assert isinstance(map_json, str)
     assert json.loads(map_json)[0]['homepage'] == 'https://escher.github.io'
     session.close()
 
