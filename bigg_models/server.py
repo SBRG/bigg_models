@@ -207,9 +207,9 @@ def safe_query(func, *args, **kwargs):
     try:
         return func(*args, **kwargs)
     except queries.NotFoundError as e:
-        raise HTTPError(status_code=404, reason=e.message)
+        raise HTTPError(status_code=404, reason=e.args[0])
     except ValueError as e:
-        raise HTTPError(status_code=400, reason=e.message)
+        raise HTTPError(status_code=400, reason=e.args[0])
     finally:
         session.close()
 
@@ -340,7 +340,7 @@ class UniversalReactionHandler(BaseHandler):
         try:
             result = safe_query(queries.get_reaction_and_models, reaction_bigg_id)
         except RedirectError as e:
-            self.redirect(re.sub(self.request.path, '%s$' % reaction_bigg_id, e.message))
+            self.redirect(re.sub(self.request.path, '%s$' % reaction_bigg_id, e.args[0]))
         else:
             self.return_result(result)
 
@@ -376,7 +376,7 @@ class UniversalMetaboliteHandler(BaseHandler):
         try:
             result = safe_query(queries.get_metabolite, met_bigg_id)
         except RedirectError as e:
-            self.redirect(re.sub(self.request.path, '%s$' % met_bigg_id, e.message))
+            self.redirect(re.sub(self.request.path, '%s$' % met_bigg_id, e.args[0]))
         else:
             self.return_result(result)
 

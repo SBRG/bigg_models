@@ -23,7 +23,7 @@ import six
 from cobradb.models import *
 from cobradb import settings
 from cobradb.model_dumping import dump_model
-from cobradb.parse import convert_ids, remove_boundary_metabolites
+from cobradb.parse import convert_ids, remove_boundary_metabolites, invalid_formula
 from cobradb.util import load_tsv
 
 from bigg_models.server import (directory as bigg_root_directory,
@@ -254,6 +254,12 @@ def _filtered_mass_balance(mb):
     return {k: v for k, v in six.iteritems(mb) if abs(v) > 1e-6}
 
 
+def _all_integer_formula_charge(reaction):
+    return all((met.charge is None or int(met.charge) == met.charge)
+               and not invalid_formula(met.formula)
+               for met in reaction.metabolites.keys())
+
+
 def test_mass_balance(db_model, pub_model):
     errors = []
 
@@ -282,8 +288,9 @@ def test_mass_balance(db_model, pub_model):
                         # been unbalanced in the original model
                         errors.append('{}: Bad mass balance in {} ({}). No formulas in published model.'
                                       .format(db_model.id, r.id, mass_balance))
-                else:
-                    # check mass balance in pub model
+                elif _all_integer_formula_charge(pub_reaction) or STRICT_MASS_BALANCE:
+                    # Check mass balance in pub model. No error if original
+                    # reaction had invalid non-integer charges or formula.
                     pub_mass_balance = _filtered_mass_balance(pub_reaction.check_mass_balance())
                     if len(pub_mass_balance) == 0:
                         errors.append('{}: Bad mass balance in {} ({}). Reaction is balanced in published model.'

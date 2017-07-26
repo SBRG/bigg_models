@@ -15,7 +15,7 @@ session = Session()
 
 for child, parent in models:
     print('\n\n%s <- %s\n' % (child, parent))
-    parent_data = (session.query(Metabolite.bigg_id,
+    parent_data = (session.query(Component.bigg_id,
                                  Compartment.bigg_id,
                                  ModelCompartmentalizedComponent.charge,
                                  ModelCompartmentalizedComponent.formula)
@@ -27,7 +27,7 @@ for child, parent in models:
                       .all())
     parent_data_dict = {'%s_%s' % (m, c): {'charge': charge, 'formula': formula}
                         for m, c, charge, formula in parent_data}
-    child_mets = (session.query(Metabolite.bigg_id, Compartment.bigg_id, ModelCompartmentalizedComponent)
+    child_mets = (session.query(Component.bigg_id, Compartment.bigg_id, ModelCompartmentalizedComponent)
                   .join(CompartmentalizedComponent)
                   .join(Compartment)
                   .join(ModelCompartmentalizedComponent)

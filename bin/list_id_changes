@@ -1,0 +1,209 @@
+#!/usr/bin/env python3
+
+# Configure the logger before imports so other packages do not override this
+# setup.
+import logging
+try:
+    import coloredlogs
+except ImportError:
+    print('coloredlogs not installed')
+else:
+    coloredlogs.install(fmt='%(levelname)s %(message)s', level=logging.INFO)
+
+from cobradb.models import *
+from cobradb.settings import db_connection_string
+
+from sqlalchemy import create_engine, or_, and_
+from sqlalchemy.orm import sessionmaker, Session as _SA_Session, aliased
+from sqlalchemy.sql.functions import array_agg
+from collections import defaultdict
+import itertools as it
+
+# Connect to development database
+dev_session = Session()
+
+# Connect to postgres stable database
+stable_connection_string = db_connection_string.replace('cobradb',
+                                                        'cobradb_stable')
+stable_engine = create_engine(stable_connection_string)
+StableSession = sessionmaker(bind=stable_engine, class_=_SA_Session)
+stable_session = StableSession()
+
+# Get old database IDs for each session
+reaction_ids = defaultdict(dict)
+metabolite_ids = defaultdict(dict)
+
+#--------------------
+# Metabolites -- dev
+#--------------------
+
+Component2 = aliased(Component)
+dev_met_old_ids = (dev_session
+                   .query(Model.bigg_id,
+                          array_agg(Component.bigg_id),
+                          array_agg(Synonym.synonym),
+                          array_agg(DeprecatedID.deprecated_id),
+                          array_agg(Component2.bigg_id))
+                   .group_by(Model.bigg_id)
+                   .join(ModelCompartmentalizedComponent,
+                         ModelCompartmentalizedComponent.model_id == Model.id)
+                   .join(CompartmentalizedComponent,
+                         CompartmentalizedComponent.id == ModelCompartmentalizedComponent.compartmentalized_component_id)
+                   .join(Component,
+                         Component.id == CompartmentalizedComponent.component_id)
+                   .join(OldIDSynonym,
+                         OldIDSynonym.ome_id == ModelCompartmentalizedComponent.id)
+                   .join(Synonym,
+                         Synonym.id == OldIDSynonym.synonym_id)
+                   .filter(OldIDSynonym.type == 'model_compartmentalized_component')
+                   .filter(Synonym.type == 'compartmentalized_component')
+                   .outerjoin(DeprecatedID, DeprecatedID.ome_id == Component.id)
+                   .filter(or_(DeprecatedID.id == None, DeprecatedID.type == 'component'))
+                   .outerjoin(Component2, Component2.bigg_id == DeprecatedID.deprecated_id))
+for model_bigg_id, metabolite_bigg_ids, synonyms, deprecated_ids, deprecated_match in dev_met_old_ids:
+    metabolite_ids['dev'][model_bigg_id] = dict(zip(synonyms, zip(metabolite_bigg_ids, deprecated_ids, deprecated_match)))
+
+#-----------------------
+# Metabolites -- stable
+#-----------------------
+
+stable_met_old_ids = (stable_session
+                      .query(Model.bigg_id,
+                             array_agg(Component.bigg_id),
+                             array_agg(Synonym.synonym))
+                      .group_by(Model.bigg_id)
+                      .join(ModelCompartmentalizedComponent,
+                            ModelCompartmentalizedComponent.model_id == Model.id)
+                      .join(CompartmentalizedComponent,
+                            CompartmentalizedComponent.id == ModelCompartmentalizedComponent.compartmentalized_component_id)
+                      .join(Component,
+                            Component.id == CompartmentalizedComponent.component_id)
+                      .join(OldIDSynonym,
+                            OldIDSynonym.ome_id == ModelCompartmentalizedComponent.id)
+                      .join(Synonym,
+                            Synonym.id == OldIDSynonym.synonym_id)
+                      .filter(OldIDSynonym.type == 'model_compartmentalized_component')
+                      # .filter(Synonym.type == 'component')
+)
+for model_bigg_id, metabolite_bigg_ids, synonyms in stable_met_old_ids:
+    metabolite_ids['stable'][model_bigg_id] = dict(zip(synonyms, metabolite_bigg_ids))
+
+#------------------
+# Reactions -- dev
+#------------------
+
+Reaction2 = aliased(Reaction)
+dev_rxn_old_ids = (dev_session
+                   .query(Model.bigg_id,
+                          array_agg(Reaction.bigg_id),
+                          array_agg(Synonym.synonym),
+                          array_agg(DeprecatedID.deprecated_id),
+                          array_agg(Reaction2.bigg_id))
+                   .group_by(Model.bigg_id)
+                   .join(ModelReaction, ModelReaction.model_id == Model.id)
+                   .join(Reaction, Reaction.id == ModelReaction.reaction_id)
+                   .join(OldIDSynonym, OldIDSynonym.ome_id == ModelReaction.id)
+                   .join(Synonym, Synonym.id == OldIDSynonym.synonym_id)
+                   .filter(OldIDSynonym.type == 'model_reaction')
+                   .filter(Synonym.type == 'reaction')
+                   .outerjoin(DeprecatedID, DeprecatedID.ome_id == Reaction.id)
+                   .filter(or_(DeprecatedID.id == None, DeprecatedID.type == 'reaction'))
+                   .outerjoin(Reaction2, Reaction2.bigg_id == DeprecatedID.deprecated_id))
+for model_bigg_id, reaction_bigg_ids, synonyms, deprecated_ids, deprecated_matches in dev_rxn_old_ids:
+    reaction_ids['dev'][model_bigg_id] = dict(zip(synonyms, zip(reaction_bigg_ids, deprecated_ids, deprecated_matches)))
+
+#---------------------
+# Reactions -- stable
+#---------------------
+
+stable_rxn_old_ids = (stable_session
+                      .query(Model.bigg_id, array_agg(Reaction.bigg_id), array_agg(Synonym.synonym))
+                      .group_by(Model.bigg_id)
+                      .join(ModelReaction, ModelReaction.model_id == Model.id)
+                      .join(Reaction, Reaction.id == ModelReaction.reaction_id)
+                      .join(OldIDSynonym, OldIDSynonym.ome_id == ModelReaction.id)
+                      .join(Synonym, Synonym.id == OldIDSynonym.synonym_id)
+                      .filter(OldIDSynonym.type == 'model_reaction')
+                      .filter(Synonym.type == 'reaction'))
+for model_bigg_id, reaction_bigg_ids, synonyms in stable_rxn_old_ids:
+    reaction_ids['stable'][model_bigg_id] = dict(zip(synonyms, reaction_bigg_ids))
+
+#--------------
+# Compare data
+#--------------
+
+all_models = set(reaction_ids['dev'].keys()).union(reaction_ids['stable'].keys())
+for model_bigg_id in all_models:
+    try:
+        dev_metabolites = metabolite_ids['dev'][model_bigg_id]
+    except KeyError:
+        logging.info(f'Model {model_bigg_id} not loaded')
+        continue
+    try:
+        stable_metabolites = metabolite_ids['stable'][model_bigg_id]
+    except KeyError:
+        logging.info(f'New model {model_bigg_id}')
+        continue
+
+    # Metabolite IDs
+    all_metabolite_ids = set(dev_metabolites.keys()).union(stable_metabolites.keys())
+    for metabolite_id in all_metabolite_ids:
+        dev_metabolite, deprecated_id, deprecated_match = dev_metabolites.get(metabolite_id, (None, None, None))
+        stable_metabolite = stable_metabolites.get(metabolite_id)
+        if not dev_metabolite == stable_metabolite:
+            logging.info(f'{model_bigg_id} - Not equal dev: {dev_metabolite}, stable: {stable_metabolite}')
+
+            # Specific cases that were done manually
+            if dev_metabolite == 'udcdpgalrmnmanabe':
+                # udcdpgalrmnmanabe was separated from udcpo4 intentionally
+                continue
+
+            # Look for deprecated metabolite IDs
+            if deprecated_id is None:
+                logging.warn(f'{model_bigg_id} - No deprecated id for dev: {dev_metabolite} and stable: {stable_metabolite}')
+
+            # Make sure deprecated IDs match last version
+            if deprecated_id is not None and deprecated_id != stable_metabolite:
+                logging.warn(f'{model_bigg_id} - Bad deprecated id {deprecated_id} for dev: {dev_metabolite} and stable: {stable_metabolite}')
+
+            # Make sure deprecated IDs don't match to real reactions
+            if deprecated_match is not None:
+                logging.error(f'{model_bigg_id} - Deprecated id {deprecated_id} conflicts with metabolite {deprecated_match}')
+
+
+    # Reaction IDs
+    dev_reactions = reaction_ids['dev'][model_bigg_id]
+    stable_reactions = reaction_ids['stable'][model_bigg_id]
+    all_reaction_ids = set(dev_reactions.keys()).union(stable_reactions.keys())
+    for reaction_id in all_reaction_ids:
+        dev_reaction, deprecated_id, deprecated_match = dev_reactions.get(reaction_id, (None, None, None))
+        stable_reaction = stable_reactions.get(reaction_id)
+        if not dev_reaction == stable_reaction:
+            logging.info(f'{model_bigg_id} - Reaction not equal dev: {dev_reaction}, stable: {stable_reaction}')
+
+            # Specific cases that were done manually
+            if dev_reaction == 'HACD8i' or dev_reaction == 'HACD8':
+                # HACD8i / HACD8 are fine the way they are
+                continue
+            if dev_reaction == 'THRA' or dev_reaction == 'THRA2':
+                # These are tricky because there are multiple deprecated ids
+                continue
+            if stable_reaction.endswith('_1'):
+                # Do not worry about deprecating _1 reactions
+                continue
+
+            # Look for deprecated reaction IDs, but do not worry about exchanges because they follow metabolites
+            if deprecated_id is None:
+                logging.warn(f'{model_bigg_id} - No deprecated id for dev: {dev_reaction} and stable: {stable_reaction}')
+
+            # Make sure deprecated IDs match last version
+            if deprecated_id is not None and deprecated_id != stable_reaction:
+                logging.warn(f'{model_bigg_id} - Bad deprecated id {deprecated_id} for dev: {dev_reaction} and stable: {stable_reaction}')
+
+            # Make sure deprecated IDs don't match to real reactions
+            if deprecated_match is not None:
+                logging.error(f'{model_bigg_id} - Deprecated id {deprecated_id} conflicts with reaction {deprecated_match}')
+
+            # Trying to get rid of 'r' and 'i' labels for reactions
+            # if dev_reaction is not None and (dev_reaction.endswith('r') or dev_reaction.endswith('i')):
+            #     logging.warn(f'{model_bigg_id} - Dev reaction {dev_reaction} has a reversibility label. Remove.')
