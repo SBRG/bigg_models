@@ -9,7 +9,6 @@ from bigg_models.version import (__version__ as version,
 
 from cobradb.models import *
 
-from decimal import Decimal
 import pytest
 from pytest import raises
 import time
@@ -68,7 +67,7 @@ def test_get_model_reaction(session):
     assert 'nh4' in [x['bigg_id'] for x in result['metabolites']]
     assert 'Ammonium' in [x['name'] for x in result['metabolites']]
     assert 'c' in [x['compartment_bigg_id'] for x in result['metabolites']]
-    assert Decimal(1) in [x['stoichiometry'] for x in result['metabolites']]
+    assert 1.0 in [x['stoichiometry'] for x in result['metabolites']]
     assert 'other_models_with_reaction' in result
     assert 'iAPECO1_1312' not in result['other_models_with_reaction']
     assert 'upper_bound' in result['results'][0]
@@ -127,12 +126,14 @@ def test_get_model_list(session):
     result = get_model_list(session)
     assert 'iAPECO1_1312' in result
 
-
+#-------------
 # Metabolites
+#-------------
+
 def test_get_metabolite_list_for_reaction(session):
     result = _get_metabolite_list_for_reaction('GAPD', session)
     assert 'g3p' in [r['bigg_id'] for r in result]
-    assert type(result[0]['stoichiometry']) is Decimal
+    assert isinstance(result[0]['stoichiometry'], float)
     assert 'c' in [r['compartment_bigg_id'] for r in result]
 
 

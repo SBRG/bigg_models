@@ -1188,6 +1188,31 @@ def json_for_map(map_name, session):
 
     return result_db[0].decode('utf8')
 
+#-------
+# Genes
+#-------
+
+def sequences_for_reaction(reaction_bigg_id, session):
+    print(reaction_bigg_id)
+    res = (session.query(Gene.dna_sequence, Gene.protein_sequence, Gene.bigg_id, Genome.accession_value, Model.bigg_id)
+           .join(Chromosome, Chromosome.id == Gene.chromosome_id)
+           .join(Genome, Genome.id == Chromosome.genome_id)
+           .join(ModelGene, ModelGene.gene_id == Gene.id)
+           .join(Model, Model.id == ModelGene.model_id)
+           .join(GeneReactionMatrix, GeneReactionMatrix.model_gene_id == ModelGene.id)
+           .join(ModelReaction, ModelReaction.id == GeneReactionMatrix.model_reaction_id)
+           .join(Reaction, Reaction.id == ModelReaction.reaction_id)
+           .filter(Reaction.bigg_id == reaction_bigg_id)
+           .filter(Gene.dna_sequence != None))
+    return [{
+        'dna_sequence': x[0],
+        'protein_sequence': x[1],
+        'gene_bigg_id': x[2],
+        'genome_accession_value': x[3],
+        'model_bigg_id': x[4],
+    } for x in res.all()]
+
+
 #-------------------------------------------------------------------------------
 # Search
 #-------------------------------------------------------------------------------

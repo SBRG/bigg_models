@@ -36,7 +36,6 @@ else:
 # command line options
 define('port', default= 8888, help='run on given port', type=int)
 define('public', default=True, help='run on all addresses')
-define('password', default= '', help='password to email', type=str)
 define('debug', default=False, help='Start server in debug mode')
 define('processes', default=1, help='number of subprocesses to spawn', type=int)
 
@@ -111,6 +110,7 @@ def get_application(debug=False):
         (r'/advanced_search$', AdvancedSearchHandler),
         (r'/advanced_search_external_id_results$', AdvancedSearchExternalIDHandler),
         (r'/advanced_search_results$', AdvancedSearchResultsHandler),
+        (r'/advanced_search_sequences$', AdvancedSearchSequences),
         (r'/autocomplete$', AutocompleteHandler),
         #
         # Maps
@@ -747,6 +747,16 @@ class AdvancedSearchResultsHandler(BaseHandler):
 
         session.close()
         self.write(self.template.render(result))
+        self.finish()
+
+class AdvancedSearchSequences(BaseHandler):
+    def post(self):
+        reaction_bigg_id = self.get_argument('query', '')
+        session = Session()
+        results = queries.sequences_for_reaction(reaction_bigg_id, session)
+        session.close()
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.write(json.dumps(results))
         self.finish()
 
 class AutocompleteHandler(BaseHandler):

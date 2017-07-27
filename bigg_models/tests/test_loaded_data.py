@@ -10,7 +10,6 @@ import numpy
 from os.path import abspath, dirname, join, exists
 from os import listdir
 from numpy.testing import assert_almost_equal
-from decimal import Decimal
 try:
     import cPickle as pickle
 except ImportError:
@@ -433,4 +432,4 @@ def test_model_without_all_charges(session):
            .filter(ModelCompartmentalizedComponent.charge == None)
            .distinct())
     print('Models without complete set of charges: %s' % ', '.join([x[0] for x in res.all()]))
-    assert res.count() == 19
+    assert res.count() == 18
