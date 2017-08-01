@@ -122,7 +122,7 @@ def write_static_model(bigg_id, model_polisher_path):
 
     print('Writing JSON')
     t = time.time()
-    json_filepath = join(static_dir, bigg_id + ".json")
+    json_filepath = join(static_dir, bigg_id + '.json')
     cobra.io.save_json_model(model, json_filepath)
     system('gzip --keep --force --best ' + json_filepath)
     print('Writing JSON finished in %.2f seconds' % (time.time() - t))

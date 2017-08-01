@@ -424,7 +424,7 @@ def test_check_charge_disagreements(session):
            .subquery())
     res = session.query(sub).filter('cc > 1')
     print('Metabolites with conflicting charges: %s' % ', '.join([x[0] for x in res.all()]))
-    assert res.count() == 168
+    assert res.count() == 167
 
 def test_model_without_all_charges(session):
     res = (session.query(Model.bigg_id)

@@ -1096,35 +1096,40 @@ def _get_old_ids_for_model_comp_metabolite(met_bigg_id, compartment_bigg_id,
     return [x[0] for x in result_db]
 
 
-#---------------------------------------------------------------------
-# utilities
-#---------------------------------------------------------------------
+#-----------
+# Utilities
+#-----------
 
-def build_reaction_string(metabolitelist, lower_bound, upper_bound, universal=False):
+def build_reaction_string(metabolite_list, lower_bound, upper_bound,
+                          universal=False, html=True):
     post_reaction_string = ''
     pre_reaction_string = ''
-    for met in metabolitelist:
+    for met in metabolite_list:
         if float(met['stoichiometry']) < 0:
-            if float(met['stoichiometry'])!= -1:
+            if float(met['stoichiometry']) != -1:
                 pre_reaction_string += '{0:.1f}'.format(abs(met['stoichiometry'])) + \
-                                       ' ' + met['bigg_id']+'_'+met['compartment_bigg_id'] + ' + '
+                                       ' ' + met['bigg_id'] + '_' + met['compartment_bigg_id'] + ' + '
             else:
-                pre_reaction_string += ' ' + met['bigg_id']+'_'+met['compartment_bigg_id'] + ' + '
+                pre_reaction_string += met['bigg_id'] + '_' + met['compartment_bigg_id'] + ' + '
         if float(met['stoichiometry']) > 0:
-            if float(met['stoichiometry'])!= 1:
+            if float(met['stoichiometry']) != 1:
                 post_reaction_string += '{0:.1f}'.format(abs(met['stoichiometry'])) + ' ' + \
-                                        met['bigg_id']+'_'+met['compartment_bigg_id'] + ' + '
+                                        met['bigg_id'] + '_' + met['compartment_bigg_id'] + ' + '
             else:
-                post_reaction_string += ' ' + met['bigg_id']+'_'+met['compartment_bigg_id'] + ' + '
+                post_reaction_string += met['bigg_id'] + '_' + met['compartment_bigg_id'] + ' + '
 
-    if len(metabolitelist) == 1 or universal is True:
-        reaction_string = pre_reaction_string[:-2] + ' &#8652; ' + post_reaction_string[:-2]
+    both_arrow = ' &#8652; ' if html else ' <-> '
+    left_arrow = ' &#x2190; ' if html else ' <-- '
+    right_arrow = ' &#x2192; ' if html else ' --> '
+
+    if len(metabolite_list) == 1 or universal is True:
+        reaction_string = pre_reaction_string[:-3] + both_arrow + post_reaction_string[:-3]
     elif lower_bound < 0 and upper_bound <= 0:
-        reaction_string = pre_reaction_string[:-2] + ' &#x2190; ' + post_reaction_string[:-2]
+        reaction_string = pre_reaction_string[:-3] + left_arrow + post_reaction_string[:-3]
     elif lower_bound >= 0 and upper_bound > 0:
-        reaction_string = pre_reaction_string[:-2] + ' &#x2192; ' + post_reaction_string[:-2]
+        reaction_string = pre_reaction_string[:-3] + right_arrow + post_reaction_string[:-3]
     else:
-        reaction_string = pre_reaction_string[:-2] + ' &#8652; ' + post_reaction_string[:-2]
+        reaction_string = pre_reaction_string[:-3] + both_arrow + post_reaction_string[:-3]
 
     return reaction_string
 
