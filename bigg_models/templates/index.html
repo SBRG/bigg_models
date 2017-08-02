@@ -70,7 +70,7 @@
               <form id="search-form" action="/search" method="get">
                 <div class="input-group">
                   <!-- Autofocus here causes a bug in Safari where you
-                       cannot click the search bar -->
+                       cannot click the search bar, so we do it in JS -->
                   <input id="search" type="text" name="query" class="form-control"
                          placeholder="">
                   </input>
@@ -236,5 +236,10 @@
     </div><!-- /.modal -->
 
     {% include 'typeahead.html' %}
+
+    <!-- Autofocus -->
+    <script>
+     $(document).ready(function() { $('#search').focus() })
+    </script>
   </body>
 </html>
