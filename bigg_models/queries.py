@@ -1107,13 +1107,13 @@ def build_reaction_string(metabolite_list, lower_bound, upper_bound,
     for met in metabolite_list:
         if float(met['stoichiometry']) < 0:
             if float(met['stoichiometry']) != -1:
-                pre_reaction_string += '{0:.1f}'.format(abs(met['stoichiometry'])) + \
+                pre_reaction_string += '{}'.format(abs(met['stoichiometry'])) + \
                                        ' ' + met['bigg_id'] + '_' + met['compartment_bigg_id'] + ' + '
             else:
                 pre_reaction_string += met['bigg_id'] + '_' + met['compartment_bigg_id'] + ' + '
         if float(met['stoichiometry']) > 0:
             if float(met['stoichiometry']) != 1:
-                post_reaction_string += '{0:.1f}'.format(abs(met['stoichiometry'])) + ' ' + \
+                post_reaction_string += '{}'.format(abs(met['stoichiometry'])) + ' ' + \
                                         met['bigg_id'] + '_' + met['compartment_bigg_id'] + ' + '
             else:
                 post_reaction_string += met['bigg_id'] + '_' + met['compartment_bigg_id'] + ' + '

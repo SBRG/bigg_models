@@ -4,8 +4,6 @@ from cobradb.models import *
 from bigg_models.queries import build_reaction_string
 
 from sqlalchemy import func
-import sys
-import os
 from os.path import abspath, dirname, join
 from os import makedirs
 import logging
@@ -13,21 +11,9 @@ import json
 import itertools as it
 from time import time
 import cobra
-from contextlib import contextmanager
 from progressbar import ProgressBar
 
-@contextmanager
-def suppress_stdout():
-    with open(os.devnull, 'w') as devnull:
-        old_stdout = sys.stdout
-        sys.stdout = devnull
-        try:
-            yield
-        finally:
-            sys.stdout = old_stdout
-
 logging.basicConfig(level=logging.INFO)
-
 logging.info('Making namespace downloads')
 
 # get directory
@@ -120,6 +106,14 @@ reaction_db = (session
                .filter(link_db.c.reaction_bigg_id == Reaction.bigg_id)
                .filter(old_id_db.c.reaction_bigg_id == Reaction.bigg_id))
 
+def _get_met(model, met_id):
+    try:
+        return model.metabolites.get_by_id(met_id)
+    except KeyError:
+        met = cobra.Metabolite(met_id)
+        model.add_metabolites([met])
+        return met
+
 # Add lines
 logging.info('Building download for reactions')
 t = time()
@@ -144,13 +138,12 @@ for (bigg_id, name, model_ids, mets, comps, stoichs, data_names, url_prefixes,
     reaction = cobra.Reaction(bigg_id)
     reaction.name = name
     model.add_reaction(reaction)
-    with suppress_stdout():
-        reaction.build_reaction_from_string(reaction_string)
+    reaction.add_metabolites({_get_met(model, f'{m}_{c}'): s
+                              for m, c, s in zip(mets, comps, stoichs)})
     reaction.annotation = links_dict
     reaction.notes['original_bigg_ids'] = old_ids
 
 logging.info(f'Finished in {time() - t:.0f} seconds')
-
 logging.info('Querying for metabolites')
 
 # Models
@@ -255,8 +248,8 @@ for (bigg_id, compartment_id, name, model_ids, data_names, url_prefixes,
         metabolite.notes['original_bigg_ids'] = old_ids
 
 logging.info(f'Finished in {time() - t:.0f} seconds')
-
 logging.info('Saving files')
+
 for filename, data in [('bigg_models_reactions.txt', reactions),
                        ('bigg_models_metabolites.txt', metabolites)]:
     with open(join(directory, filename), 'w') as f:
@@ -266,5 +259,4 @@ for filename, data in [('bigg_models_reactions.txt', reactions),
 cobra.io.save_json_model(model, join(directory, 'universal_model.json'))
 
 session.close()
-
 logging.info('Done making namespace downloads')
