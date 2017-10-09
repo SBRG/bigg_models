@@ -39,7 +39,7 @@ body, html {
   margin: 40px auto;
   background-color: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.3);
-  max-width: 560px;
+  max-width: 610px;
 }
 
 .updates-link > a {
