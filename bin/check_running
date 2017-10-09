@@ -6,6 +6,6 @@ export PATH=/home/zaking/esolver_bin:$PATH
 if ps -Af | grep -v grep | grep 'python3 -m bigg_models.server --port=8888'; then
     echo Running;
 else
-    python3 -m bigg_models.server --port=8888 --log-file-prefix=$BIGG'/bigg_models.log'
+    python3 -m bigg_models.server --port=8888 --log-file-prefix=$BIGG'/bigg_models.log' --processes=4
 fi
 exit
