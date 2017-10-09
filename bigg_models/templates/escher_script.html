@@ -1,6 +1,6 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.14/d3.min.js"></script>
-<script src="//unpkg.com/escher-vis@1.4.3/js/dist/escher.min.js"></script>
-<link rel="stylesheet" href="//unpkg.com/escher-vis@1.4.3/css/dist/builder.min.css"/>
+<script src="//unpkg.com/escher-vis@1.6.0/js/dist/escher.min.js"></script>
+<link rel="stylesheet" href="//unpkg.com/escher-vis@1.6.0/css/dist/builder.min.css"/>
 <script>
 
  // Set up map and styles
@@ -33,6 +33,7 @@
      scroll_behavior: 'none',
      enable_editing: false,
      first_load_callback: add_click_listeners,
+     enable_keys: false,
    };
    if (has_data) {
      if ('{{escher_script_type}}' == 'reaction') {
