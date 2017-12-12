@@ -77,6 +77,13 @@
 
       {% if escher_maps|count > 0 %}
         {% include 'escher_div.html' %}
+
+        <h4 style="margin-top: 35px">Download Escher maps as JSON</h4>
+        <ul>
+          {% for map_name in escher_maps|map(attribute='map_name') %}
+          <li><a href="/escher_map_json/{{map_name}}" download="{{map_name}}.json">{{map_name}}.json</a></li>
+          {% endfor %}
+        </ul>
       {% endif %}
 
       {% include 'comments.html' %}
