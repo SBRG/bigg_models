@@ -122,15 +122,15 @@ for (bigg_id, name, model_ids, mets, comps, stoichs, data_names, url_prefixes,
     reaction_string = build_reaction_string([{'bigg_id': m, 'compartment_bigg_id': c, 'stoichiometry': s}
                                              for m, c, s in zip(mets, comps, stoichs)],
                                             None, None, True, False)
-    links_dict = {name: f'{prefix}{id}' for name, prefix, id in
-                  zip(data_names, url_prefixes, synonyms)
-                  if prefix is not None}
+    links = [(name, f'{prefix}{id}') for name, prefix, id in
+             zip(data_names, url_prefixes, synonyms)
+             if prefix is not None]
     reactions['lines'].append([
         bigg_id,
         name if name is not None else '',
         reaction_string,
         '; '.join(model_ids),
-        '; '.join(f'{k}: {v}' for k, v in links_dict.items()),
+        '; '.join(f'{k}: {v}' for k, v in links),
         '; '.join(old_ids)
     ])
 
@@ -140,7 +140,7 @@ for (bigg_id, name, model_ids, mets, comps, stoichs, data_names, url_prefixes,
     model.add_reaction(reaction)
     reaction.add_metabolites({_get_met(model, f'{m}_{c}'): s
                               for m, c, s in zip(mets, comps, stoichs)})
-    reaction.annotation = links_dict
+    reaction.annotation = links
     reaction.notes['original_bigg_ids'] = old_ids
 
 logging.info(f'Finished in {time() - t:.0f} seconds')
@@ -225,15 +225,15 @@ metabolites = {
 for (bigg_id, compartment_id, name, model_ids, data_names, url_prefixes,
      synonyms, old_ids) in ProgressBar()(component_db.all()):
     compartmentalized_id = f'{bigg_id}_{compartment_id}'
-    c_links_dict = {name: f'{prefix}{id}' for name, prefix, id in
-                    zip(data_names, url_prefixes, synonyms)
-                    if prefix is not None}
+    c_links = [(name, f'{prefix}{id}') for name, prefix, id in
+               zip(data_names, url_prefixes, synonyms)
+               if prefix is not None]
     metabolites['lines'].append([
         compartmentalized_id,
         bigg_id,
         name if name is not None else '',
         '; '.join(model_ids),
-        '; '.join(f'{k}: {v}' for k, v in c_links_dict.items()),
+        '; '.join(f'{k}: {v}' for k, v in c_links),
         '; '.join(old_ids)
     ])
 
@@ -244,7 +244,7 @@ for (bigg_id, compartment_id, name, model_ids, data_names, url_prefixes,
         logging.warn(f'Could not find metabolite {compartmentalized_id}')
     else:
         metabolite.name = name
-        metabolite.annotation = c_links_dict
+        metabolite.annotation = c_links
         metabolite.notes['original_bigg_ids'] = old_ids
 
 logging.info(f'Finished in {time() - t:.0f} seconds')
