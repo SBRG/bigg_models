@@ -1,7 +1,7 @@
 {% if xml_gz_size %}
 SBML
 {% with question_title='SBML level 3 (v1) with FBC (v2)'%}
-    {% with question_text='This file is fully annotated through MIRIAM and uses version 2 of the FBC package. It is only readable by COBRApy v0.4 and later.' %}
+    {% with question_text='This file is fully annotated through MIRIAM and uses version 2 of the FBC package. Make sure the software you use supports this standard. If using COBRApy, v0.4 and later is required. It is also supported by the latest release of the COBRA Toolbox.' %}
       {% include 'question_mark.html' %}
     {% endwith %}
 {% endwith %}
