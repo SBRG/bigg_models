@@ -104,15 +104,15 @@ curl 'http://{{api_host}}/static/models/iND750.json'</pre>
 
   <pre class="get"># Get a list of model reactions<br/>curl 'http://{{api_host}}/api/v2/models/iND750/reactions'</pre>
   <pre>[{"bigg_id": "EX_4abut_e", "name": "4-Aminobutanoate exchange", "organism": "Saccharomyces cerevisiae S288c"},
- {"bigg_id": "EX_ac_e", "name": "Acetate exchange", "organism": "Saccharomyces cerevisiae S288c"},
+ {"bigg_id": "EX_ac_e", "name": "Acetate exchange", "organism": "Saccharomyces cerevisiae S288c"}, 
 
 ...
 ]</pre>
 
   <pre class="get">curl 'http://{{api_host}}/api/v2/models/iND750/reactions/GAPD'</pre>
-  <pre>{"bigg_id": "GAPD",
- "name": "glyceraldehyde-3-phosphate dehydrogenase",
+  <pre>{"name": "glyceraldehyde-3-phosphate dehydrogenase",
  "pseudoreaction": false,
+ "count": 1,
  "model_bigg_id": "iND750"
  "metabolites": [{"stoichiometry": -1,
 		  "bigg_id": "pi",
@@ -210,18 +210,19 @@ curl 'http://{{api_host}}/static/models/iND750.json'</pre>
 ]</pre>
   <pre class="get">curl 'http://{{api_host}}/api/v2/models/iMM904/genes/Q0045'</pre>
 	<pre>{"bigg_id": "Q0045",
- "name": "",
- "leftpos": ,
- "rightpos": ,
+ "name": "COX1",
+ "leftpos": 13818,
+ "rightpos": 26701,
  "model_bigg_id": "iMM904",
+ "protein_sequence": , 
  "reactions": [{"bigg_id": "",
 		        "name": "",
 		        "gene_reaction_rule": ""}]
 }</pre>
 
 	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/reactions'</pre>
-	<pre>[{"bigg_id": "12DGR120tipp", "name": "_1,2 diacylglycerol transport via flipping (periplasm to cytoplasm, n-C12:0)"},
- {"bigg_id": "12DGR140tipp", "name": "_1,2 diacylglycerol transport via flipping (periplasm to cytoplasm, n-C14:0)"},
+	<pre>[{"bigg_id": "12DGR120tipp", "model_bigg_id": "Universal", "name": "_1,2 diacylglycerol transport via flipping (periplasm to cytoplasm, n-C12:0)"},
+ {"bigg_id": "12DGR140tipp", "model_bigg_id": "Universal", "name": "_1,2 diacylglycerol transport via flipping (periplasm to cytoplasm, n-C14:0)"},
  ...
 ]</pre>
 
@@ -243,8 +244,8 @@ curl 'http://{{api_host}}/static/models/iND750.json'</pre>
 }</pre>
 
 	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/metabolites'</pre>
-	<pre>[{"bigg_id": "10fthf", "name": "_10-Formyltetrahydrofolate"},
- {"bigg_id": "12dgr120", "name": "_1,2-Diacyl-sn-glycerol (didodecanoyl, n-C12:0)"},
+	<pre>[{"bigg_id": "10fthf", "model_bigg_id": "Universal", "name": "_10-Formyltetrahydrofolate"},
+ {"bigg_id": "12dgr120", "model_bigg_id": "Universal", "name": "_1,2-Diacyl-sn-glycerol (didodecanoyl, n-C12:0)"},
  ...
 ]</pre>
 
