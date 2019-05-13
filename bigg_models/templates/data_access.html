@@ -66,20 +66,20 @@ curl -O 'http://{{api_host}}/static/models/iMM904.mat'</pre>
   <hr/><h3>Models, reactions, metabolites, and genes</h3>
 
   <pre class="get"># Get a list of models<br/>curl 'http://{{api_host}}/api/v2/models'</pre>
-  <pre>{"results_count": 76,
- "results": [{"bigg_id": "iAPECO1_1312",
-              "organism": "Escherichia coli APEC O1",
-              "metabolite_count": 1944,
-              "gene_count": 1313,
-              "reaction_count": 2737},
-
-             {"bigg_id": "iND750",
-              "organism": "Saccharomyces cerevisiae S288c",
-              "metabolite_count": 1061,
-              "gene_count": 750,
-              "reaction_count": 1266},
-
-             ... ]
+  <pre>{"results_count": 85, 
+  "results": [{"bigg_id": "e_coli_core", 
+  		"metabolite_count": 72, 
+		"organism": "Escherichia coli str. K-12 substr. MG1655", 
+		"reaction_count": 95, 
+		"gene_count": 137}, 
+		
+ 		{"bigg_id": "iAB_RBC_283", 
+		"metabolite_count": 342, 
+		"organism": "Homo sapiens", 
+		"reaction_count": 469, 
+		"gene_count": 346}, 
+		
+		...]
 }</pre>
 
   <pre class="get"># Get model details<br/>curl 'http://{{api_host}}/api/v2/models/iND750'</pre>
@@ -103,9 +103,9 @@ curl 'http://{{api_host}}/static/models/iND750.json'</pre>
   <pre># Returns the whole model</pre>
 
   <pre class="get"># Get a list of model reactions<br/>curl 'http://{{api_host}}/api/v2/models/iND750/reactions'</pre>
-  <pre>[{"bigg_id": "EX_4abut_e", "name": "4-Aminobutanoate exchange", "organism": "Saccharomyces cerevisiae S288c"},
- {"bigg_id": "EX_ac_e", "name": "Acetate exchange", "organism": "Saccharomyces cerevisiae S288c"}, 
-
+  <pre>[{"bigg_id": "XPPT", "name": "Xanthine phosphoribosyltransferase", "organism": "Saccharomyces cerevisiae S288C", "model_bigg_id": "iND750"}, 
+  {"bigg_id": "XTSNt2", "name": "Xanthosine transport in via proton symport", "organism": "Saccharomyces cerevisiae S288C", "model_bigg_id": "iND750"},
+  
 ...
 ]</pre>
 
@@ -173,30 +173,23 @@ curl 'http://{{api_host}}/static/models/iND750.json'</pre>
  "compartment_bigg_id": "c",
  "name": "10-Formyltetrahydrofolate",
  "model_bigg_id": "iND750",
+ "old_identifiers": ["10fthf_c"],
  "escher_maps": [],
- "reactions": [
-   {"model_bigg_id": "iND750",
-     "bigg_id": "AICART",
-     "name": "phosphoribosylaminoimidazolecarboxamide formyltransferase"},
-   {"model_bigg_id": "iND750",
-     "bigg_id": "MTHFC",
-     "name": "methenyltetrahydrofolate cyclohydrolase"},
-
-   ...
-   ],
+ 
+  "other_models_with_metabolite": [
+   {"bigg_id": "iAPECO1_1312",
+    "compartment_bigg_id": "c"}
+    
+    ...
+    ],
+    
  "database_links": {
    "KEGG": [{"link": "http://www.genome.jp/dbget-bin/www_bget?cpd:C00234",
 	     "id": "C00234"}],
    "MetaCyc": [{"link": "http://metacyc.org/META/NEW-IMAGE?type=COMPOUND&object=10-FORMYL-THF",
 		"id": "10-FORMYL-THF"}],
    ...
-   },
- "other_models_with_metabolite": [
-   {"bigg_id": "iAPECO1_1312",
-    "compartment_bigg_id": "c"}
-
-   ...
- ]
+   }
 }
   </pre>
 
@@ -211,13 +204,25 @@ curl 'http://{{api_host}}/static/models/iND750.json'</pre>
   <pre class="get">curl 'http://{{api_host}}/api/v2/models/iMM904/genes/Q0045'</pre>
 	<pre>{"bigg_id": "Q0045",
  "name": "COX1",
+ "strand": "+",
  "leftpos": 13818,
- "rightpos": 26701,
+ "genome_ref_string": "ncbi_assembly:GCF_000146045.2", 
+ "database_links": {"Saccharomyces Genome Database": [{"link": "http://identifiers.org/sgd/S000007260", "id": "S000007260"}], 
+ "NCBI Entrez Gene": [{"link": "http://identifiers.org/ncbigene/854598", "id": "854598"}], 
+ "NCBI GI": [{"link": "http://identifiers.org/ncbigi/gi:6226519", "id": "6226519"}]},
+ "rightpos": 26701, 
+ "protein_sequence": " ",
  "model_bigg_id": "iMM904",
- "protein_sequence": , 
  "reactions": [{"bigg_id": "",
 		        "name": "",
 		        "gene_reaction_rule": ""}]
+			
+			...
+"old_identifiers": ["Q0045"], 
+"mapped_to_genbank": true, 
+"genome_name": "GCF_000146045.2", 
+"chromosome_ncbi_accession": "NC_001224.1"}		
+
 }</pre>
 
 	<pre class="get">curl 'http://{{api_host}}/api/v2/universal/reactions'</pre>
@@ -253,6 +258,7 @@ curl 'http://{{api_host}}/static/models/iND750.json'</pre>
 	<pre>{"bigg_id": "g3p",
  "name": "Glyceraldehyde 3-phosphate",
  "formula": "C3H5O6P",
+ "old_identifiers": ["g3p"], 
  "database_links": {
    "KEGG": [
      {"link": "http://www.genome.jp/dbget-bin/www_bget?cpd:C00661",
@@ -291,7 +297,7 @@ curl 'http://{{api_host}}/static/models/iND750.json'</pre>
 }</pre>
 
 	<pre class="get">curl 'http://{{api_host}}/api/v2/search?query=gapA&search_type=genes'</pre>
-	<pre>{"results_count": 55,
+	<pre>{"results_count": 71,
  "results": [
      {"model_bigg_id": "iAF987", "bigg_id": "Gmet_1946", "name": "gapA", "organism": "Geobacter metallireducens GS-15"},
      {"model_bigg_id": "iAF1260", "bigg_id": "b1779", "name": "gapA", "organism": "Escherichia coli str. K-12 substr. MG1655"},
