@@ -59,6 +59,18 @@ span.pseudoreaction {
   color: #333;
 }
 
+/* Search options */
+.search-option-input {
+  margin-left: -4px;
+  font-size: 16px;
+  text-align: left;
+  font-weight: 400;
+}
+.search-option-input input {
+  top: -2px;
+  position: relative;
+}
+
 .navbar {
   font-size: 15px;
   /* position:relative; */

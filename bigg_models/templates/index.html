@@ -68,17 +68,19 @@
                 {% endwith %}
               </div>
               <form id="search-form" action="/search" method="get">
-                <div class="input-group">
-                  <!-- Autofocus here causes a bug in Safari where you
-                       cannot click the search bar, so we do it in JS -->
-                  <input id="search" type="text" name="query" class="form-control"
-                         placeholder="">
-                  </input>
-                  <span class="input-group-btn">
-                    <input type="submit" value="Search" class="btn btn-default"
-                           type="button">
-                  </input>
-                  </span>
+                <div class="container" style="text-align: left">
+                  <div class="input-group row">
+                    <!-- Autofocus here causes a bug in Safari where you
+                         cannot click the search bar, so we do it in JS -->
+                    <input id="search" type="text" name="query" class="form-control" placeholder="" />
+                    <span class="input-group-btn">
+                      <input type="submit" value="Search" class="btn btn-default" type="button" />
+                    </span>
+                  </div>
+                  <label class="search-option-input search-option-input-frontpage row">
+                    <input type="checkbox" name="multistrain" checked="checked" />
+                    Include <i>E. coli</i> multistrain models in search
+                  </label>
                 </div>
               </form>
             </div>
