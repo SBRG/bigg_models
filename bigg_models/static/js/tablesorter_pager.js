@@ -38,6 +38,7 @@ $(function() {
                 // and a filterList = [[2,Blue],[3,13]] becomes "&fcol[2]=Blue&fcol[3]=13" in the url
                 ajaxUrl: ('/api/v2' + window.location.pathname +
                           '?query=' + get_parameter_by_name('query') +
+                          '&multistrain=' + get_parameter_by_name('multistrain') +
                           '&page={page}&size={size}&{sortList:col}' +
                           '&include_link_urls'),
 

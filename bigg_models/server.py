@@ -575,6 +575,7 @@ class SearchHandler(BaseHandler):
         page = self.get_argument('page', None)
         size = self.get_argument('size', None)
         search_type = self.get_argument('search_type', None)
+        multistrain = self.get_argument('multistrain', None) == 'off'
         include_link_urls = 'include_link_urls' in self.request.query_arguments
 
         # defaults
@@ -592,40 +593,80 @@ class SearchHandler(BaseHandler):
 
         if search_type == 'reactions':
             # reactions
-            raw_results = queries.search_for_universal_reactions(query_string, session, page,
-                                                                 size, sort_column, sort_direction)
+            raw_results = queries.search_for_universal_reactions(
+                query_string,
+                session,
+                page,
+                size,
+                sort_column,
+                sort_direction,
+                multistrain,
+            )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/universal/reactions/{bigg_id}'.format(**x)})
                                for x in raw_results]
-            result = {'results': [dict(x, model_bigg_id='Universal', organism='') for x in raw_results],
-                      'results_count': queries.search_for_universal_reactions_count(query_string,
-                                                                                    session)}
+            result = {
+                'results': [dict(x, model_bigg_id='Universal', organism='') for x in raw_results],
+                'results_count': queries.search_for_universal_reactions_count(
+                    query_string,
+                    session,
+                    multistrain,
+                )}
 
         elif search_type == 'metabolites':
-            raw_results = queries.search_for_universal_metabolites(query_string, session,
-                                                                    page, size, sort_column,
-                                                                    sort_direction)
+            raw_results = queries.search_for_universal_metabolites(
+                query_string,
+                session,
+                page,
+                size,
+                sort_column,
+                sort_direction,
+                multistrain,
+            )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/universal/metabolites/{bigg_id}'.format(**x)})
                             for x in raw_results]
 
-            result = {'results': [dict(x, model_bigg_id='Universal', organism='') for x in raw_results],
-                      'results_count': queries.search_for_universal_metabolites_count(query_string, session)}
+            result = {
+                'results': [dict(x, model_bigg_id='Universal', organism='') for x in raw_results],
+                'results_count': queries.search_for_universal_metabolites_count(
+                    query_string,
+                    session,
+                    multistrain,
+                )}
 
         elif search_type == 'genes':
-            raw_results = queries.search_for_genes(query_string, session, page,
-                                                   size, sort_column,
-                                                   sort_direction)
+            raw_results = queries.search_for_genes(
+                query_string,
+                session,
+                page,
+                size,
+                sort_column,
+                sort_direction,
+                multistrain,
+            )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/genes/{bigg_id}'.format(**x)})
                                for x in raw_results]
 
-            result = {'results': raw_results,
-                      'results_count': queries.search_for_genes_count(query_string, session)}
+            result = {
+                'results': raw_results,
+                'results_count': queries.search_for_genes_count(
+                    query_string,
+                    session,
+                    multistrain,
+                )}
 
         elif search_type == 'models':
-            raw_results = queries.search_for_models(query_string, session, page,
-                                                    size, sort_column, sort_direction)
+            raw_results = queries.search_for_models(
+                query_string,
+                session,
+                page,
+                size,
+                sort_column,
+                sort_direction,
+                multistrain,
+            )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/models/{bigg_id}'.format(**x),
                                                 'metabolite_count': '/models/{bigg_id}/metabolites'.format(**x),
@@ -633,8 +674,14 @@ class SearchHandler(BaseHandler):
                                                 'gene_count': '/models/{bigg_id}/genes'.format(**x)})
                                for x in raw_results]
 
-            result = {'results': raw_results,
-                      'results_count': queries.search_for_models_count(query_string, session)}
+            result = {
+                'results': raw_results,
+                'results_count': queries.search_for_models_count(
+                    query_string,
+                    session,
+                    multistrain,
+                )
+            }
 
         else:
             raise HTTPError(400, 'Bad search_type %s' % search_type)

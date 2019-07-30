@@ -85,6 +85,15 @@ def _apply_order_limit_offset(query, sort_column_object=None, sort_direction='as
     return query
 
 
+def _add_multistrain_filter(query):
+    return (query
+            .join(PublicationModel, PublicationModel.model_id == Model.id)
+            .join(Publication, Publication.id == PublicationModel.publication_id)
+            .filter(or_(
+                Publication.reference_id != '24277855',
+                Publication.reference_type != 'pmid'
+            )))
+
 #-------------------------------------------------------------------------------
 # Reactions
 #-------------------------------------------------------------------------------
@@ -1655,23 +1664,32 @@ def search_for_genes(query_string, session, page=None, size=None, sort_column=No
             for x in query]
 
 
-def search_for_models_count(query_string, session):
+def search_for_models_count(query_string, session, multistrain):
     """Count the search results."""
     # similarity functions
     sim_bigg_id = func.similarity(Model.bigg_id, query_string)
     sim_organism = func.similarity(Model.organism, query_string)
 
     # set up the query
-    return (session
-            .query(Model.bigg_id, ModelCount, Model.organism)
-            .join(ModelCount)
-            .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
-                        sim_organism >= organism_sim_cutoff))
-            .count())
+    query = (session
+             .query(Model.bigg_id, ModelCount, Model.organism)
+             .join(ModelCount)
+             .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
+                         sim_organism >= organism_sim_cutoff)))
+    if multistrain:
+        query = _add_multistrain_filter(query)
+    return query.count()
 
 
-def search_for_models(query_string, session, page=None, size=None,
-                      sort_column=None, sort_direction='ascending'):
+def search_for_models(
+        query_string,
+        session,
+        page=None,
+        size=None,
+        sort_column=None,
+        sort_direction='ascending',
+        multistrain=False,
+):
     """Search for models.
 
     Arguments
@@ -1729,6 +1747,8 @@ def search_for_models(query_string, session, page=None, size=None,
              .join(ModelCount)
              .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
                          sim_organism >= organism_sim_cutoff)))
+    if multistrain:
+        query = _add_multistrain_filter(query)
 
     # order and limit
     query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
