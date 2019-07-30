@@ -20,3 +20,5 @@ TAGS
 .ipynb_checkpoints/
 *.out
 ModelPolisher-*.jar
+.mypy_cache/
+flycheck_*
