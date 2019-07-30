@@ -27,19 +27,19 @@
 
   <label class="search-option-input row">
     <input type="checkbox" id="multistrain-checkbox" checked="checked" />
-    Include <i>E. coli</i> multistrain models in search
+    Exclude <i>E. coli</i> multistrain models from search
   </label>
   <script>
    // Update URL when this is clicked
    const el = document.getElementById('multistrain-checkbox');
    const url = new URL(document.location);
    const multistrain = url.searchParams.get('multistrain');
-   el.checked = multistrain === 'on';
+   el.checked = multistrain === 'off';
    el.onclick = function () {
      if (multistrain) {
        url.searchParams.delete('multistrain');
      } else {
-       url.searchParams.set('multistrain', 'on');
+       url.searchParams.set('multistrain', 'off');
      }
      window.location.href = url.toString();
    };
