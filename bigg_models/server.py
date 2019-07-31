@@ -601,6 +601,7 @@ class GeneListHandler(PageableHandler):
         self.write(result)
         self.finish()
 
+
 class GeneListDisplayHandler(BaseHandler):
     template = env.get_template('list_display.html')
 
@@ -611,6 +612,7 @@ class GeneListDisplayHandler(BaseHandler):
         }
         self.write(self.template.render(data))
         self.finish()
+
 
 class GeneHandler(BaseHandler):
     template = env.get_template('gene.html')
