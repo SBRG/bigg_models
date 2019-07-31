@@ -24,15 +24,6 @@ import simplejson as json
 import re
 import six
 
-# sbml validator
-try:
-    import cobra_sbml_validator
-except ImportError:
-    print('COBRA SBML Validator not installed')
-    HAS_SBML_VALIDATOR = False
-else:
-    HAS_SBML_VALIDATOR = True
-
 # command line options
 define('port', default= 8888, help='run on given port', type=int)
 define('public', default=True, help='run on all addresses')
@@ -131,15 +122,6 @@ def get_application(debug=False):
         # redirects
         (r'/multiecoli/?$', RedirectHandler, {'url': 'http://bigg1.ucsd.edu/multiecoli'})
     ]
-
-    # SBML validator
-    if HAS_SBML_VALIDATOR:
-        routes += [
-            (r'/validator/?$', RedirectHandler, {'url': '/validator/app'}),
-            (r'/sbml_validator/?$', RedirectHandler, {'url': '/validator/app'}),
-            (r'/validator/app$', cobra_sbml_validator.ValidatorFormHandler),
-            (r'/validator/upload$', cobra_sbml_validator.Upload)
-        ]
 
     return Application(routes, debug=debug)
 

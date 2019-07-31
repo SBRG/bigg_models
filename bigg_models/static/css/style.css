@@ -21,6 +21,12 @@ h4 {
   color: #666;
 }
 
+/* show an image for link-outs */
+.link-out:after {
+  content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
+  opacity: 0.6;
+}
+
 p.sequence {
   word-wrap: break-word;
   font-size: 0.7em;
