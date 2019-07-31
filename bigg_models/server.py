@@ -272,6 +272,7 @@ class PageableHandler(BaseHandler):
         query_kwargs = {
             "page": self.get_argument('page', None),
             "size": self.get_argument('size', None),
+            "multistrain_off": self.get_argument('multistrain', None) == 'off',
             "sort_column": default_sort_column,
             "sort_direction": sort_direction
         }
@@ -459,6 +460,7 @@ class GenomeHandler(BaseHandler):
         result = safe_query(queries.get_genome_and_models, genome_ref_string)
         self.return_result(result)
 
+
 # Models
 class ModelListHandler(PageableHandler):
     def get(self):
@@ -472,8 +474,10 @@ class ModelListHandler(PageableHandler):
                                               'reaction_count': '/models/{bigg_id}/reactions'.format(**x),
                                               'gene_count': '/models/{bigg_id}/genes'.format(**x)})
                            for x in raw_results]
-        result = {'results': raw_results,
-                  'results_count': safe_query(queries.get_models_count)}
+        result = {
+            'results': raw_results,
+            'results_count': safe_query(queries.get_models_count, **kwargs),
+        }
 
         self.write(result)
         self.finish()
@@ -575,7 +579,7 @@ class SearchHandler(BaseHandler):
         page = self.get_argument('page', None)
         size = self.get_argument('size', None)
         search_type = self.get_argument('search_type', None)
-        multistrain = self.get_argument('multistrain', None) == 'off'
+        multistrain_off = self.get_argument('multistrain', None) == 'off'
         include_link_urls = 'include_link_urls' in self.request.query_arguments
 
         # defaults
@@ -600,7 +604,7 @@ class SearchHandler(BaseHandler):
                 size,
                 sort_column,
                 sort_direction,
-                multistrain,
+                multistrain_off,
             )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/universal/reactions/{bigg_id}'.format(**x)})
@@ -610,7 +614,7 @@ class SearchHandler(BaseHandler):
                 'results_count': queries.search_for_universal_reactions_count(
                     query_string,
                     session,
-                    multistrain,
+                    multistrain_off,
                 )}
 
         elif search_type == 'metabolites':
@@ -621,7 +625,7 @@ class SearchHandler(BaseHandler):
                 size,
                 sort_column,
                 sort_direction,
-                multistrain,
+                multistrain_off,
             )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/universal/metabolites/{bigg_id}'.format(**x)})
@@ -632,7 +636,7 @@ class SearchHandler(BaseHandler):
                 'results_count': queries.search_for_universal_metabolites_count(
                     query_string,
                     session,
-                    multistrain,
+                    multistrain_off,
                 )}
 
         elif search_type == 'genes':
@@ -643,7 +647,7 @@ class SearchHandler(BaseHandler):
                 size,
                 sort_column,
                 sort_direction,
-                multistrain,
+                multistrain_off,
             )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/genes/{bigg_id}'.format(**x)})
@@ -654,7 +658,7 @@ class SearchHandler(BaseHandler):
                 'results_count': queries.search_for_genes_count(
                     query_string,
                     session,
-                    multistrain,
+                    multistrain_off,
                 )}
 
         elif search_type == 'models':
@@ -665,7 +669,7 @@ class SearchHandler(BaseHandler):
                 size,
                 sort_column,
                 sort_direction,
-                multistrain,
+                multistrain_off,
             )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/models/{bigg_id}'.format(**x),
@@ -679,7 +683,7 @@ class SearchHandler(BaseHandler):
                 'results_count': queries.search_for_models_count(
                     query_string,
                     session,
-                    multistrain,
+                    multistrain_off,
                 )
             }
 

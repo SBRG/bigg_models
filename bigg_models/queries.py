@@ -521,12 +521,21 @@ def get_model_metabolites(model_bigg_id, session, page=None, size=None, sort_col
 #-------------------------------------------------------------------------------
 
 
-def get_models_count(session):
+def get_models_count(session, multistrain_off, **kwargs):
     """Return the number of models in the database."""
-    return session.query(Model).count()
+    query = session.query(Model)
+    if multistrain_off:
+        query = _add_multistrain_filter(query)
+    return query.count()
 
 
-def get_models(session, page=None, size=None, sort_column=None, sort_direction='ascending'):
+def get_models(session,
+               page=None,
+               size=None,
+               sort_column=None,
+               sort_direction='ascending',
+               multistrain_off=False,
+):
     """Get models and number of components.
 
     Arguments
@@ -572,12 +581,20 @@ def get_models(session, page=None, size=None, sort_column=None, sort_direction='
                     ModelCount.reaction_count, ModelCount.gene_count)
              .join(ModelCount, ModelCount.model_id == Model.id))
 
-    # order and limit
-    query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
-                                      page, size)
+    if multistrain_off:
+        query = _add_multistrain_filter(query)
 
-    return [{'bigg_id': x[0], 'organism': x[1], 'metabolite_count': x[2], 'reaction_count': x[3], 'gene_count': x[4]}
-            for x in query]
+    # order and limit
+    query = _apply_order_limit_offset(query, sort_column_object,
+                                      sort_direction, page, size)
+
+    return [{
+        'bigg_id': x[0],
+        'organism': x[1],
+        'metabolite_count': x[2],
+        'reaction_count': x[3],
+        'gene_count': x[4],
+    } for x in query]
 
 
 def get_model_list_for_reaction(reaction_bigg_id, session):
@@ -1664,7 +1681,7 @@ def search_for_genes(query_string, session, page=None, size=None, sort_column=No
             for x in query]
 
 
-def search_for_models_count(query_string, session, multistrain):
+def search_for_models_count(query_string, session, multistrain_off):
     """Count the search results."""
     # similarity functions
     sim_bigg_id = func.similarity(Model.bigg_id, query_string)
@@ -1676,8 +1693,8 @@ def search_for_models_count(query_string, session, multistrain):
              .join(ModelCount)
              .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
                          sim_organism >= organism_sim_cutoff)))
-    if multistrain:
-        query = _add_multistrain_filter(query)
+    if multistrain_off:
+        query = _add_multistrain_off_filter(query)
     return query.count()
 
 
@@ -1688,7 +1705,7 @@ def search_for_models(
         size=None,
         sort_column=None,
         sort_direction='ascending',
-        multistrain=False,
+        multistrain_off=False,
 ):
     """Search for models.
 
@@ -1747,8 +1764,8 @@ def search_for_models(
              .join(ModelCount)
              .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
                          sim_organism >= organism_sim_cutoff)))
-    if multistrain:
-        query = _add_multistrain_filter(query)
+    if multistrain_off:
+        query = _add_multistrain_off_filter(query)
 
     # order and limit
     query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
