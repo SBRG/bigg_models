@@ -611,8 +611,12 @@ class SearchHandler(BaseHandler):
 
         # get the sorting column
         columns = _parse_col_arg(self.get_argument('columns', None))
-        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns,
-                                                    sort_column, sort_direction)
+        sort_column, sort_direction = _get_col_name(
+            self.request.query_arguments,
+            columns,
+            sort_column,
+            sort_direction,
+        )
 
         # run the queries
         session = Session()
@@ -670,7 +674,7 @@ class SearchHandler(BaseHandler):
                 size,
                 sort_column,
                 sort_direction,
-                multistrain_off,
+                multistrain_off=multistrain_off,
             )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/genes/{bigg_id}'.format(**x)})
@@ -681,7 +685,7 @@ class SearchHandler(BaseHandler):
                 'results_count': queries.search_for_genes_count(
                     query_string,
                     session,
-                    multistrain_off,
+                    multistrain_off=multistrain_off,
                 )}
 
         elif search_type == 'models':

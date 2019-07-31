@@ -3,12 +3,13 @@
 from bigg_models.version import (__version__ as version,
                                  __api_version__ as api_version)
 
+from cobradb.models import Model
 from cobradb.models import *
 from cobradb.model_loading import parse
 from cobradb import settings
 from cobradb.util import make_reaction_copy_id, ref_str_to_tuple, ref_tuple_to_str
 
-from sqlalchemy import desc, asc, func, or_, and_
+from sqlalchemy import desc, asc, func, or_, and_, not_
 from collections import defaultdict
 from os.path import abspath, dirname, join, isfile, getsize
 from itertools import chain
@@ -84,15 +85,35 @@ def _apply_order_limit_offset(query, sort_column_object=None, sort_direction='as
 
     return query
 
-
-def _add_multistrain_filter(query):
+def _add_pub_filter(query):
     return (query
             .join(PublicationModel, PublicationModel.model_id == Model.id)
             .join(Publication, Publication.id == PublicationModel.publication_id)
-            .filter(or_(
-                Publication.reference_id != '24277855',
-                Publication.reference_type != 'pmid'
-            )))
+            .filter(not_(and_(
+                Publication.reference_id.in_(['24277855', '27667363']),
+                Publication.reference_type == 'pmid',
+            ))))
+
+def _add_multistrain_filter(session, query, from_class):
+    if from_class is Reaction:
+        return query.filter(Reaction.id.in_(_add_pub_filter(
+            session.query(Reaction.id)
+            .join(ModelReaction, ModelReaction.reaction_id == Reaction.id)
+            .join(Model, Model.id == ModelReaction.model_id)
+        )))
+    elif from_class is Component:
+        return query.filter(Component.id.in_(_add_pub_filter(
+            session.query(Component.id)
+            .join(CompartmentalizedComponent,
+                  CompartmentalizedComponent.component_id == Component.id)
+            .join(ModelCompartmentalizedComponent,
+                  ModelCompartmentalizedComponent.compartmentalized_component_id == CompartmentalizedComponent.id)
+            .join(Model, Model.id == ModelCompartmentalizedComponent.model_id)
+        )))
+    elif from_class is Model or from_class is Gene:
+        return _add_pub_filter(query)
+    else:
+        raise Exception
 
 #-------------------------------------------------------------------------------
 # Reactions
@@ -525,16 +546,17 @@ def get_models_count(session, multistrain_off, **kwargs):
     """Return the number of models in the database."""
     query = session.query(Model)
     if multistrain_off:
-        query = _add_multistrain_filter(query)
+        query = _add_multistrain_filter(session, query, Model)
     return query.count()
 
 
-def get_models(session,
-               page=None,
-               size=None,
-               sort_column=None,
-               sort_direction='ascending',
-               multistrain_off=False,
+def get_models(
+        session,
+        page=None,
+        size=None,
+        sort_column=None,
+        sort_direction='ascending',
+        multistrain_off=False,
 ):
     """Get models and number of components.
 
@@ -582,7 +604,7 @@ def get_models(session,
              .join(ModelCount, ModelCount.model_id == Model.id))
 
     if multistrain_off:
-        query = _add_multistrain_filter(query)
+        query = _add_multistrain_filter(session, query, Model)
 
     # order and limit
     query = _apply_order_limit_offset(query, sort_column_object,
@@ -1255,22 +1277,37 @@ gene_bigg_id_sim_cutoff = 1.0
 organism_sim_cutoff = 0.1
 
 
-def search_for_universal_reactions_count(query_string, session):
+def search_for_universal_reactions_count(
+        query_string,
+        session,
+        multistrain_off,
+):
     """Count the search results."""
     # similarity functions
     sim_bigg_id = func.similarity(Reaction.bigg_id, query_string)
     sim_name = func.similarity(Reaction.name, query_string)
 
-    return (session
-            .query(Reaction.bigg_id, Reaction.name)
-            .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
-                        and_(sim_name >= name_sim_cutoff,
-                             Reaction.name != '')))
-            .count())
+    query = (session
+             .query(Reaction.bigg_id, Reaction.name)
+             .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
+                         and_(sim_name >= name_sim_cutoff,
+                              Reaction.name != ''))))
+
+    if multistrain_off:
+        query = _add_multistrain_filter(session, query, Reaction)
+
+    return query.count()
 
 
-def search_for_universal_reactions(query_string, session, page=None, size=None,
-                                   sort_column=None, sort_direction='ascending'):
+def search_for_universal_reactions(
+        query_string,
+        session,
+        page=None,
+        size=None,
+        sort_column=None,
+        sort_direction='ascending',
+        multistrain_off=False,
+):
     """Search for universal reactions.
 
     Arguments
@@ -1319,6 +1356,9 @@ def search_for_universal_reactions(query_string, session, page=None, size=None,
              .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
                          and_(sim_name >= name_sim_cutoff,
                               Reaction.name != ''))))
+
+    if multistrain_off:
+        query = _add_multistrain_filter(session, query, Reaction)
 
     # order and limit
     query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
@@ -1405,23 +1445,37 @@ def reaction_with_hash(hash, session):
     return {'bigg_id': res[0], 'model_bigg_id': 'universal', 'name': res[1]}
 
 
-def search_for_universal_metabolites_count(query_string, session):
+def search_for_universal_metabolites_count(
+        query_string,
+        session,
+        multistrain_off,
+):
     """Count the search results."""
     # similarity functions
     sim_bigg_id = func.similarity(Component.bigg_id, query_string)
     sim_name = func.similarity(Component.name, query_string)
 
-    return (session
-            .query(Component.bigg_id, Component.name)
-            .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
-                        and_(sim_name >= name_sim_cutoff,
-                             Component.name != '')))
-            .count())
+    query = (session
+             .query(Component.bigg_id, Component.name)
+             .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
+                         and_(sim_name >= name_sim_cutoff,
+                              Component.name != ''))))
+
+    if multistrain_off:
+        query = _add_multistrain_filter(session, query, Component)
+
+    return query.count()
 
 
-def search_for_universal_metabolites(query_string, session, page=None,
-                                     size=None, sort_column=None,
-                                     sort_direction='ascending'):
+def search_for_universal_metabolites(
+        query_string,
+        session,
+        page=None,
+        size=None,
+        sort_column=None,
+        sort_direction='ascending',
+        multistrain_off=False,
+):
     """Search for universal Metabolites.
 
     Arguments
@@ -1470,6 +1524,9 @@ def search_for_universal_metabolites(query_string, session, page=None,
              .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
                          and_(sim_name >= name_sim_cutoff,
                               Component.name != ''))))
+
+    if multistrain_off:
+        query = _add_multistrain_filter(session, query, Component)
 
     # order and limit
     query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
@@ -1587,7 +1644,12 @@ def search_for_metabolites(query_string, session, page=None, size=None,
             for x in query]
 
 
-def search_for_genes_count(query_string, session, limit_models=None):
+def search_for_genes_count(
+        query_string,
+        session,
+        limit_models=None,
+        multistrain_off=False,
+):
     """Count the search results."""
     # similarity functions
     sim_bigg_id = func.similarity(Gene.bigg_id, query_string)
@@ -1602,6 +1664,9 @@ def search_for_genes_count(query_string, session, limit_models=None):
                          and_(sim_name >= name_sim_cutoff,
                               Gene.name != ''))))
 
+    if multistrain_off:
+        query = _add_multistrain_filter(session, query, Gene)
+
     # limit the models
     if limit_models:
         query = query.filter(Model.bigg_id.in_(limit_models))
@@ -1609,8 +1674,16 @@ def search_for_genes_count(query_string, session, limit_models=None):
     return query.count()
 
 
-def search_for_genes(query_string, session, page=None, size=None, sort_column=None,
-                     sort_direction='ascending', limit_models=None):
+def search_for_genes(
+        query_string,
+        session,
+        page=None,
+        size=None,
+        sort_column=None,
+        sort_direction='ascending',
+        limit_models=None,
+        multistrain_off=False,
+):
     """Search for genes.
 
     Arguments
@@ -1669,6 +1742,9 @@ def search_for_genes(query_string, session, page=None, size=None, sort_column=No
                          and_(sim_name >= name_sim_cutoff,
                               Gene.name != ''))))
 
+    if multistrain_off:
+        query = _add_multistrain_filter(session, query, Gene)
+
     # order and limit
     query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
                                       page, size)
@@ -1694,7 +1770,7 @@ def search_for_models_count(query_string, session, multistrain_off):
              .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
                          sim_organism >= organism_sim_cutoff)))
     if multistrain_off:
-        query = _add_multistrain_off_filter(query)
+        query = _add_multistrain_filter(session, query, Model)
     return query.count()
 
 
@@ -1764,12 +1840,13 @@ def search_for_models(
              .join(ModelCount)
              .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
                          sim_organism >= organism_sim_cutoff)))
+
     if multistrain_off:
-        query = _add_multistrain_off_filter(query)
+        query = _add_multistrain_filter(session, query, Model)
 
     # order and limit
-    query = _apply_order_limit_offset(query, sort_column_object, sort_direction,
-                                      page, size)
+    query = _apply_order_limit_offset(query, sort_column_object,
+                                      sort_direction, page, size)
 
     return [{'bigg_id': x[0], 'organism': x[1], 'metabolite_count': x[2],
              'reaction_count': x[3], 'gene_count': x[4]}
