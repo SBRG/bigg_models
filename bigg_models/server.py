@@ -393,6 +393,7 @@ class UniversalMetaboliteListDisplayHandler(BaseHandler):
         self.write(self.template.render(data))
         self.finish()
 
+
 class UniversalMetaboliteHandler(BaseHandler):
     template = env.get_template('universal_metabolite.html')
 
@@ -404,9 +405,10 @@ class UniversalMetaboliteHandler(BaseHandler):
         else:
             self.return_result(result)
 
+
 class ReactionListHandler(PageableHandler):
     def get(self, model_bigg_id):
-        kwargs = self._get_pager_args(default_sort_column="bigg_id")
+        kwargs = self._get_pager_args(default_sort_column='bigg_id')
 
         raw_results = safe_query(queries.get_model_reactions, model_bigg_id,
                                  **kwargs)
@@ -414,19 +416,28 @@ class ReactionListHandler(PageableHandler):
         if "include_link_urls" in self.request.query_arguments:
             raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/reactions/{bigg_id}'.format(**x)})
                            for x in raw_results]
-        result = {'results': raw_results,
-                  'results_count':
-                  safe_query(queries.get_model_reactions_count, model_bigg_id)}
+        result = {
+            'results': raw_results,
+            'results_count': safe_query(
+                queries.get_model_reactions_count,
+                model_bigg_id,
+            )
+        }
 
         self.write(result)
         self.finish()
+
 
 class ReactionListDisplayHandler(BaseHandler):
     template = env.get_template('list_display.html')
 
     def get(self, model_bigg_id):
-        results = {'results': {'reactions': 'ajax'}}
+        results = {
+            'results': {'reactions': 'ajax'},
+            'page_name': 'reaction_list',
+        }
         self.return_result(results)
+
 
 class ReactionHandler(BaseHandler):
     template = env.get_template('reaction.html')
@@ -529,9 +540,10 @@ class ModelHandler(BaseHandler):
                             static_model_dir=static_model_dir)
         self.return_result(result)
 
+
 class MetaboliteListHandler(PageableHandler):
     def get(self, model_bigg_id):
-        kwargs = self._get_pager_args(default_sort_column="bigg_id")
+        kwargs = self._get_pager_args(default_sort_column='bigg_id')
 
         # run the queries
         raw_results = safe_query(queries.get_model_metabolites, model_bigg_id,
@@ -540,19 +552,29 @@ class MetaboliteListHandler(PageableHandler):
         if "include_link_urls" in self.request.query_arguments:
             raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/metabolites/{bigg_id}_{compartment_bigg_id}'.format(**x)})
                            for x in raw_results]
-        result = {'results': raw_results,
-                  'results_count': safe_query(queries.get_model_metabolites_count, model_bigg_id)}
+        result = {
+            'results': raw_results,
+            'results_count': safe_query(
+                queries.get_model_metabolites_count,
+                model_bigg_id,
+            )
+        }
 
         self.write(result)
         self.finish()
+
 
 class MetabolitesListDisplayHandler(BaseHandler):
     template = env.get_template('list_display.html')
 
     def get(self, model_bigg_id):
-        data = {'results': {'metabolites': 'ajax'}}
+        data = {
+            'results': {'metabolites': 'ajax'},
+            'page_name': 'metabolite_list',
+        }
         self.write(self.template.render(data))
         self.finish()
+
 
 class MetaboliteHandler(BaseHandler):
     template = env.get_template('metabolite.html')
@@ -583,7 +605,10 @@ class GeneListDisplayHandler(BaseHandler):
     template = env.get_template('list_display.html')
 
     def get(self, model_bigg_id):
-        data = {'results': {'genes': 'ajax'}}
+        data = {
+            'results': {'genes': 'ajax'},
+            'page_name': 'gene_list',
+        }
         self.write(self.template.render(data))
         self.finish()
 

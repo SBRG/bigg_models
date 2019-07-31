@@ -182,8 +182,15 @@ def get_model_reactions_count(model_bigg_id, session):
             .count())
 
 
-def get_model_reactions(model_bigg_id, session, page=None, size=None,
-                        sort_column=None, sort_direction='ascending'):
+def get_model_reactions(
+        model_bigg_id,
+        session,
+        page=None,
+        size=None,
+        sort_column=None,
+        sort_direction='ascending',
+        **kwargs,
+):
     """Get model reactions.
 
     Arguments
@@ -479,7 +486,7 @@ def get_model_metabolites_count(model_bigg_id, session):
 
 
 def get_model_metabolites(model_bigg_id, session, page=None, size=None, sort_column=None,
-                          sort_direction='ascending'):
+                          sort_direction='ascending', **kwargs):
     """Get model metabolites.
 
     Arguments
@@ -731,7 +738,7 @@ def get_model_genes_count(model_bigg_id, session):
 
 
 def get_model_genes(model_bigg_id, session, page=None, size=None,
-                    sort_column=None, sort_direction='ascending'):
+                    sort_column=None, sort_direction='ascending', **kwargs):
     """Get model genes.
 
     Arguments
@@ -1367,8 +1374,15 @@ def search_for_universal_reactions(
     return [{'bigg_id': x[0], 'name': x[1]} for x in query]
 
 
-def search_for_reactions(query_string, session, page=None, size=None, sort_column=None,
-                         sort_direction='ascending', limit_models=None):
+def search_for_reactions(
+        query_string,
+        session,
+        page=None,
+        size=None,
+        sort_column=None,
+        sort_direction='ascending',
+        limit_models=None,
+):
     """Search for model reactions.
 
     Arguments

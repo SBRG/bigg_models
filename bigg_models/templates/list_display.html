@@ -25,7 +25,13 @@
     {% endwith %}
   </h1>
 
-  {% if not page_name or page_name not in ['universal_reaction_list', 'universal_metabolite_list'] %}
+  {% if not page_name or page_name not in [
+  'universal_reaction_list',
+  'universal_metabolite_list',
+  'metabolite_list',
+  'reaction_list',
+  'gene_list',
+  ] %}
   <label class="search-option-input row">
     <input type="checkbox" id="multistrain-checkbox" checked="checked" />
     Exclude <i>E. coli</i> multistrain models from search
