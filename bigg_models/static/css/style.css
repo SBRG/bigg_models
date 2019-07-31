@@ -84,11 +84,17 @@ span.pseudoreaction {
 .navbar-form {
   margin-left: 0px;
   margin-right: 0px;
+  padding: 0;
+  border: none;
 }
 
 .navbar-brand {
   font-size: 17px !important;
   color: #337ab7 !important;
+}
+
+.form-group>.twitter-typeahead {
+  width: auto !important;
 }
 
 #nav-title-background {
