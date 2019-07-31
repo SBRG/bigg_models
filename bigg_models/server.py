@@ -804,14 +804,20 @@ class AdvancedSearchExternalIDHandler(BaseHandler):
                                                   query_string,
                                                   database_source)
         session.close()
-        dictionary = {'results': {'metabolites': metabolites,
-                                  'reactions': reactions,
-                                  'genes': genes},
-                      'no_pager': True,
-                      'hide_organism': True}
+        dictionary = {
+            'results': {
+                'metabolites': metabolites,
+                'reactions': reactions,
+                'genes': genes,
+            },
+            'no_pager': True,
+            'hide_organism': True,
+            'page_name': 'advanced_search_external_id_results',
+        }
 
         self.write(self.template.render(dictionary))
         self.finish()
+
 
 class AdvancedSearchResultsHandler(BaseHandler):
     template = env.get_template('list_display.html')
@@ -845,10 +851,14 @@ class AdvancedSearchResultsHandler(BaseHandler):
             if include_metabolites:
                 metabolite_results += queries.search_for_metabolites(query_string, session,
                                                                      limit_models=model_list)
-        result = {'results': {'reactions': reaction_results,
-                              'metabolites': metabolite_results,
-                              'genes': gene_results},
-                  'no_pager': True}
+        result = {
+            'results': {
+                'reactions': reaction_results,
+                'metabolites': metabolite_results,
+                'genes': gene_results},
+            'no_pager': True,
+            'page_name': 'advanced_search_results',
+        }
 
         session.close()
         self.write(self.template.render(result))
