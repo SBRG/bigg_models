@@ -176,7 +176,7 @@ footer {
 }
 .footer-image {
   margin: 0 auto 20px auto;
-  max-width: 80%;
+  width: 100%;
 }
 
 @media (min-width: 992px) {
