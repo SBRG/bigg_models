@@ -105,7 +105,7 @@ def get_universal_reactions_count(session):
 
 
 def get_universal_reactions(session, page=None, size=None, sort_column=None,
-                            sort_direction='ascending'):
+                            sort_direction='ascending', **kwargs):
     """Get universal reactions.
 
     Arguments
@@ -400,7 +400,7 @@ def get_universal_metabolites_count(session):
 
 
 def get_universal_metabolites(session, page=None, size=None, sort_column=None,
-                              sort_direction='ascending'):
+                              sort_direction='ascending', **kwargs):
     """Get universal metabolites.
 
     Arguments

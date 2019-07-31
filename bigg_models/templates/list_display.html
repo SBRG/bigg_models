@@ -25,6 +25,7 @@
     {% endwith %}
   </h1>
 
+  {% if not page_name or page_name not in ['universal_reaction_list', 'universal_metabolite_list'] %}
   <label class="search-option-input row">
     <input type="checkbox" id="multistrain-checkbox" checked="checked" />
     Exclude <i>E. coli</i> multistrain models from search
@@ -44,6 +45,7 @@
      window.location.href = url.toString();
    };
   </script>
+  {% endif %}
 
   <!-- header -->
   <div>

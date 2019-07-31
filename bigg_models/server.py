@@ -308,6 +308,7 @@ class PageableHandler(BaseHandler):
 
         return query_kwargs
 
+
 # reactions
 class UniversalReactionListHandler(PageableHandler):
     def get(self):
@@ -317,20 +318,29 @@ class UniversalReactionListHandler(PageableHandler):
         raw_results = safe_query(queries.get_universal_reactions, **kwargs)
 
         if "include_link_urls" in self.request.query_arguments:
-            raw_results = [dict(x, link_urls={'bigg_id': '/universal/reactions/{bigg_id}'.format(**x)})
-                           for x in raw_results]
-        result = {'results': [dict(x, model_bigg_id='Universal') for x in raw_results],
-                  'results_count': safe_query(queries.get_universal_reactions_count)}
+            raw_results = [
+                dict(x, link_urls={'bigg_id': '/universal/reactions/{bigg_id}'.format(**x)})
+                for x in raw_results
+            ]
+        result = {
+            'results': [
+                dict(x, model_bigg_id='Universal') for x in raw_results
+            ],
+            'results_count': safe_query(queries.get_universal_reactions_count)}
 
         self.write(result)
         self.finish()
+
 
 class UniversalReactionListDisplayHandler(BaseHandler):
     template = env.get_template('list_display.html')
 
     def get(self):
-        dictionary = {'results': {'reactions': 'ajax'},
-                      'hide_organism': True}
+        dictionary = {
+            'results': {'reactions': 'ajax'},
+            'hide_organism': True,
+            'page_name': 'universal_reaction_list',
+        }
         self.write(self.template.render(dictionary))
         self.finish()
 
@@ -345,6 +355,7 @@ class UniversalReactionHandler(BaseHandler):
         else:
             self.return_result(result)
 
+
 class UniversalMetaboliteListHandler(PageableHandler):
     def get(self):
         # get arguments
@@ -354,19 +365,31 @@ class UniversalMetaboliteListHandler(PageableHandler):
 
         # add links and universal
         if 'include_link_urls' in self.request.query_arguments:
-            raw_results = [dict(x, link_urls={'bigg_id': '/universal/metabolites/{bigg_id}'.format(**x)})
-                           for x in raw_results]
-        result = {'results': [dict(x, model_bigg_id='Universal') for x in raw_results],
-                  'results_count': safe_query(queries.get_universal_metabolites_count)}
+            raw_results = [dict(x, link_urls={
+                'bigg_id': '/universal/metabolites/{bigg_id}'.format(**x)
+            }) for x in raw_results]
+        result = {
+            'results': [
+                dict(x, model_bigg_id='Universal') for x in raw_results
+            ],
+            'results_count': safe_query(
+                queries.get_universal_metabolites_count
+            ),
+        }
 
         self.write(result)
         self.finish()
+
 
 class UniversalMetaboliteListDisplayHandler(BaseHandler):
     template = env.get_template('list_display.html')
 
     def get(self):
-        data = {'results': {'metabolites': 'ajax'}, 'hide_organism': True}
+        data = {
+            'results': {'metabolites': 'ajax'},
+            'hide_organism': True,
+            'page_name': 'universal_metabolite_list',
+        }
         self.write(self.template.render(data))
         self.finish()
 
