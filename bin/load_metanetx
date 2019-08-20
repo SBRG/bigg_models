@@ -187,7 +187,7 @@ def add_inchi_keys(file_key, chemical_xref):
         for mnx_id in val['mnx.chemical']:
             inchi_key = inchi_keys.get(mnx_id, None)
             if inchi_key is not None:
-                val['inchi_key'] = inchi_key
+                val['inchi_key'] = [inchi_key]
 
     return chemical_xref
 
