@@ -45,8 +45,10 @@
             <!-- Button trigger modal -->
             <li><a href="#" data-toggle="modal" data-target="#about-modal">About</a></li>
             <li><a href="advanced_search">Advanced Search</a></li>
-            <li><a href="/validator/app" target="_blank">Model Validator</a></li>
             <li><a href="/data_access">Data Access</a></li>
+            <li><a href="https://memote.io" target="_blank" class="link-out">
+              Memote Validator
+            </a></li>
           </ul>
         </div>
       </div>
@@ -68,17 +70,19 @@
                 {% endwith %}
               </div>
               <form id="search-form" action="/search" method="get">
-                <div class="input-group">
-                  <!-- Autofocus here causes a bug in Safari where you
-                       cannot click the search bar, so we do it in JS -->
-                  <input id="search" type="text" name="query" class="form-control"
-                         placeholder="">
-                  </input>
-                  <span class="input-group-btn">
-                    <input type="submit" value="Search" class="btn btn-default"
-                           type="button">
-                  </input>
-                  </span>
+                <div class="input-group-container" style="text-align: left">
+                  <div class="input-group row">
+                    <!-- Autofocus here causes a bug in Safari where you
+                         cannot click the search bar, so we do it in JS -->
+                    <input id="search" type="text" name="query" class="form-control" placeholder="" />
+                    <span class="input-group-btn">
+                      <input type="submit" value="Search" class="btn btn-default" type="button" />
+                    </span>
+                  </div>
+                  <label class="search-option-input search-option-input-frontpage row">
+                    <input type="checkbox" name="multistrain" value="off" />
+                    Exclude <i>E. coli</i> multistrain models from search
+                  </label>
                 </div>
               </form>
             </div>
@@ -205,15 +209,33 @@
         <div class="row">
           <div class="col-md-5">
             <a href="http://systemsbiology.ucsd.edu/">
-              <img class="img-responsive footer-image" src="/static/assets/sbrg-logo.png">
+              <img class="img-responsive footer-image"
+                style="max-width: 613px;"
+                src="/static/assets/sbrg-logo.png">
             </a>
           </div>
           <div class="col-md-2">
-            <a href="http://www.biosustain.dtu.dk/"><img class="img-responsive footer-image" src="/static/assets/cfb-logo.png"></a>
+            <a href="http://www.biosustain.dtu.dk/">
+              <img class="img-responsive footer-image"
+                style="max-width: 200px;"
+                src="/static/assets/cfb-logo.png">
+            </a>
           </div>
           <div class="col-md-5">
-            <a href="http://www.ucsd.edu/"><img class="img-responsive footer-image" src="/static/assets/ucsd-logo.png"></a>
+            <a href="http://www.ucsd.edu/">
+              <img class="img-responsive footer-image"
+                style="max-width: 500px;"
+                src="/static/assets/ucsd-logo.png">
+            </a>
           </div>
+        </div>
+        <div class="row">
+          <a href="https://novonordiskfonden.dk/en/">
+            <img class="img-responsive footer-image"
+              style="max-width: 754px;"
+              src="/static/assets/nnf-logo.jpg"
+            >
+          </a>
         </div>
         <div class="row">
           <div class="col-lg-12">

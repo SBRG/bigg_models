@@ -10,7 +10,19 @@ body, html {
 
 .lead {
   font-size: 19px;
-  font-weight: 300;
+  font-weight: 400;
+}
+
+.input-group-container {
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* Search options */
+.search-option-input-frontpage {
+  color: rgb(239, 248, 255);
 }
 
 .intro-header {
@@ -164,7 +176,7 @@ footer {
 }
 .footer-image {
   margin: 0 auto 20px auto;
-  max-width: 80%;
+  width: 100%;
 }
 
 @media (min-width: 992px) {

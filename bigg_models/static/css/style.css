@@ -21,6 +21,12 @@ h4 {
   color: #666;
 }
 
+/* show an image for link-outs */
+.link-out:after {
+  content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
+  opacity: 0.6;
+}
+
 p.sequence {
   word-wrap: break-word;
   font-size: 0.7em;
@@ -59,6 +65,18 @@ span.pseudoreaction {
   color: #333;
 }
 
+/* Search options */
+.search-option-input {
+  margin-left: -4px;
+  font-size: 16px;
+  text-align: left;
+  font-weight: 400;
+}
+.search-option-input input {
+  top: -2px;
+  position: relative;
+}
+
 .navbar {
   font-size: 15px;
   /* position:relative; */
@@ -72,11 +90,17 @@ span.pseudoreaction {
 .navbar-form {
   margin-left: 0px;
   margin-right: 0px;
+  padding: 0;
+  border: none;
 }
 
 .navbar-brand {
   font-size: 17px !important;
   color: #337ab7 !important;
+}
+
+.form-group>.twitter-typeahead {
+  width: auto !important;
 }
 
 #nav-title-background {
@@ -100,7 +124,7 @@ span.pseudoreaction {
 
 /* fix nav padding */
 .nav>li>a {
-  padding: 10px 12px;
+  padding: 10px 8px;
 }
 .navbar-nav>li>a {
   padding-top: 15px;

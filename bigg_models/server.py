@@ -24,15 +24,6 @@ import simplejson as json
 import re
 import six
 
-# sbml validator
-try:
-    import cobra_sbml_validator
-except ImportError:
-    print('COBRA SBML Validator not installed')
-    HAS_SBML_VALIDATOR = False
-else:
-    HAS_SBML_VALIDATOR = True
-
 # command line options
 define('port', default= 8888, help='run on given port', type=int)
 define('public', default=True, help='run on all addresses')
@@ -131,15 +122,6 @@ def get_application(debug=False):
         # redirects
         (r'/multiecoli/?$', RedirectHandler, {'url': 'http://bigg1.ucsd.edu/multiecoli'})
     ]
-
-    # SBML validator
-    if HAS_SBML_VALIDATOR:
-        routes += [
-            (r'/validator/?$', RedirectHandler, {'url': '/validator/app'}),
-            (r'/sbml_validator/?$', RedirectHandler, {'url': '/validator/app'}),
-            (r'/validator/app$', cobra_sbml_validator.ValidatorFormHandler),
-            (r'/validator/upload$', cobra_sbml_validator.Upload)
-        ]
 
     return Application(routes, debug=debug)
 
@@ -272,6 +254,7 @@ class PageableHandler(BaseHandler):
         query_kwargs = {
             "page": self.get_argument('page', None),
             "size": self.get_argument('size', None),
+            "multistrain_off": self.get_argument('multistrain', None) == 'off',
             "sort_column": default_sort_column,
             "sort_direction": sort_direction
         }
@@ -307,6 +290,7 @@ class PageableHandler(BaseHandler):
 
         return query_kwargs
 
+
 # reactions
 class UniversalReactionListHandler(PageableHandler):
     def get(self):
@@ -316,20 +300,29 @@ class UniversalReactionListHandler(PageableHandler):
         raw_results = safe_query(queries.get_universal_reactions, **kwargs)
 
         if "include_link_urls" in self.request.query_arguments:
-            raw_results = [dict(x, link_urls={'bigg_id': '/universal/reactions/{bigg_id}'.format(**x)})
-                           for x in raw_results]
-        result = {'results': [dict(x, model_bigg_id='Universal') for x in raw_results],
-                  'results_count': safe_query(queries.get_universal_reactions_count)}
+            raw_results = [
+                dict(x, link_urls={'bigg_id': '/universal/reactions/{bigg_id}'.format(**x)})
+                for x in raw_results
+            ]
+        result = {
+            'results': [
+                dict(x, model_bigg_id='Universal') for x in raw_results
+            ],
+            'results_count': safe_query(queries.get_universal_reactions_count)}
 
         self.write(result)
         self.finish()
+
 
 class UniversalReactionListDisplayHandler(BaseHandler):
     template = env.get_template('list_display.html')
 
     def get(self):
-        dictionary = {'results': {'reactions': 'ajax'},
-                      'hide_organism': True}
+        dictionary = {
+            'results': {'reactions': 'ajax'},
+            'hide_organism': True,
+            'page_name': 'universal_reaction_list',
+        }
         self.write(self.template.render(dictionary))
         self.finish()
 
@@ -344,6 +337,7 @@ class UniversalReactionHandler(BaseHandler):
         else:
             self.return_result(result)
 
+
 class UniversalMetaboliteListHandler(PageableHandler):
     def get(self):
         # get arguments
@@ -353,21 +347,34 @@ class UniversalMetaboliteListHandler(PageableHandler):
 
         # add links and universal
         if 'include_link_urls' in self.request.query_arguments:
-            raw_results = [dict(x, link_urls={'bigg_id': '/universal/metabolites/{bigg_id}'.format(**x)})
-                           for x in raw_results]
-        result = {'results': [dict(x, model_bigg_id='Universal') for x in raw_results],
-                  'results_count': safe_query(queries.get_universal_metabolites_count)}
+            raw_results = [dict(x, link_urls={
+                'bigg_id': '/universal/metabolites/{bigg_id}'.format(**x)
+            }) for x in raw_results]
+        result = {
+            'results': [
+                dict(x, model_bigg_id='Universal') for x in raw_results
+            ],
+            'results_count': safe_query(
+                queries.get_universal_metabolites_count
+            ),
+        }
 
         self.write(result)
         self.finish()
+
 
 class UniversalMetaboliteListDisplayHandler(BaseHandler):
     template = env.get_template('list_display.html')
 
     def get(self):
-        data = {'results': {'metabolites': 'ajax'}, 'hide_organism': True}
+        data = {
+            'results': {'metabolites': 'ajax'},
+            'hide_organism': True,
+            'page_name': 'universal_metabolite_list',
+        }
         self.write(self.template.render(data))
         self.finish()
+
 
 class UniversalMetaboliteHandler(BaseHandler):
     template = env.get_template('universal_metabolite.html')
@@ -380,9 +387,10 @@ class UniversalMetaboliteHandler(BaseHandler):
         else:
             self.return_result(result)
 
+
 class ReactionListHandler(PageableHandler):
     def get(self, model_bigg_id):
-        kwargs = self._get_pager_args(default_sort_column="bigg_id")
+        kwargs = self._get_pager_args(default_sort_column='bigg_id')
 
         raw_results = safe_query(queries.get_model_reactions, model_bigg_id,
                                  **kwargs)
@@ -390,19 +398,28 @@ class ReactionListHandler(PageableHandler):
         if "include_link_urls" in self.request.query_arguments:
             raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/reactions/{bigg_id}'.format(**x)})
                            for x in raw_results]
-        result = {'results': raw_results,
-                  'results_count':
-                  safe_query(queries.get_model_reactions_count, model_bigg_id)}
+        result = {
+            'results': raw_results,
+            'results_count': safe_query(
+                queries.get_model_reactions_count,
+                model_bigg_id,
+            )
+        }
 
         self.write(result)
         self.finish()
+
 
 class ReactionListDisplayHandler(BaseHandler):
     template = env.get_template('list_display.html')
 
     def get(self, model_bigg_id):
-        results = {'results': {'reactions': 'ajax'}}
+        results = {
+            'results': {'reactions': 'ajax'},
+            'page_name': 'reaction_list',
+        }
         self.return_result(results)
+
 
 class ReactionHandler(BaseHandler):
     template = env.get_template('reaction.html')
@@ -459,6 +476,7 @@ class GenomeHandler(BaseHandler):
         result = safe_query(queries.get_genome_and_models, genome_ref_string)
         self.return_result(result)
 
+
 # Models
 class ModelListHandler(PageableHandler):
     def get(self):
@@ -472,8 +490,10 @@ class ModelListHandler(PageableHandler):
                                               'reaction_count': '/models/{bigg_id}/reactions'.format(**x),
                                               'gene_count': '/models/{bigg_id}/genes'.format(**x)})
                            for x in raw_results]
-        result = {'results': raw_results,
-                  'results_count': safe_query(queries.get_models_count)}
+        result = {
+            'results': raw_results,
+            'results_count': safe_query(queries.get_models_count, **kwargs),
+        }
 
         self.write(result)
         self.finish()
@@ -502,9 +522,10 @@ class ModelHandler(BaseHandler):
                             static_model_dir=static_model_dir)
         self.return_result(result)
 
+
 class MetaboliteListHandler(PageableHandler):
     def get(self, model_bigg_id):
-        kwargs = self._get_pager_args(default_sort_column="bigg_id")
+        kwargs = self._get_pager_args(default_sort_column='bigg_id')
 
         # run the queries
         raw_results = safe_query(queries.get_model_metabolites, model_bigg_id,
@@ -513,19 +534,29 @@ class MetaboliteListHandler(PageableHandler):
         if "include_link_urls" in self.request.query_arguments:
             raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/metabolites/{bigg_id}_{compartment_bigg_id}'.format(**x)})
                            for x in raw_results]
-        result = {'results': raw_results,
-                  'results_count': safe_query(queries.get_model_metabolites_count, model_bigg_id)}
+        result = {
+            'results': raw_results,
+            'results_count': safe_query(
+                queries.get_model_metabolites_count,
+                model_bigg_id,
+            )
+        }
 
         self.write(result)
         self.finish()
+
 
 class MetabolitesListDisplayHandler(BaseHandler):
     template = env.get_template('list_display.html')
 
     def get(self, model_bigg_id):
-        data = {'results': {'metabolites': 'ajax'}}
+        data = {
+            'results': {'metabolites': 'ajax'},
+            'page_name': 'metabolite_list',
+        }
         self.write(self.template.render(data))
         self.finish()
+
 
 class MetaboliteHandler(BaseHandler):
     template = env.get_template('metabolite.html')
@@ -552,13 +583,18 @@ class GeneListHandler(PageableHandler):
         self.write(result)
         self.finish()
 
+
 class GeneListDisplayHandler(BaseHandler):
     template = env.get_template('list_display.html')
 
     def get(self, model_bigg_id):
-        data = {'results': {'genes': 'ajax'}}
+        data = {
+            'results': {'genes': 'ajax'},
+            'page_name': 'gene_list',
+        }
         self.write(self.template.render(data))
         self.finish()
+
 
 class GeneHandler(BaseHandler):
     template = env.get_template('gene.html')
@@ -575,6 +611,7 @@ class SearchHandler(BaseHandler):
         page = self.get_argument('page', None)
         size = self.get_argument('size', None)
         search_type = self.get_argument('search_type', None)
+        multistrain_off = self.get_argument('multistrain', None) == 'off'
         include_link_urls = 'include_link_urls' in self.request.query_arguments
 
         # defaults
@@ -583,8 +620,12 @@ class SearchHandler(BaseHandler):
 
         # get the sorting column
         columns = _parse_col_arg(self.get_argument('columns', None))
-        sort_column, sort_direction = _get_col_name(self.request.query_arguments, columns,
-                                                    sort_column, sort_direction)
+        sort_column, sort_direction = _get_col_name(
+            self.request.query_arguments,
+            columns,
+            sort_column,
+            sort_direction,
+        )
 
         # run the queries
         session = Session()
@@ -592,40 +633,80 @@ class SearchHandler(BaseHandler):
 
         if search_type == 'reactions':
             # reactions
-            raw_results = queries.search_for_universal_reactions(query_string, session, page,
-                                                                 size, sort_column, sort_direction)
+            raw_results = queries.search_for_universal_reactions(
+                query_string,
+                session,
+                page,
+                size,
+                sort_column,
+                sort_direction,
+                multistrain_off,
+            )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/universal/reactions/{bigg_id}'.format(**x)})
                                for x in raw_results]
-            result = {'results': [dict(x, model_bigg_id='Universal', organism='') for x in raw_results],
-                      'results_count': queries.search_for_universal_reactions_count(query_string,
-                                                                                    session)}
+            result = {
+                'results': [dict(x, model_bigg_id='Universal', organism='') for x in raw_results],
+                'results_count': queries.search_for_universal_reactions_count(
+                    query_string,
+                    session,
+                    multistrain_off,
+                )}
 
         elif search_type == 'metabolites':
-            raw_results = queries.search_for_universal_metabolites(query_string, session,
-                                                                    page, size, sort_column,
-                                                                    sort_direction)
+            raw_results = queries.search_for_universal_metabolites(
+                query_string,
+                session,
+                page,
+                size,
+                sort_column,
+                sort_direction,
+                multistrain_off,
+            )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/universal/metabolites/{bigg_id}'.format(**x)})
                             for x in raw_results]
 
-            result = {'results': [dict(x, model_bigg_id='Universal', organism='') for x in raw_results],
-                      'results_count': queries.search_for_universal_metabolites_count(query_string, session)}
+            result = {
+                'results': [dict(x, model_bigg_id='Universal', organism='') for x in raw_results],
+                'results_count': queries.search_for_universal_metabolites_count(
+                    query_string,
+                    session,
+                    multistrain_off,
+                )}
 
         elif search_type == 'genes':
-            raw_results = queries.search_for_genes(query_string, session, page,
-                                                   size, sort_column,
-                                                   sort_direction)
+            raw_results = queries.search_for_genes(
+                query_string,
+                session,
+                page,
+                size,
+                sort_column,
+                sort_direction,
+                multistrain_off=multistrain_off,
+            )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/models/{model_bigg_id}/genes/{bigg_id}'.format(**x)})
                                for x in raw_results]
 
-            result = {'results': raw_results,
-                      'results_count': queries.search_for_genes_count(query_string, session)}
+            result = {
+                'results': raw_results,
+                'results_count': queries.search_for_genes_count(
+                    query_string,
+                    session,
+                    multistrain_off=multistrain_off,
+                )}
 
         elif search_type == 'models':
-            raw_results = queries.search_for_models(query_string, session, page,
-                                                    size, sort_column, sort_direction)
+            raw_results = queries.search_for_models(
+                query_string,
+                session,
+                page,
+                size,
+                sort_column,
+                sort_direction,
+                multistrain_off,
+            )
             if include_link_urls:
                 raw_results = [dict(x, link_urls={'bigg_id': '/models/{bigg_id}'.format(**x),
                                                 'metabolite_count': '/models/{bigg_id}/metabolites'.format(**x),
@@ -633,8 +714,14 @@ class SearchHandler(BaseHandler):
                                                 'gene_count': '/models/{bigg_id}/genes'.format(**x)})
                                for x in raw_results]
 
-            result = {'results': raw_results,
-                      'results_count': queries.search_for_models_count(query_string, session)}
+            result = {
+                'results': raw_results,
+                'results_count': queries.search_for_models_count(
+                    query_string,
+                    session,
+                    multistrain_off,
+                )
+            }
 
         else:
             raise HTTPError(400, 'Bad search_type %s' % search_type)
@@ -699,14 +786,20 @@ class AdvancedSearchExternalIDHandler(BaseHandler):
                                                   query_string,
                                                   database_source)
         session.close()
-        dictionary = {'results': {'metabolites': metabolites,
-                                  'reactions': reactions,
-                                  'genes': genes},
-                      'no_pager': True,
-                      'hide_organism': True}
+        dictionary = {
+            'results': {
+                'metabolites': metabolites,
+                'reactions': reactions,
+                'genes': genes,
+            },
+            'no_pager': True,
+            'hide_organism': True,
+            'page_name': 'advanced_search_external_id_results',
+        }
 
         self.write(self.template.render(dictionary))
         self.finish()
+
 
 class AdvancedSearchResultsHandler(BaseHandler):
     template = env.get_template('list_display.html')
@@ -740,10 +833,14 @@ class AdvancedSearchResultsHandler(BaseHandler):
             if include_metabolites:
                 metabolite_results += queries.search_for_metabolites(query_string, session,
                                                                      limit_models=model_list)
-        result = {'results': {'reactions': reaction_results,
-                              'metabolites': metabolite_results,
-                              'genes': gene_results},
-                  'no_pager': True}
+        result = {
+            'results': {
+                'reactions': reaction_results,
+                'metabolites': metabolite_results,
+                'genes': gene_results},
+            'no_pager': True,
+            'page_name': 'advanced_search_results',
+        }
 
         session.close()
         self.write(self.template.render(result))

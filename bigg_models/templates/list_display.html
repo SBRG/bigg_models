@@ -25,6 +25,36 @@
     {% endwith %}
   </h1>
 
+  {% if not page_name or page_name not in [
+  'universal_reaction_list',
+  'universal_metabolite_list',
+  'metabolite_list',
+  'reaction_list',
+  'gene_list',
+  'advanced_search_results',
+  'advanced_search_external_id_results',
+  ] %}
+  <label class="search-option-input row">
+    <input type="checkbox" id="multistrain-checkbox" checked="checked" />
+    Exclude <i>E. coli</i> multistrain models from search
+  </label>
+  <script>
+   // Update URL when this is clicked
+   const el = document.getElementById('multistrain-checkbox');
+   const url = new URL(document.location);
+   const multistrain = url.searchParams.get('multistrain');
+   el.checked = multistrain === 'off';
+   el.onclick = function () {
+     if (multistrain) {
+       url.searchParams.delete('multistrain');
+     } else {
+       url.searchParams.set('multistrain', 'off');
+     }
+     window.location.href = url.toString();
+   };
+  </script>
+  {% endif %}
+
   <!-- header -->
   <div>
     {% if no_pager == true %}
