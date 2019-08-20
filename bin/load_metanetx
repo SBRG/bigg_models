@@ -43,6 +43,7 @@ db_translation = {
         'chebi': lambda val: ('chebi', 'CHEBI:%s' % val),
         'kegg': lambda val: ('kegg.drug', val) if val.startswith('D') else ('kegg.compound', val),
         'metacyc': lambda val: ('biocyc', 'META:%s' % val),
+        'reactome': 'reactome.compound',
         'seed': 'seed.compound',
         'umbbd': 'umbbd.compound',
         'upa': 'unipathway.compound',
@@ -51,8 +52,8 @@ db_translation = {
         'biopath': 'biopath.reaction',
         'kegg': 'kegg.reaction',
         'metacyc': lambda x: ('biocyc', 'META:%s' % x),
-        'reactome': lambda x: ('reactome', 'REACT_%s' % x),
-        # 'seed': # could not find a good url prefix for seed reactions
+        'reactome': 'reactome.reaction',
+        'seed': 'seed.reaction',
         'upa': 'unipathway.reaction',
     },
 }
