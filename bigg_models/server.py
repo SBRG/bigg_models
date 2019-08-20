@@ -170,7 +170,7 @@ def _get_col_name(query_arguments, columns, default_column=None,
         if len(split) != 2:
             continue
         if split[0] == 'col':
-            sort_direction = ('ascending' if v[0] == '0' else 'descending')
+            sort_direction = ('ascending' if v[0] == b'0' else 'descending')
             sort_col_index = int(split[1])
             return columns[sort_col_index], sort_direction
     return default_column, default_direction
@@ -272,7 +272,7 @@ class PageableHandler(BaseHandler):
             try:
                 # get the number in col[?]
                 col_index = int(param_name[4:-1])
-                sort_direction = "ascending" if param_value[0] == "0" \
+                sort_direction = "ascending" if param_value[0] == b'0' \
                     else "descending"
             except ValueError as e:
                 raise HTTPError(status_code=400,
