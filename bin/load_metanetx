@@ -18,7 +18,7 @@ files = {
     # XREF <tab> MNX_ID <tab> Evidence <tab> Description
     # bigg:10fthf <tab> MNXM237 <tab> inferred <tab> 10-Formyltetrahydrofolate
 
-    # 'chem_prop': 'chem_prop.tsv',
+    'chem_prop': 'chem_prop.tsv',
     # MNX_ID <tab> Description <tab> Formula <tab> Charge <tab> Mass <tab> InChi <tab> SMILES <tab> Source
 
     'comp_xref': 'comp_xref.tsv',
@@ -76,7 +76,9 @@ def main():
     session = Session()
 
     # Update chemicals
-    update_synonyms(parse_xref('chem_xref', 'metabolite'), 'metabolite', session)
+    chemical_xref = parse_xref('chem_xref', 'metabolite')
+    chemical_xref = add_inchi_keys('chem_prop', chemical_xref)
+    update_synonyms(chemical_xref, 'metabolite', session)
 
     # Update reactions
     reaction_xref = parse_xref('reac_xref', 'reaction')
@@ -163,6 +165,31 @@ def update_synonyms(xref_dict, ref_type, session):
                     else: stats['not_found'] += 1
 
     print('New %s synonyms: %d' % (ref_type, stats['not_found']))
+
+
+def add_inchi_keys(file_key, chemical_xref):
+    """Add InChI keys from the chemical properties file to the xref object."""
+
+    # read the file
+    inchi_keys = {}
+    with open(join(data_dir, files[file_key]), 'r') as f:
+        for line in f.readlines():
+            if line.strip().startswith('#') or line.strip() == '':
+                continue
+            split_line = [x.strip() for x in line.split('\t')]
+            # no inchi
+            inchi_key = split_line[8].strip()
+            if inchi_key == '' or inchi_key == 'NA':
+                continue
+            inchi_keys[split_line[0]] = inchi_key
+
+    for bigg_id, val in six.iteritems(chemical_xref):
+        for mnx_id in val['mnx.chemical']:
+            inchi_key = inchi_keys.get(mnx_id, None)
+            if inchi_key is not None:
+                val['inchi_key'] = inchi_key
+
+    return chemical_xref
 
 
 def add_ec_numbers(file_key, reaction_xref):
