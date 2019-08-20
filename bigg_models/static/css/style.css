@@ -137,10 +137,30 @@ span.pseudoreaction {
 p {
   margin: 0 0 25px 0;
 }
-.clickable-row {
-  color: #428bca;
+
+.table-header {
+  font-weight: bold;
+}
+.table-row {
+  display: flex;
+  padding: 10px;
+  border-bottom: 1px solid #d1d1d1;
+}
+.table-cell {
+  flex-grow: 1;
+  margin-right: 15px;
+}
+a>.table-row {
   cursor: pointer;
 }
+a>.table-row:hover {
+  background-color: #f5f5f5;
+}
+.table a:hover, .table a:focus {
+  text-decoration: none !important;
+  color: #428bca;
+}
+
 .section-break {
   margin: 50px 0 50px 0;
 }

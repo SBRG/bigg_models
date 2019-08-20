@@ -21,47 +21,59 @@
 
       <h4>Metabolites:</h4>
       <div class="panel panel-default">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Stoichiometry</th>
-              <th>BiGG ID</th>
-              <th>Name</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div class="table table-hover">
+          <div class="table-header">
+            <div class="table-row">
+              <div class="table-cell" style="width: 20%; min-width: 140px">Stoichiometry</div>
+              <div class="table-cell" style="width: 30%">BiGG ID</div>
+              <div class="table-cell" style="width: 50%">Name</div>
+            </div>
+          </div>
+          <div class="table-body">
             {% for metabolite in metabolites %}
-              <tr class="clickable-row" href="/models/universal/metabolites/{{metabolite['bigg_id']}}">
-                <td align="right" width="50px">{{metabolite['stoichiometry']}}</td>
-                <td>
+            <a href="/models/universal/metabolites/{{metabolite['bigg_id']}}">
+              <div class="table-row">
+                <div class="table-cell" style="width: 20%; min-width: 140px" align="right">
+                  {{metabolite['stoichiometry']}}
+                </div>
+                <div class="table-cell" style="width: 30%">
                   {{metabolite['bigg_id']}}_{{metabolite['compartment_bigg_id']}}
-                </td>
-                <td>{{metabolite['name']}}</td>
-              </tr>
+                </div>
+                <div class="table-cell" style="width: 50%">
+                  {{metabolite['name']}}
+                </div>
+              </div>
+            </a>
             {% endfor %}
-          </tbody>
-        </table>
+          </div>
+        </div>
       </div>
       <br/>
 
       <h4><i>{{bigg_id}}</i> in BiGG models:</h4>
       <div class="panel panel-default">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Organism</th>
-              <th>Model</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div class="table table-hover">
+          <div class="table-header">
+            <div class="table-row">
+              <div class="table-cell" style="width: 50%">Organism</div>
+              <div class="table-cell" style="width: 50%">Model</div>
+            </div>
+          </div>
+          <div class="table-body">
             {% for model in models_containing_reaction %}
-              <tr class="clickable-row" href="/models/{{model['bigg_id']}}/reactions/{{bigg_id}}">
-                <td>{% if model['organism'] is none %}-{% else %}{{model['organism']}}{% endif %}</td>
-                <td>{{model['bigg_id']}}</td>
-              </tr>
+            <a href="/models/{{model['bigg_id']}}/reactions/{{bigg_id}}">
+              <div class="table-row">
+                <div class="table-cell" style="width: 50%">
+                  {% if model['organism'] is none %}-{% else %}{{model['organism']}}{% endif %}
+                </div>
+                <div class="table-cell" style="width: 50%">
+                  {{model['bigg_id']}}
+                </div>
+              </div>
+            </a>
             {% endfor %}
-          </tbody>
-        </table>
+          </div>
+        </div>
       </div>
 
       {% include 'comments.html' %}

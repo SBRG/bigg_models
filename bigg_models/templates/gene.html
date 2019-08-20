@@ -41,24 +41,26 @@
 
       <h4> Associated reactions: </h4>
       <div class="panel panel-default">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>BiGG ID</th>
-              <th>Name</th>
-              <th>Gene reaction rule</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div class="table table-hover">
+          <div class="table-header">
+            <div class="table-row">
+              <div class="table-cell" style="width: 20%">BiGG ID</div>
+              <div class="table-cell" style="width: 40%">Name</div>
+              <div class="table-cell" style="width: 40%">Gene reaction rule</div>
+            </div>
+          </div>
+          <div>
             {% for reaction in reactions %}
-              <tr class="clickable-row" href="/models/{{model_bigg_id}}/reactions/{{reaction['bigg_id']}}">
-                <td>{{reaction['bigg_id']}}</td>
-                <td>{{reaction['name']}}</td>
-                <td>{{reaction['gene_reaction_rule']}}</td>
-              </tr>
+            <a href="/models/{{model_bigg_id}}/reactions/{{reaction['bigg_id']}}">
+              <div class="table-row">
+                <div class="table-cell" style="width: 20%">{{reaction['bigg_id']}}</div>
+                <div class="table-cell" style="width: 40%">{{reaction['name']}}</div>
+                <div class="table-cell" style="width: 40%">{{reaction['gene_reaction_rule']}}</div>
+              </div>
+            </a>
             {% endfor %}
-          </tbody>
-        </table>
+          </div>
+        </div>
       </div>
 
       {% include 'comments.html' %}

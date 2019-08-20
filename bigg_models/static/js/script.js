@@ -1,11 +1,6 @@
 /* global $ */
 
 $(document).ready(function() {
-  // clickable table rows
-  $('.clickable-row').click(function() {
-    window.document.location = $(this).attr('href')
-  })
-
   // Go to a new GitHub issue page and fill out some key info.
   $('#comment-link').click(function() {
     var url = ('https://github.com/SBRG/bigg_models/issues/new?body=' +
