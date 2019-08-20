@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright © 2015 The Regents of the University of California. -->
+<!-- Copyright © 2019 The Regents of the University of California. -->
 <!-- Style file for the display of BiGG SBML files in web browsers -->
 <!-- Author: Andreas Dräger -->
 <xsl:stylesheet version="1.0"

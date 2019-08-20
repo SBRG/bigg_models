@@ -23,25 +23,34 @@
 
       <h4>Model metrics: </h4>
       <div class="panel panel-default">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Component</th>
-              <th>Count</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="clickable-row" href="/models/{{model_bigg_id}}/metabolites">
-              <td>Metabolites</td><td>{{metabolite_count}}</td>
-            </tr>
-            <tr class="clickable-row" href="/models/{{model_bigg_id}}/reactions">
-              <td>Reactions</td><td>{{reaction_count}}</td>
-            </tr>
-            <tr class="clickable-row" href="/models/{{model_bigg_id}}/genes">
-              <td>Genes</td><td>{{gene_count}}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table table-hover">
+          <div class="table-header">
+            <div class="table-row">
+              <div class="table-cell" style="width: 50%">Component</div>
+              <div class="table-cell" style="width: 50%">Count</div>
+            </div>
+          </div>
+          <div class="table-body">
+            <a href="/models/{{model_bigg_id}}/metabolites">
+              <div class="table-row">
+                <div class="table-cell" style="width: 50%">Metabolites</div>
+                <div class="table-cell" style="width: 50%">{{metabolite_count}}</div>
+              </div>
+            </a>
+            <a href="/models/{{model_bigg_id}}/reactions">
+              <div class="table-row">
+                <div class="table-cell" style="width: 50%">Reactions</div>
+                <div class="table-cell" style="width: 50%">{{reaction_count}}</div>
+              </div>
+            </a>
+            <a href="/models/{{model_bigg_id}}/genes">
+              <div class="table-row">
+                <div class="table-cell" style="width: 50%">Genes</div>
+                <div class="table-cell" style="width: 50%">{{gene_count}}</div>
+              </div>
+            </a>
+          </div>
+        </div>
       </div>
 
       <h4 style="margin-top: 35px">Download COBRA model from the BiGG Database:</h4>

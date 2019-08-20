@@ -23,24 +23,32 @@
 
       <h4><i>{{bigg_id}}</i> in BiGG models:</h4>
       <div class="panel panel-default">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Organism</th>
-              <th>Model</th>
-              <th>Compartmentalized BiGG ID</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div class="table table-hover">
+          <div class="table-header">
+            <div class="table-row">
+              <div class="table-cell" style="width: 50%">Organism</div>
+              <div class="table-cell" style="width: 25%">Model</div>
+              <div class="table-cell" style="width: 25%">Compartmentalized BiGG ID</div>
+            </div>
+          </div>
+          <div class="table-body">
             {% for c in compartments_in_models %}
-              <tr class="clickable-row" href="/models/{{c['model_bigg_id']}}/metabolites/{{bigg_id}}_{{c['bigg_id']}}">
-                <td>{% if c['organism'] is none %}-{% else %}{{c['organism']}}{% endif %}</td>
-                <td>{{c['model_bigg_id']}}</td>
-                <td>{{bigg_id}}_{{c['bigg_id']}}</td>
-              </tr>
+            <a href="/models/{{c['model_bigg_id']}}/metabolites/{{bigg_id}}_{{c['bigg_id']}}">
+              <div class="table-row">
+                <div class="table-cell" style="width: 50%">
+                  {% if c['organism'] is none %}-{% else %}{{c['organism']}}{% endif %}
+                </div>
+                <div class="table-cell" style="width: 25%">
+                  {{c['model_bigg_id']}}
+                </div>
+                <div class="table-cell" style="width: 25%">
+                  {{bigg_id}}_{{c['bigg_id']}}
+                </div>
+              </div>
+            </a>
             {% endfor %}
-          </tbody>
-        </table>
+          </div>
+        </div>
       </div>
 
       {% include 'comments.html' %}
