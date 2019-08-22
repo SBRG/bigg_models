@@ -1,13 +1,11 @@
-<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.14/d3.min.js"></script>
-<script src="//unpkg.com/escher-vis@1.6.0/js/dist/escher.min.js"></script>
-<link rel="stylesheet" href="//unpkg.com/escher-vis@1.6.0/css/dist/builder.min.css"/>
+<script src="//unpkg.com/escher@1.7.2/dist/escher.min.js"></script>
 <script>
 
  // Set up map and styles
  var has_data = '{{escher_script_type}}' == 'reaction' || '{{escher_script_type}}' == 'metabolite',
      {{escher_script_type}}_data,
      zoom_element_type,
-     map_sel = d3.select('#map');
+     map_sel = escher.libs.d3_select('#map');
 
  function add_click_listeners () {
    map_sel.selectAll('.node,.reaction,.reaction-label,.node-label').style('cursor', 'pointer')
@@ -26,7 +24,7 @@
    })
  }
 
- d3.json('/escher_map_json/{{escher_maps[0]['map_name']}}', function(e, data) {
+ escher.libs.d3_json('/escher_map_json/{{escher_maps[0]['map_name']}}', function(e, data) {
    if (e) console.warn(e);
    var options = {
      menu: 'zoom',
@@ -49,11 +47,11 @@
    if (has_data) {
      window.setTimeout(function() {
        /* go_to(); */
-       map_sel.selectAll('.simple-button').each(function() {
-         var t = d3.select(this);
-         if (t.attr('title').indexOf('canvas')!=-1) {
+       map_sel.selectAll('.button').each(function () {
+         var t = escher.libs.d3_select(this);
+         if (t.attr('title') && t.attr('title').indexOf('canvas') !== -1) {
            t.on('click', null);
-           t.on('click', function() {
+           t.on('click', function () {
              if ('{{escher_script_type}}' == 'reaction') {
                b.map.zoom_to_reaction('{{escher_maps[0]['element_id']}}');
              } else {
