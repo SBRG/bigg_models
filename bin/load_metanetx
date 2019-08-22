@@ -41,7 +41,9 @@ db_translation = {
     'metabolite': {
         'biopath': 'biopath.molecule',
         'chebi': lambda val: ('chebi', 'CHEBI:%s' % val),
-        'kegg': lambda val: ('kegg.drug', val) if val.startswith('D') else ('kegg.compound', val),
+        'kegg': lambda val: (('kegg.drug', val) if val.startswith('D')
+                             else ('kegg.glycan', val) if val.startswith('G')
+                             else ('kegg.compound', val)),
         'metacyc': lambda val: ('biocyc', 'META:%s' % val),
         'reactome': 'reactome.compound',
         'seed': 'seed.compound',
