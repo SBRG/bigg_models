@@ -47,11 +47,11 @@
    if (has_data) {
      window.setTimeout(function() {
        /* go_to(); */
-       map_sel.selectAll('.simple-button').each(function() {
+       map_sel.selectAll('.button').each(function () {
          var t = escher.libs.d3_select(this);
-         if (t.attr('title').indexOf('canvas')!=-1) {
+         if (t.attr('title') && t.attr('title').indexOf('canvas') !== -1) {
            t.on('click', null);
-           t.on('click', function() {
+           t.on('click', function () {
              if ('{{escher_script_type}}' == 'reaction') {
                b.map.zoom_to_reaction('{{escher_maps[0]['element_id']}}');
              } else {
