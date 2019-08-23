@@ -650,7 +650,8 @@ def get_model_list_for_metabolite(metabolite_bigg_id, session):
             } for x in result]
 
 
-def get_model_and_counts(model_bigg_id, session, static_model_dir=None):
+def get_model_and_counts(model_bigg_id, session, static_model_dir=None,
+                         static_multistrain_dir=None):
     model_db = (session
                 .query(Model, ModelCount, Genome, Publication.reference_type,
                        Publication.reference_id)
@@ -687,9 +688,14 @@ def get_model_and_counts(model_bigg_id, session, static_model_dir=None):
     }
     if static_model_dir:
         # get filesizes
-        for ext in ("xml", "mat", "json", "xml_gz"):
-            fpath = join(static_model_dir,
-                         model_bigg_id + "." + ext.replace("_", "."))
+        for ext in ('xml', 'mat', 'json', 'xml_gz', 'multistrain'):
+            if ext == 'multistrain':
+                if not static_multistrain_dir:
+                    continue
+                fpath = join(static_multistrain_dir, model_bigg_id + '_multistrain.zip')
+            else:
+                fpath = join(static_model_dir,
+                             model_bigg_id + "." + ext.replace("_", "."))
             byte_size = getsize(fpath) if isfile(fpath) else 0
             if byte_size > 1048576:
                 result[ext + "_size"] = "%.1f MB" % (byte_size / 1048576.)

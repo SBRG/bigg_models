@@ -37,6 +37,7 @@ env = Environment(loader=PackageLoader('bigg_models', 'templates'),
 # root directory
 directory = abspath(dirname(__file__))
 static_model_dir = join(directory, 'static', 'models')
+static_multistrain_dir = join(directory, 'static', 'multistrain')
 
 # host
 api_host = 'bigg.ucsd.edu'
@@ -519,7 +520,8 @@ class ModelHandler(BaseHandler):
 
     def get(self, model_bigg_id):
         result = safe_query(queries.get_model_and_counts, model_bigg_id,
-                            static_model_dir=static_model_dir)
+                            static_model_dir=static_model_dir,
+                            static_multistrain_dir=static_multistrain_dir)
         self.return_result(result)
 
 

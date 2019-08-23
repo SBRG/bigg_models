@@ -9,8 +9,9 @@ gurobi.log
 *.egg-info/
 docs/schema/
 crontab.txt
-bigg_models/static/models
-bigg_models/static/namespace
+bigg_models/static/models/
+bigg_models/static/namespace/
+bigg_models/static/multistrain/
 .#*
 *.log
 .cache/

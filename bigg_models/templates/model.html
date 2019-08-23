@@ -68,6 +68,20 @@
         </div>
       </div>
 
+      {% if model_bigg_id in ['iCN718', 'iYL1228', 'STM_v1_0'] %}
+      <h4 style="margin-top: 35px">Download multistrain models for {{model_bigg_id}}:</h4>
+      <div class="downloads">
+        <p>[description here]</p>
+        <a href="/static/multistrain/{{model_bigg_id}}_multistrain.zip"
+          data-toggle="tooltip"
+          data-trigger="hover"
+          data-title="{{multistrain_size}}"
+        >
+          {{model_bigg_id}}_multistrain.zip
+        </a>
+      </div>
+      {% endif %}
+
       <br/>
 
       {% if reference_type == 'pmid' %}
