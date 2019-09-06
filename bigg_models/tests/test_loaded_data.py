@@ -343,6 +343,30 @@ def test_mapped_genes(session, db_model):
 # Specific issues
 # ---------------
 
+def test_gene_annotation_iJO1366(session, db_model):
+    if db_model.id != 'iJO1366':
+        return
+    assert db_model.genes.b1779.annotation['uniprot'] == ['P0A9B2']
+    assert 'old_bigg_id' not in db_model.genes.b1779.annotation
+    assert 'deprecated' not in db_model.genes.b1779.annotation
+
+
+def test_reaction_annotation_iJO1366(session, db_model):
+    if db_model.id != 'iJO1366':
+        return
+    assert set(db_model.reactions.GAPD.annotation['ec']) == {'1.2.1.59', '1.2.1.12'}
+    assert 'old_bigg_id' not in db_model.reactions.GAPD.annotation
+    assert 'deprecated' not in db_model.reactions.GAPD.annotation
+
+
+def test_metabolite_annotation_iJO1366(session, db_model):
+    if db_model.id != 'iJO1366':
+        return
+    assert set(db_model.metabolites.g3p_c.annotation['seed.compound']) == {'cpd00102', 'cpd19005'}
+    assert 'old_bigg_id' not in db_model.metabolites.g3p_c.annotation
+    assert 'deprecated' not in db_model.metabolites.g3p_c.annotation
+
+
 def test_mass_balance_iAPECO1_1312_PSUDS(session):
     res_db = (session
               .query(ModelCompartmentalizedComponent)
