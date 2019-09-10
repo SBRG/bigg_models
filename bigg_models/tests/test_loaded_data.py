@@ -354,7 +354,9 @@ def test_gene_annotation_iJO1366(session, db_model):
 def test_reaction_annotation_iJO1366(session, db_model):
     if db_model.id != 'iJO1366':
         return
-    assert set(db_model.reactions.GAPD.annotation['ec']) == {'1.2.1.59', '1.2.1.12'}
+    assert db_model.reactions.GAPD.annotation['bigg.reaction'] == ['GAPD']
+    assert db_model.reactions.GAPD.annotation['metanetx.reaction'] == ['MNXR100040']
+    assert set(db_model.reactions.GAPD.annotation['ec-code']) == {'1.2.1.59', '1.2.1.12'}
     assert 'old_bigg_id' not in db_model.reactions.GAPD.annotation
     assert 'deprecated' not in db_model.reactions.GAPD.annotation
 
@@ -363,6 +365,8 @@ def test_metabolite_annotation_iJO1366(session, db_model):
     if db_model.id != 'iJO1366':
         return
     assert set(db_model.metabolites.g3p_c.annotation['seed.compound']) == {'cpd00102', 'cpd19005'}
+    assert db_model.metabolites.g3p_c.annotation['bigg.metabolite'] == ['g3p']
+    assert db_model.metabolites.g3p_c.annotation['metanetx.chemical'] == ['MNXM74']
     assert 'old_bigg_id' not in db_model.metabolites.g3p_c.annotation
     assert 'deprecated' not in db_model.metabolites.g3p_c.annotation
 

@@ -187,7 +187,7 @@ def add_inchi_keys(file_key, chemical_xref):
             inchi_keys[split_line[0]] = inchi_key
 
     for bigg_id, val in six.iteritems(chemical_xref):
-        for mnx_id in val['mnx.chemical']:
+        for mnx_id in val['metanetx.chemical']:
             inchi_key = inchi_keys.get(mnx_id, None)
             if inchi_key is not None:
                 val['inchi_key'] = [inchi_key]
@@ -215,14 +215,14 @@ def add_ec_numbers(file_key, reaction_xref):
                 ec_numbers[split_line[0]].add(ec)
 
     for bigg_id, val in six.iteritems(reaction_xref):
-        if not 'mnx.equation' in val:
+        if not 'metanetx.reaction' in val:
             continue
-        for mnx_id in val['mnx.equation']:
+        for mnx_id in val['metanetx.reaction']:
             if not mnx_id in ec_numbers:
                 continue
-            if not 'ec' in val:
-                val['ec'] = []
-            val['ec'] += ec_numbers[mnx_id]
+            if not 'ec-code' in val:
+                val['ec-code'] = []
+            val['ec-code'] += ec_numbers[mnx_id]
 
     return reaction_xref
 
@@ -264,7 +264,7 @@ def parse_xref(file_key, ref_type):
                 metanetx_to_ref[split_line[1]][ref_tr].append(val)
 
     # make the dictionary and add metanetx ref
-    mnx_ref_id = 'mnx.chemical' if ref_type == 'metabolite' else 'mnx.equation'
+    mnx_ref_id = 'metanetx.chemical' if ref_type == 'metabolite' else 'metanetx.reaction'
     return { bigg: dict(metanetx_to_ref[mnx], **{ mnx_ref_id: [mnx] })
              for bigg, mnx in six.iteritems(bigg_to_metanetx) }
 
@@ -276,7 +276,7 @@ def print_missing_metabolite_refs(session):
                            .join(Synonym, Synonym.ome_id == Component.id)
                            .join(DataSource, DataSource.id == Synonym.data_source_id)
                            .filter(DataSource.url_prefix is not None)
-                           .filter(DataSource.name != 'mnx.chemical'))
+                           .filter(DataSource.name != 'metanetx.chemical'))
     mets_no_source_db = (session
                          .query(Model.bigg_id, Component.bigg_id)
                          .join(ModelCompartmentalizedComponent, ModelCompartmentalizedComponent.model_id == Model.id)
