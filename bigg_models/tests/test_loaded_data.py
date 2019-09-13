@@ -242,8 +242,8 @@ def test_optimize(db_model, pub_model):
     remove_boundary_metabolites(pub_model)
     solution2 = pub_model.optimize()
 
-    f1 = 0.0 if solution1.f is None else solution1.f
-    f2 = 0.0 if solution2.f is None else solution2.f
+    f1 = 0.0 if solution1.objective_value is None else solution1.objective_value
+    f2 = 0.0 if solution2.objective_value is None else solution2.objective_value
     assert abs(f1 - f2) < 1e-5
 
 
