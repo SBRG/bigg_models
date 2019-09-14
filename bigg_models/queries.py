@@ -189,7 +189,7 @@ def get_model_reactions(
         size=None,
         sort_column=None,
         sort_direction='ascending',
-        **kwargs,
+        **kwargs
 ):
     """Get model reactions.
 

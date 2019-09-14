@@ -1,7 +1,7 @@
 #!/bin/sh
 
 . $BIGG/env/bin/activate
-export PATH=/home/zaking/esolver_bin:$PATH
+export PATH=$BIGG/esolver_bin:$PATH
 
 if ps -Af | grep -v grep | grep 'python3 -m bigg_models.server --port=8888'; then
     echo Running;
