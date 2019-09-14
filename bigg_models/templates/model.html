@@ -71,7 +71,16 @@
       {% if model_bigg_id in ['iCN718', 'iYL1228', 'STM_v1_0'] %}
       <h4 style="margin-top: 35px">Download multistrain models for {{model_bigg_id}}:</h4>
       <div class="downloads">
-        <p>[description here]</p>
+        <p>
+          Download multistrain models generated from {{model_bigg_id}}. This COBRA
+          model was used to generate draft models for specific related
+          strains of interest, as described by
+          {{'<a href="http://www.ncbi.nlm.nih.gov/pubmed/29692801" target="_blank">Norsigian et al. (2018) <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a>' if model_bigg_id == 'iCN718' else
+          '<a href="http://www.ncbi.nlm.nih.gov/pubmed/30218022" target="_blank">Seif et al. (2018) <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a>' if model_bigg_id == 'STM_v1_0' else
+          '<a href="http://www.ncbi.nlm.nih.gov/pubmed/31179245" target="_blank">Norsigian et al. (2019) <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a>'}}. Download the associated
+          {{'74' if model_bigg_id == 'iCN718' else '415' if model_bigg_id == 'STM_v1_0' else '22'}}
+          models here:
+        </p>
         <a href="/static/multistrain/{{model_bigg_id}}_multistrain.zip"
           data-toggle="tooltip"
           data-trigger="hover"
