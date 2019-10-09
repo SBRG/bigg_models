@@ -23,3 +23,4 @@ TAGS
 ModelPolisher-*.jar
 .mypy_cache/
 flycheck_*
+bigg.code-workspace
