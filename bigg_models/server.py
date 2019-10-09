@@ -112,6 +112,7 @@ def get_application(debug=False):
         (r'/web_api$', RedirectHandler, {'url': '/data_access'}),
         (r'/data_access$', WebAPIHandler),
         (r'/license$', TemplateHandler, {'template_name': 'about_license_page.html'}),
+        (r'/about$', TemplateHandler, {'template_name': 'about_license_page.html'}),
         (r'/updates$', TemplateHandler, {'template_name': 'updates.html'}),
         #
         # Version
