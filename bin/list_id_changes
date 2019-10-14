@@ -160,11 +160,11 @@ for model_bigg_id in all_models:
 
             # Look for deprecated metabolite IDs
             if deprecated_id is None:
-                logging.warn(f'{model_bigg_id} - No deprecated id for dev: {dev_metabolite} and stable: {stable_metabolite}')
+                logging.warning(f'{model_bigg_id} - No deprecated id for dev: {dev_metabolite} and stable: {stable_metabolite}')
 
             # Make sure deprecated IDs match last version
             if deprecated_id is not None and deprecated_id != stable_metabolite:
-                logging.warn(f'{model_bigg_id} - Bad deprecated id {deprecated_id} for dev: {dev_metabolite} and stable: {stable_metabolite}')
+                logging.warning(f'{model_bigg_id} - Bad deprecated id {deprecated_id} for dev: {dev_metabolite} and stable: {stable_metabolite}')
 
             # Make sure deprecated IDs don't match to real reactions
             if deprecated_match is not None:
@@ -194,11 +194,11 @@ for model_bigg_id in all_models:
 
             # Look for deprecated reaction IDs, but do not worry about exchanges because they follow metabolites
             if deprecated_id is None:
-                logging.warn(f'{model_bigg_id} - No deprecated id for dev: {dev_reaction} and stable: {stable_reaction}')
+                logging.warning(f'{model_bigg_id} - No deprecated id for dev: {dev_reaction} and stable: {stable_reaction}')
 
             # Make sure deprecated IDs match last version
             if deprecated_id is not None and deprecated_id != stable_reaction:
-                logging.warn(f'{model_bigg_id} - Bad deprecated id {deprecated_id} for dev: {dev_reaction} and stable: {stable_reaction}')
+                logging.warning(f'{model_bigg_id} - Bad deprecated id {deprecated_id} for dev: {dev_reaction} and stable: {stable_reaction}')
 
             # Make sure deprecated IDs don't match to real reactions
             if deprecated_match is not None:
@@ -206,4 +206,4 @@ for model_bigg_id in all_models:
 
             # Trying to get rid of 'r' and 'i' labels for reactions
             # if dev_reaction is not None and (dev_reaction.endswith('r') or dev_reaction.endswith('i')):
-            #     logging.warn(f'{model_bigg_id} - Dev reaction {dev_reaction} has a reversibility label. Remove.')
+            #     logging.warning(f'{model_bigg_id} - Dev reaction {dev_reaction} has a reversibility label. Remove.')
