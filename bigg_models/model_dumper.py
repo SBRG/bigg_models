@@ -36,7 +36,7 @@ def make_all_static_models():
 
     # make the directories
     try:
-        makedirs(join(static_dir, 'raw'))
+        makedirs(static_dir)
     except OSError:
         pass
 
@@ -69,49 +69,22 @@ def write_static_model(bigg_id, model_polisher_path):
     t = time.time()
     model = dump_model(bigg_id)
     print('Dumping finished in %.2f seconds' % (time.time() - t))
-    raw_sbml_filepath = join(static_dir, 'raw', bigg_id + '.xml')
     sbml_filepath = join(static_dir, bigg_id + '.xml')
     try:
         print('Writing SBML')
         t = time.time()
-        cobra.io.write_sbml_model(model, raw_sbml_filepath)
+        cobra.io.write_sbml_model(model, sbml_filepath)
         print('Writing SBML finished in %.2f seconds' % (time.time() - t))
     except Exception as e:
         success = False
         print('failed to export sbml model "%s": %s' % (bigg_id, e.message))
     else:
-        # polish
-        print('Polishing')
+        print('Compressing')
         t = time.time()
-        command = [settings.java,
-                   '-jar',
-                   '-Xms8G',
-                   '-Xmx8G',
-                   '-Xss128M',
-                   '-Duser.language=en',
-                   model_polisher_path,
-                   '--user=%s' % settings.postgres_user,
-                   '--passwd=%s' % settings.postgres_password,
-                   '--host=%s' % settings.postgres_host,
-                   '--dbname=%s' % settings.postgres_database,
-                   '--input=%s' % raw_sbml_filepath,
-                   '--output=%s' % static_dir,
-                   '--compression-type=NONE',
-                   '--check-mass-balance=true',
-                   '--omit-generic-terms=false',
-                   '--log-level=OFF',
-                   '--include-any-uri=false',
-                   '--annotate-with-bigg=true']
-        polish_result = call(command)
-        print('Polishing finished in %.2f seconds' % (time.time() - t))
-        if polish_result == 0:
-            # compress model
-            print('Compressing')
-            t = time.time()
-            system('gzip --keep --force --best ' + sbml_filepath)
-            print('Compressing finished in %.2f seconds' % (time.time() - t))
-        else:
-            success = False
+        system('gzip --keep --force --best ' + sbml_filepath)
+        print('Compressing finished in %.2f seconds' % (time.time() - t))
+        # else:
+        #     success = False
 
     print('Writing MAT')
     t = time.time()
