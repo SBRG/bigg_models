@@ -1,4 +1,4 @@
-{% if xml_gz_size %}
+{% if xml_size %}
 SBML
 {% with question_title='SBML level 3 (v1) with FBC (v2)'%}
     {% with question_text='This file is fully annotated through MIRIAM and uses version 2 of the FBC package. Make sure the software you use supports this standard. If using COBRApy, v0.4 and later is required. It is also supported by the latest release of the COBRA Toolbox.' %}
@@ -6,19 +6,19 @@ SBML
     {% endwith %}
 {% endwith %}
 :&nbsp;
-<a href="/static/models/{{model_bigg_id}}.xml.gz"
-    download="{{model_bigg_id}}.xml.gz"
-    data-toggle="tooltip"
-    data-trigger="hover"
-    data-title="{{xml_gz_size}}"
-    >
-    {{model_bigg_id}}.xml.gz</a>
-<small>
-(<a href="/static/models/{{model_bigg_id}}.xml"
+<a href="/static/models/{{model_bigg_id}}.xml"
     download="{{model_bigg_id}}.xml"
     data-toggle="tooltip"
     data-trigger="hover"
     data-title="{{xml_size}}"
-    >uncompressed</small></a>)
+    >
+    {{model_bigg_id}}.xml</a>
+<small>
+(<a href="/static/models/{{model_bigg_id}}.xml.gz"
+    download="{{model_bigg_id}}.xml.gz"
+    data-toggle="tooltip"
+    data-trigger="hover"
+    data-title="{{xml_gz_size}}"
+    >.xml.gz, compressed</small></a>)
 </small>
 {% endif %}

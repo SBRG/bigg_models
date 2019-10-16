@@ -700,7 +700,7 @@ def get_model_and_counts(model_bigg_id, session, static_model_dir=None,
     }
     if static_model_dir:
         # get filesizes
-        for ext in ('xml', 'mat', 'json', 'xml_gz', 'multistrain'):
+        for ext in ('xml', 'xml_gz', 'mat', 'mat_gz', 'json', 'json_gz', 'multistrain'):
             if ext == 'multistrain':
                 if not static_multistrain_dir:
                     continue
