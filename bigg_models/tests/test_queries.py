@@ -222,7 +222,6 @@ def test_get_model_gene(session):
     result = get_model_gene('ECO103_2936', 'iECO103_1326', session)
     assert result['bigg_id'] == 'ECO103_2936'
     assert result['old_identifiers'] == ['ECO103_2936']
-    assert 'NCBI GI' in result['database_links']
     none_links = [x for x in six.iteritems(result['database_links'])
                   if any([ext['link'] is None for ext in x[1]])]
     assert len(none_links) == 0
