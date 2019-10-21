@@ -264,10 +264,18 @@ def test_mass_balance(db_model, pub_model):
 
     for r in db_model.reactions:
         if (re.match(r'EX_.*', r.id)
-            or re.match(r'DM_.*', r.id)
-            or re.match(r'sink_.*', r.id, re.IGNORECASE)
-            or re.match(r'.*biomass.*', r.id, re.IGNORECASE)):
+                or re.match(r'DM_.*', r.id)
+                or re.match(r'sink_.*', r.id, re.IGNORECASE)
+                or re.match(r'.*biomass.*', r.id, re.IGNORECASE)):
             continue
+
+        if db_model.id == 'iEK1008' and r.id == 'SHCHD3':
+            # iEK contains both pre2 and dscl with different formulas, so when
+            # they get merged as duplicate metabolites, this reaction is no
+            # longer mass balanced. Cannot be easily fixed without changing
+            # reaction stoichiometries.
+            continue
+
         # filter out very low numbers
         mass_balance = _filtered_mass_balance(r.check_mass_balance())
 
@@ -278,7 +286,7 @@ def test_mass_balance(db_model, pub_model):
                 pub_reaction = pub_model.reactions.get_by_id(r.notes['original_bigg_ids'][0])
             except KeyError:
                 errors.append('{}: Bad mass balance in {} ({}). Not found in pub model.'
-                                .format(db_model.id, r.id, mass_balance))
+                              .format(db_model.id, r.id, mass_balance))
             else:
                 # check for models where formula do not load
                 if all(x.formula == '' for x in pub_reaction.metabolites):
@@ -293,7 +301,7 @@ def test_mass_balance(db_model, pub_model):
                     pub_mass_balance = _filtered_mass_balance(pub_reaction.check_mass_balance())
                     if len(pub_mass_balance) == 0:
                         errors.append('{}: Bad mass balance in {} ({}). Reaction is balanced in published model.'
-                                        .format(db_model.id, r.id, mass_balance))
+                                      .format(db_model.id, r.id, mass_balance))
                     elif STRICT_MASS_BALANCE:
                         # if strict, then warn even if the reaction may have
                         # been unbalanced in the original model
