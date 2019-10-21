@@ -992,8 +992,8 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, s
 def get_gene_list_for_model(model_bigg_id, session):
     result = (session
               .query(Gene.bigg_id, Gene.name, Model.organism, Model.bigg_id)
-              .join(ModelGene)
-              .join(Model)
+              .join(ModelGene, ModelGene.gene_id == Gene.id)
+              .join(Model, Model.id == ModelGene.model_id)
               .filter(Model.bigg_id == model_bigg_id)
               )
     return [{'bigg_id': x[0], 'name': x[1], 'organism': x[2], 'model_bigg_id': x[3]}
