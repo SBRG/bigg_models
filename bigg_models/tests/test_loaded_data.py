@@ -166,8 +166,8 @@ def test_metabolite_count(db_model, pub_model):
 
 
 def test_gene_count(db_model, pub_model):
-    # check for merged genes
-    pub_genes_len = len(pub_model.genes)
+    # check for merged genes, and filter out genes that are not used in pub model
+    pub_genes_len = len([g for g in pub_model.genes if len(g.reactions) > 0])
     db_genes_len = len(db_model.genes)
     db_merged_extra = _check_merged(db_model.genes, db_model.id, 'gene')
     try:
