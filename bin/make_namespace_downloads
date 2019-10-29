@@ -241,7 +241,7 @@ for (bigg_id, compartment_id, name, model_ids, data_names, url_prefixes,
     try:
         metabolite = model.metabolites.get_by_id(compartmentalized_id)
     except KeyError:
-        logging.warn(f'Could not find metabolite {compartmentalized_id}')
+        logging.warning(f'Could not find metabolite {compartmentalized_id}')
     else:
         metabolite.name = name
         metabolite.annotation = c_links

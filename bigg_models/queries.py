@@ -478,9 +478,12 @@ def get_model_metabolites_count(model_bigg_id, session):
     """Count the model metabolites."""
     return (session
             .query(Component)
-            .join(CompartmentalizedComponent)
-            .join(ModelCompartmentalizedComponent)
-            .join(Model)
+            .join(CompartmentalizedComponent,
+                  CompartmentalizedComponent.component_id == Component.id)
+            .join(ModelCompartmentalizedComponent,
+                  ModelCompartmentalizedComponent.compartmentalized_component_id == CompartmentalizedComponent.id)
+            .join(Model,
+                  Model.id == ModelCompartmentalizedComponent.model_id)
             .filter(Model.bigg_id == model_bigg_id)
             .count())
 
@@ -529,10 +532,19 @@ def get_model_metabolites(model_bigg_id, session, page=None, size=None, sort_col
 
     # set up the query
     query = (session
-             .query(Component.bigg_id, Component.name, Model.bigg_id, Model.organism, Compartment.bigg_id)
-             .join(CompartmentalizedComponent)
-             .join(ModelCompartmentalizedComponent)
-             .join(Model)
+             .query(
+                 Component.bigg_id,
+                 Component.name,
+                 Model.bigg_id,
+                 Model.organism,
+                 Compartment.bigg_id,
+             )
+             .join(CompartmentalizedComponent,
+                   CompartmentalizedComponent.component_id == Component.id)
+             .join(ModelCompartmentalizedComponent,
+                   ModelCompartmentalizedComponent.compartmentalized_component_id == CompartmentalizedComponent.id)
+             .join(Model,
+                   Model.id == ModelCompartmentalizedComponent.model_id)
              .join(Compartment, Compartment.id == CompartmentalizedComponent.compartment_id)
              .filter(Model.bigg_id == model_bigg_id))
 
@@ -688,7 +700,7 @@ def get_model_and_counts(model_bigg_id, session, static_model_dir=None,
     }
     if static_model_dir:
         # get filesizes
-        for ext in ('xml', 'mat', 'json', 'xml_gz', 'multistrain'):
+        for ext in ('xml', 'xml_gz', 'mat', 'mat_gz', 'json', 'json_gz', 'multistrain'):
             if ext == 'multistrain':
                 if not static_multistrain_dir:
                     continue
@@ -787,8 +799,8 @@ def get_model_genes(model_bigg_id, session, page=None, size=None,
     # set up the query
     query = (session
              .query(Gene.bigg_id, Gene.name, Model.bigg_id, Model.organism)
-             .join(ModelGene)
-             .join(Model)
+             .join(ModelGene, ModelGene.gene_id == Gene.id)
+             .join(Model, Model.id == ModelGene.model_id)
              .filter(Model.bigg_id == model_bigg_id))
 
     # order and limit
@@ -813,8 +825,8 @@ def get_model_gene(gene_bigg_id, model_bigg_id, session):
                         Gene.mapped_to_genbank,
                         Gene.dna_sequence,
                         Gene.protein_sequence)
-                 .join(ModelGene)
-                 .join(Model)
+                 .join(ModelGene, ModelGene.gene_id == Gene.id)
+                 .join(Model, Model.id == ModelGene.model_id)
                  .outerjoin(Genome, Genome.id == Model.genome_id)
                  .outerjoin(Chromosome, Chromosome.id == Gene.chromosome_id)
                  .filter(Gene.bigg_id == gene_bigg_id)
@@ -888,10 +900,12 @@ def get_metabolite(met_bigg_id, session):
                            Model.organism,
                            ModelCompartmentalizedComponent.formula,
                            ModelCompartmentalizedComponent.charge)
-                    .join(CompartmentalizedComponent)
-                    .join(ModelCompartmentalizedComponent)
-                    .join(Model)
-                    .join(Component)
+                    .join(CompartmentalizedComponent,
+                          CompartmentalizedComponent.compartment_id == Compartment.id)
+                    .join(ModelCompartmentalizedComponent,
+                          ModelCompartmentalizedComponent.compartmentalized_component_id == CompartmentalizedComponent.id)
+                    .join(Model, Model.id == ModelCompartmentalizedComponent.model_id)
+                    .join(Component, Component.id == CompartmentalizedComponent.component_id)
                     .filter(Component.bigg_id == met_bigg_id))
     formulae = list({y for y in (x[3] for x in comp_comp_db) if y is not None})
     charges = list({y for y in (x[4] for x in comp_comp_db) if y is not None})
@@ -923,10 +937,13 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, s
                         ModelCompartmentalizedComponent.charge,
                         CompartmentalizedComponent.id,
                         Model.id)
-                 .join(CompartmentalizedComponent)
-                 .join(Compartment)
-                 .join(ModelCompartmentalizedComponent)
-                 .join(Model)
+                 .join(CompartmentalizedComponent,
+                       CompartmentalizedComponent.component_id == Component.id)
+                 .join(Compartment,
+                       Compartment.id == CompartmentalizedComponent.compartment_id)
+                 .join(ModelCompartmentalizedComponent,
+                       ModelCompartmentalizedComponent.compartmentalized_component_id == CompartmentalizedComponent.id)
+                 .join(Model, Model.id == ModelCompartmentalizedComponent.model_id)
                  .filter(Component.bigg_id == met_bigg_id)
                  .filter(Compartment.bigg_id == compartment_bigg_id)
                  .filter(Model.bigg_id == model_bigg_id)
@@ -975,8 +992,8 @@ def get_model_comp_metabolite(met_bigg_id, compartment_bigg_id, model_bigg_id, s
 def get_gene_list_for_model(model_bigg_id, session):
     result = (session
               .query(Gene.bigg_id, Gene.name, Model.organism, Model.bigg_id)
-              .join(ModelGene)
-              .join(Model)
+              .join(ModelGene, ModelGene.gene_id == Gene.id)
+              .join(Model, Model.id == ModelGene.model_id)
               .filter(Model.bigg_id == model_bigg_id)
               )
     return [{'bigg_id': x[0], 'name': x[1], 'organism': x[2], 'model_bigg_id': x[3]}
@@ -1436,8 +1453,8 @@ def search_for_reactions(
     # set up the query
     query = (session
              .query(Reaction.bigg_id, Model.bigg_id, Model.organism, Reaction.name)
-             .join(ModelReaction)
-             .join(Model)
+             .join(ModelReaction, ModelReaction.reaction_id == Reaction.id)
+             .join(Model, Model.id == ModelReaction.model_id)
              .filter(or_(sim_bigg_id >= bigg_id_sim_cutoff,
                          and_(sim_name >= name_sim_cutoff,
                               Reaction.name != ''))))
@@ -1678,8 +1695,8 @@ def search_for_genes_count(
     # set up the query
     query = (session
              .query(Gene.bigg_id, Model.bigg_id, Gene.name, sim_bigg_id, Model.organism)
-             .join(ModelGene)
-             .join(Model)
+             .join(ModelGene, ModelGene.gene_id == Gene.id)
+             .join(Model, Model.id == ModelGene.model_id)
              .filter(or_(sim_bigg_id >= gene_bigg_id_sim_cutoff,
                          and_(sim_name >= name_sim_cutoff,
                               Gene.name != ''))))

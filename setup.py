@@ -1,30 +1,34 @@
-# -*- coding: utf-8 -*-
-
 import sys
 from os.path import join, dirname, abspath
 
-from setuptools import setup, Command
+from setuptools import setup, find_packages
 
 # this is a trick to get the version before the package is installed
 directory = dirname(abspath(__file__))
 sys.path.insert(0, join(directory, 'bigg_models'))
 version = __import__('version').__version__
 
-setup(name='BiGG Models',
-      version=version,
-      author='Justin Lu & Zachary King',
-      url='http://bigg.ucsd.edu',
-      packages=['bigg_models'],
-      package_data={'bigg_models': ['static/assets/*', 'static/css/*',
-                                    'static/js/*', 'static/lib/*',
-                                    'static/lib/tablesorter/*',
-                                    'templates/*']},
-      install_requires=['Jinja2>=2.7.3',
-                        'tornado>=4.0.2',
-                        'pytest>=2.6.4',
-                        'cobradb>=0.1.0',
-                        'cobra>=0.6.2',
-                        'python-libsbml>=5.12.1',
-                        'simplejson>=3.8.2',
-                        'progressbar2>=3.30.2',
-                        'six>=1.10.0'])
+setup(
+    name='BiGG Models',
+    version=version,
+    author='Justin Lu & Zachary King',
+    author_email='zaking@ucsd.edu',
+    url='http://bigg.ucsd.edu',
+    packages=find_packages(),
+    package_data={'bigg_models': ['static/assets/*', 'static/css/*',
+                                  'static/js/*', 'static/lib/*',
+                                  'static/lib/tablesorter/*',
+                                  'templates/*']},
+    license='MIT',
+    classifiers=[
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.7',
+    ],
+    install_requires=[
+        'cobradb>=0.3.0,<0.4',
+        'Jinja2>=2.10.3,<3',
+        'simplejson>=3.16.0,<4',
+        'progressbar2>=3.47.0,<4',
+    ],
+)

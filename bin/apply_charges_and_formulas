@@ -19,19 +19,25 @@ for child, parent in models:
                                  Compartment.bigg_id,
                                  ModelCompartmentalizedComponent.charge,
                                  ModelCompartmentalizedComponent.formula)
-                      .join(CompartmentalizedComponent)
-                      .join(Compartment)
-                      .join(ModelCompartmentalizedComponent)
-                      .join(Model)
+                      .join(CompartmentalizedComponent,
+                            CompartmentalizedComponent.component_id == Component.id)
+                      .join(Compartment,
+                            Compartment.id == CompartmentalizedComponent.compartment_id)
+                      .join(ModelCompartmentalizedComponent,
+                            ModelCompartmentalizedComponent.compartmentalized_component_id == CompartmentalizedComponent.id)
+                      .join(Model, Model.id == ModelCompartmentalizedComponent.model_id)
                       .filter(Model.bigg_id == parent)
                       .all())
     parent_data_dict = {'%s_%s' % (m, c): {'charge': charge, 'formula': formula}
                         for m, c, charge, formula in parent_data}
     child_mets = (session.query(Component.bigg_id, Compartment.bigg_id, ModelCompartmentalizedComponent)
-                  .join(CompartmentalizedComponent)
-                  .join(Compartment)
-                  .join(ModelCompartmentalizedComponent)
-                  .join(Model)
+                  .join(CompartmentalizedComponent,
+                        CompartmentalizedComponent.component_id == Component.id)
+                  .join(Compartment,
+                        Compartment.id == CompartmentalizedComponent.compartment_id)
+                  .join(ModelCompartmentalizedComponent,
+                        ModelCompartmentalizedComponent.compartmentalized_component_id == CompartmentalizedComponent.id)
+                  .join(Model, Model.id == ModelCompartmentalizedComponent.model_id)
                   .filter(Model.bigg_id == child)
                   .all())
     for bigg_id, compartment, model_compartmentalized_component in child_mets:

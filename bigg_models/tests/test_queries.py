@@ -142,7 +142,6 @@ def test_get_metabolite(session):
     assert result['bigg_id'] == 'akg'
     assert result['name'] == '2-Oxoglutarate'
     assert result['formulae'] == ['C5H4O5']
-    assert result['charges'] == [-2]
     assert 'c' in [c['bigg_id'] for c in result['compartments_in_models']]
     assert 'iAPECO1_1312' in [c['model_bigg_id'] for c in result['compartments_in_models']]
     assert 'Escherichia coli APEC O1' in [c['organism'] for c in result['compartments_in_models']]
@@ -222,7 +221,6 @@ def test_get_model_gene(session):
     result = get_model_gene('ECO103_2936', 'iECO103_1326', session)
     assert result['bigg_id'] == 'ECO103_2936'
     assert result['old_identifiers'] == ['ECO103_2936']
-    assert 'NCBI GI' in result['database_links']
     none_links = [x for x in six.iteritems(result['database_links'])
                   if any([ext['link'] is None for ext in x[1]])]
     assert len(none_links) == 0
