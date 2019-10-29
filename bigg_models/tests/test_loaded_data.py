@@ -220,7 +220,7 @@ def test_load_compressed_sbml(db_model):
 
 
 def test_load_mat(db_model):
-    if db_model.id.startswith('iCHO'):
+    if db_model.id.startswith('iCHO') or db_model.id == 'iJB785':
         # remove when this is solved: https://github.com/opencobra/cobrapy/issues/919
         return
     model = load_matlab_model(join(static_model_dir, db_model.id + '.mat'))
@@ -257,13 +257,20 @@ def _filtered_mass_balance(mb):
 
 
 def _all_integer_formula_charge(reaction):
-    return all((met.charge is None or met.charge == '' or int(met.charge) == met.charge)
-               and not invalid_formula(met.formula)
-               for met in reaction.metabolites.keys())
+    return all(
+        not invalid_formula(met.formula)
+            and (met.charge is None or int(met.charge) == met.charge)
+        for met in reaction.metabolites.keys()
+    )
 
 
 def test_mass_balance(db_model, pub_model):
     errors = []
+
+    # fix empty-string charges
+    for metabolite in pub_model.metabolites:
+        if metabolite.charge == '':
+            metabolite.charge = None
 
     for r in db_model.reactions:
         if (re.match(r'EX_.*', r.id)
@@ -273,9 +280,16 @@ def test_mass_balance(db_model, pub_model):
             continue
 
         if db_model.id == 'iEK1008' and r.id == 'SHCHD3':
-            # iEK contains both pre2 and dscl with different formulas, so when
-            # they get merged as duplicate metabolites, this reaction is no
-            # longer mass balanced. Cannot be easily fixed without changing
+            # iEK1008 contains both pre2 and dscl with different formulas, so
+            # when they get merged as duplicate metabolites, this reaction is
+            # no longer mass balanced. Cannot be easily fixed without changing
+            # reaction stoichiometries.
+            continue
+
+        if db_model.id == 'iYS1720' and r.id == 'URCN_2':
+            # iYS1720 contains both 4izp and 4iz5pp with different formulas, so
+            # when they get merged as duplicate metabolites, this reaction is
+            # no longer mass balanced. Cannot be easily fixed without changing
             # reaction stoichiometries.
             continue
 

@@ -142,7 +142,6 @@ def test_get_metabolite(session):
     assert result['bigg_id'] == 'akg'
     assert result['name'] == '2-Oxoglutarate'
     assert result['formulae'] == ['C5H4O5']
-    assert result['charges'] == [-2]
     assert 'c' in [c['bigg_id'] for c in result['compartments_in_models']]
     assert 'iAPECO1_1312' in [c['model_bigg_id'] for c in result['compartments_in_models']]
     assert 'Escherichia coli APEC O1' in [c['organism'] for c in result['compartments_in_models']]
