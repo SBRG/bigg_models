@@ -342,8 +342,7 @@ def test_pyr(db_model):
 
 def test_mapped_genes(session, db_model):
     # iRC1080 genes are not mapped to the genome
-    if db_model.id in ['iRC1080', 'iEC1364_W', 'iEC1368_DH5a', 'iEC1344_C',
-                       'iAM_Pk459', 'iYS1720']:
+    if db_model.id in ['iRC1080', 'iEC1368_DH5a', 'iEC1344_C', 'iAM_Pk459', 'iYS1720']:
         return
 
     # Count mapped genes
