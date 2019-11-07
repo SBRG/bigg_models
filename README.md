@@ -46,7 +46,7 @@ Dumping and restoring the database
 
 The latest database dumps are available in this Dropbox folder:
 
-https://www.dropbox.com/sh/yayfmcrsrtrcypw/AACDoew92pCYlSJa8vCs5rSMa?dl=0
+https://www.dropbox.com/sh/ye05djxrpxy37da/AAD6GrSRTt4MRfuIpprlnLYba?dl=0
 
 We generally dump the database with this command:
 
